@@ -22,7 +22,7 @@ import { validTask } from './08-party-state';
 export const SAVE_VERSION = 3;
 
 function ensureDefaults() {
-  gameState.tier=gameState.tier||{};gameState.best=gameState.best||{};gameState.cx=gameState.cx||{};gameState.bench=gameState.bench||{};gameState.lead=gameState.lead||null;gameState.style=gameState.style||'Melee';gameState.gear=gameState.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(gameState.xp.Attack==null&&(gameState.xp.Melee||gameState.xp.Ranged||gameState.xp.Magic)){const b0=Math.max(gameState.xp.Melee||0,gameState.xp.Ranged||0,gameState.xp.Magic||0);gameState.xp.Attack=gameState.xp.Strength=gameState.xp.Defense=b0}
+  gameState.tier=gameState.tier||{};gameState.best=gameState.best||{};gameState.cx=gameState.cx||{};gameState.bench=gameState.bench||{};gameState.mk=gameState.mk||{};gameState.lead=gameState.lead||null;gameState.style=gameState.style||'Melee';gameState.gear=gameState.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(gameState.xp.Attack==null&&(gameState.xp.Melee||gameState.xp.Ranged||gameState.xp.Magic)){const b0=Math.max(gameState.xp.Melee||0,gameState.xp.Ranged||0,gameState.xp.Magic||0);gameState.xp.Attack=gameState.xp.Strength=gameState.xp.Defense=b0}
   COMBAT_SKILLS.forEach(k=>gameState.xp[k]=gameState.xp[k]||(k=='Vitality'?XT[10]:0));gameState.tool=gameState.tool||{Foraging:0,Woodcutting:0,Fishing:0,Mining:0};if(gameState.cur&&gameState.cur.k=='s'&&!ACHIEVEMENTS.find(a=>a.id==gameState.cur.id))gameState.cur=null;
   if(gameState.cur&&gameState.cur.k=='c'&&!ENEMIES.find(e=>e.id==gameState.cur.id))gameState.cur=null;
   if(gameState.cur&&gameState.cur.k=='d')gameState.cur=null; // live delves were replaced by timed expeditions

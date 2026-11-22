@@ -1,6 +1,6 @@
 import { gameState, TASKS, say } from './00-state';
 import { X } from './registry';
-import { FM, MEMBERS, IT, SL, XS, adv, cb, fighters, fw, lv, mst, maxhp, onTask, pk, pm, spAff , OFF } from './01-species-pets';
+import { FM, MEMBERS, IT, SL, XS, adv, cb, fighters, fw, kit, lv, mst, maxhp, onTask, pk, pm, spAff , OFF } from './01-species-pets';
 import { CE, ENEMIES, GRP, GSK, PSK, RFN, accScore, capeFx, capeLabel, capeOk, elv, gearSync, itFx } from './02-gear-data';
 import { enr } from './03-world-expeditions';
 // Smart loadout optimizer. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
@@ -102,7 +102,7 @@ export const shT=()=>shieldOn()?.08:0;
 export const maxHit=(e:Enemy)=>Math.max(1,Math.floor((1+offLv()[1]*1+wst()*3.2)*3*(1+FM![gameState.form].dmg)*(is2h()?1.3:1)*(1+spAff())*(1+.25*adv(gameState.style,e.type))*(1+pk('dmg'))*(1+ef('dmg'))*(1+cb('dmgm'))*(onTask(e)?1.1+(gameState.su.keen?.15:0)+cb('tdmg'):1)));
 export const eDef=(e:Enemy)=>elv(e)*.9+5+(e.boss?10:0);
 export const eAtk=(e:Enemy)=>elv(e)*.8+5+(e.boss?10:0);
-export const mdmg=(k:string,e:Enemy)=>{const c=mst(k).a;return fw(k)*c*(1.5+c/60)*(MEMBERS[k].pet?1.25:1)*(1+.25*adv(MEMBERS[k].st,e.type))};
+export const mdmg=(k:string,e:Enemy)=>{const c=mst(k).a;return fw(k)*c*(1.5+c/60)*(1+kit(k))*(MEMBERS[k].pet?1.25:1)*(1+.25*adv(MEMBERS[k].st,e.type))};
 export const memDpr=(e:Enemy)=>fighters().reduce((q,k)=>q+mdmg(k,e),0)*pm()*.9;
 export const emax=(e:Enemy)=>Math.max(1,Math.round(e.dps*3*enr(e)));
 export const hitP=(e:Enemy)=>{const A=(offLv()[0]+8)*(1+wst()/45),D=eDef(e);return clampH(1.5*A/(A+D)+(dwf()>0?.03:0)+cb('acc')+pk('acc'))};

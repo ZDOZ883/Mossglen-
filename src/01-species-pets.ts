@@ -90,12 +90,17 @@ export const pm=()=>(FM[gameState.form]||FM.steady).party+cb('pmult');
 // Member combat stats are their level shaped by role: [Attack, Defense, Vitality] multipliers, so a party's overall strength stays the same while roles matter.
 export const STAT_MULT:Record<string,[number,number,number]>={Tank:[.9,1.05,1.05],Striker:[1.1,.85,.85],Healer:[.9,.95,1.15],Scout:[1,.9,.9],Specialist:[1,1,1],Pet:[1,1,1]};
 // Kit stands in for gear: recruits are better equipped the later they join, boss pets carry a little more than skill pets, and raid pets the most.
-export const kit=(k:string)=>{if(/^p_z\d+$/.test(k))return .03+.008*(+k.slice(3));if(/^p_r\d+$/.test(k))return .12+.02*(+k.slice(3));if(MEMBERS[k].pet)return 0;const i=HK.indexOf(k);return i<0?0:.005*i};
-export const mst=(k:string)=>{const c=cl(k),m=STAT_MULT[MEMBERS[k].role]||[1,1,1],q=1+kit(k),f=(x:number)=>Math.min(135,Math.max(1,Math.round(c*x*q)));return{a:f(m[0]),d:f(m[1]),v:f(m[2])}};
+export const KIT_STEP=.01,KIT_COST=2,KIT_MAX=10;
+export const kitTier=(k:string)=>MEMBERS[k]&&!MEMBERS[k].pet?Math.min(KIT_MAX,gameState.mk[k]||0):0;
+export const kit=(k:string)=>{if(/^p_z\d+$/.test(k))return .045+.012*(+k.slice(3));if(/^p_r\d+$/.test(k))return .18+.03*(+k.slice(3));if(MEMBERS[k].pet)return 0;return KIT_STEP*kitTier(k)};
+// The next kit tier for a recruited member: they must have the level that tier's gear asks for, and it costs acorns once per tier.
+export const kitNext=(k:string)=>{if(!MEMBERS[k]||MEMBERS[k].pet||kitTier(k)>=KIT_MAX)return null;const t=kitTier(k)+1;return{t,cost:GP[t]*KIT_COST,req:REQ[t]}};
+export function buyKit(k:string){const n=kitNext(k);if(!n||!known(k)||gameState.a<n.cost||cl(k)<n.req)return false;gameState.a-=n.cost;gameState.mk[k]=n.t;return true}
+export const mst=(k:string)=>{const c=cl(k),m=STAT_MULT[MEMBERS[k].role]||[1,1,1],f=(x:number)=>Math.min(120,Math.max(1,Math.round(c*x)));return{a:f(m[0]),d:f(m[1]),v:f(m[2])}};
 // Each perk grows with the stat that fits it: damage and accuracy with Attack, damage taken with Defense, healing and health with Vitality.
 const PSTAT:Record<string,'a'|'d'|'v'>={dmg:'a',acc:'a',taken:'d',heal:'v',hp:'v'};
 export const plv=(k:string,n:string)=>{const s=PSTAT[n];return s?mst(k)[s]:cl(k)};
-export const pk=(n:string)=>Math.min(({taken:.45,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+(MEMBERS[k].pk[n]||0)*fw(k)*(1+(plv(k,n)-1)*.02)*pm()*(MEMBERS[k].pet?1.25:1),0));
+export const pk=(n:string)=>Math.min(({taken:.45,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+(MEMBERS[k].pk[n]||0)*fw(k)*(1+(plv(k,n)-1)*.02)*(1+kit(k))*pm()*(MEMBERS[k].pet?1.25:1),0));
 export function mxp(k:string,x:number){const b=cl(k);gameState.cx[k]=(gameState.cx[k]||0)+x*(MEMBERS[k].pet?1.5:1);if(cl(k)>b)say(MEMBERS[k].n+' reaches level '+cl(k)+'.')}
 export function ldx(x:number){const b=LD();gameState.xp.Leadership+=x;const a=LD();if(a>b){const u=HK.filter(k=>MEMBERS[k].lt>b&&MEMBERS[k].lt<=a).map(k=>MEMBERS[k].n);say('Leadership reaches level '+a+'.'+(LT.some(l=>l>b&&l<=a)?' New party slot.':'')+(u.length?' Now available: '+u.join(', ')+'.':''))}}
 export const onTask=(e:Enemy)=>!!gameState.task&&gameState.task.id==e.id;

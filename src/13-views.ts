@@ -1,7 +1,7 @@
 import { gameState, TASKS } from './00-state';
 import { X } from './registry';
-import { COMBAT_SKILLS, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, kit, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
-import { AF, CE, KEEP, KP, RF, RFN, gateOk, refRecipe } from './02-gear-data';
+import { COMBAT_SKILLS, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
+import { AF, CE, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
 import { GATE, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
 import { combatView, istat } from './05-combat';
@@ -68,7 +68,12 @@ export function leadView(){
 }
 export const PKN:Record<string,string[]>={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['expeditions ','% faster'],loot:['+','% expedition loot'],succ:['+','% expedition odds']};
 export function perkTxt(k:string){return Object.keys(MEMBERS[k].pk).map(n=>{const v=MEMBERS[k].pk[n]*(1+(cl(k)-1)*.02)*pm()*(MEMBERS[k].pet?1.25:1),x=n=='succ'?Math.round(v):Math.round(v*100);return PKN[n][0]+x+PKN[n][1]}).join(', ')}
-export const statTxt=(k:string)=>{const s=mst(k);return 'Attack '+s.a+' · Defense '+s.d+' · Vitality '+s.v+(kit(k)>0?' · kit +'+Math.round(kit(k)*100)+'%':'')};
+export const kitRow=(k:string)=>{
+  if(MEMBERS[k].pet)return '';
+  const t=kitTier(k),n=kitNext(k);
+  return '<div class="chips" style="margin:8px 0 0"><small style="align-self:center">Kit: '+(t?PRE[t]+' (tier '+t+', +'+t+'% to perks and damage)':'none')+'</small>'+(n?'<button data-kit="'+k+'"'+(gameState.a<n.cost||cl(k)<n.req?' disabled':'')+'>Outfit '+PRE[n.t]+' · '+n.cost.toLocaleString()+(cl(k)<n.req?' · needs level '+n.req:'')+'</button>':'')+'</div>';
+};
+export const statTxt=(k:string)=>{const s=mst(k);return 'Attack '+s.a+' · Defense '+s.d+' · Vitality '+s.v+(kit(k)>0?' · kit +'+(Math.round(kit(k)*1000)/10)+'%':'')};
 export function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(exOf(k)?exOf(k)!.dur-exOf(k)!.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+Math.round(BRATE(buL('bar'))*mentor()).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+ACHIEVEMENTS.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id!].n:t.k=='f'?'Crafting: '+IT[t.id!].n:t.k=='r'?'Refining: '+RFN[t.id!].n:TASKS[t.k]&&TASKS[t.k].mname?TASKS[t.k].mname!(t):'Resting. Send them to work from a skill page.'}
 export function partyView(){
   const hs=Object.keys(gameState.hired),l=LD(),sl=slots();
@@ -77,7 +82,7 @@ export function partyView(){
   if(!roster().length)h+='<p class="mu">No one has joined yet. Recruit your first member below.</p>';
   h+=hs.map(k=>{
     const m=MEMBERS[k],t=asg(k),work=t.k!='war'&&t.k!='idle'&&t.k!='bar'&&t.k!='exp';
-    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+(k==gameState.lead?' · lead':'')+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small><small>'+statTxt(k)+'</small></span><small>'+memName(k)+(work?' · '+Math.round(mspd(k)*100)+'% speed · '+Math.round(famShare()*100)+'% to your pack · family stash '+(gameState.fam[k]||0):'')+'</small>'+(work?'<div class="bar"><i id="mp_'+k+'"></i></div>':'')+(t.k=='exp'?'':'<div class="chips" style="margin:8px 0 0"><button class="'+(t.k=='war'?'on':'')+'" data-assign="'+k+':war">Fight with me</button><button class="'+(t.k=='idle'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+'<button class="'+(gameState.lead==k?'on':'')+'" data-lead="'+k+'">Lead</button><button data-dismiss="'+k+'">Bench</button></div>')+'</div>';
+    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+(k==gameState.lead?' · lead':'')+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small><small>'+statTxt(k)+'</small></span><small>'+memName(k)+(work?' · '+Math.round(mspd(k)*100)+'% speed · '+Math.round(famShare()*100)+'% to your pack · family stash '+(gameState.fam[k]||0):'')+'</small>'+(work?'<div class="bar"><i id="mp_'+k+'"></i></div>':'')+kitRow(k)+(t.k=='exp'?'':'<div class="chips" style="margin:8px 0 0"><button class="'+(t.k=='war'?'on':'')+'" data-assign="'+k+':war">Fight with me</button><button class="'+(t.k=='idle'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+'<button class="'+(gameState.lead==k?'on':'')+'" data-lead="'+k+'">Lead</button><button data-dismiss="'+k+'">Bench</button></div>')+'</div>';
   }).join('');
   if(hs.length)h+='<p class="mu">To put a member to work, open a skill and choose them under “Choose who works”. Benched members stay on your roster, keep their level and can train in the barracks. Combat perks apply only while fighting beside you. Speed, loot and odds perks apply on expeditions.</p>';
   const bs=Object.keys(gameState.bench);
@@ -85,7 +90,7 @@ export function partyView(){
     h+='<h2>Resting at home <span class="mu" style="display:inline">· '+bs.length+' on your roster, not in the party</span></h2><p class="mu">Benched members do no work and fight nothing, but they keep their level and can train in the barracks. Open a slot or swap one of your party to bring them back.</p>';
     h+=bs.map(k=>{
       const m=MEMBERS[k],t=asg(k),free=nsl()<sl,sw=Object.keys(gameState.hired).filter(a=>asg(a).k!='exp');
-      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small></span><small>'+memName(k)+'</small><div class="chips" style="margin:8px 0 0"><button class="'+(t.k!='bar'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+(free?'<button data-call="'+k+'">Join party</button>':'')+'</div>'+(free?'':'<small style="margin-top:8px">Swap in for:</small><div class="chips" style="margin:4px 0 0">'+sw.map(a=>'<button data-call="'+k+':'+a+'">'+MEMBERS[a].n.split(' ')[0]+'</button>').join('')+'</div>')+'</div>';
+      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small></span><small>'+memName(k)+'</small>'+kitRow(k)+'<div class="chips" style="margin:8px 0 0"><button class="'+(t.k!='bar'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+(free?'<button data-call="'+k+'">Join party</button>':'')+'</div>'+(free?'':'<small style="margin-top:8px">Swap in for:</small><div class="chips" style="margin:4px 0 0">'+sw.map(a=>'<button data-call="'+k+':'+a+'">'+MEMBERS[a].n.split(' ')[0]+'</button>').join('')+'</div>')+'</div>';
     }).join('');
   }
   const rec=HK.filter(k=>!known(k));

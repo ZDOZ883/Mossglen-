@@ -140,7 +140,7 @@ nav button.on i{opacity:1}
     gameState = JSON.parse(localStorage.getItem("hollowbrook1"));
   } catch (e) {
   }
-  if (!gameState) gameState = { sp: null, xp: { Foraging: 0, Woodcutting: 0, Fishing: 0, Mining: 0 }, inv: {}, a: 0, cur: null, p: 0, hired: {}, bench: {}, t: Date.now(), log: [] };
+  if (!gameState) gameState = { sp: null, xp: { Foraging: 0, Woodcutting: 0, Fishing: 0, Mining: 0 }, inv: {}, a: 0, cur: null, p: 0, hired: {}, bench: {}, mk: {}, t: Date.now(), log: [] };
   var save = () => {
     try {
       localStorage.setItem("hollowbrook1", JSON.stringify(gameState));
@@ -177,6 +177,9 @@ nav button.on i{opacity:1}
     HDN: () => HDN,
     HK: () => HK,
     IT: () => IT,
+    KIT_COST: () => KIT_COST,
+    KIT_MAX: () => KIT_MAX,
+    KIT_STEP: () => KIT_STEP,
     LD: () => LD,
     LT: () => LT,
     MEMBERS: () => MEMBERS,
@@ -202,6 +205,7 @@ nav button.on i{opacity:1}
     ZPT: () => ZPT,
     adv: () => adv,
     asg: () => asg,
+    buyKit: () => buyKit,
     cb: () => cb,
     cl: () => cl,
     fighters: () => fighters,
@@ -209,6 +213,8 @@ nav button.on i{opacity:1}
     gainPet: () => gainPet,
     joinParty: () => joinParty,
     kit: () => kit,
+    kitNext: () => kitNext,
+    kitTier: () => kitTier,
     known: () => known,
     ldx: () => ldx,
     lv: () => lv,
@@ -399,15 +405,28 @@ nav button.on i{opacity:1}
   var fighters = () => Object.keys(gameState.hired).filter((k) => asg(k).k == "war");
   var pm = () => (FM[gameState.form] || FM.steady).party + cb("pmult");
   var STAT_MULT = { Tank: [0.9, 1.05, 1.05], Striker: [1.1, 0.85, 0.85], Healer: [0.9, 0.95, 1.15], Scout: [1, 0.9, 0.9], Specialist: [1, 1, 1], Pet: [1, 1, 1] };
+  var KIT_STEP = 0.01, KIT_COST = 2, KIT_MAX = 10;
+  var kitTier = (k) => MEMBERS[k] && !MEMBERS[k].pet ? Math.min(KIT_MAX, gameState.mk[k] || 0) : 0;
   var kit = (k) => {
-    if (/^p_z\d+$/.test(k)) return 0.03 + 8e-3 * +k.slice(3);
-    if (/^p_r\d+$/.test(k)) return 0.12 + 0.02 * +k.slice(3);
+    if (/^p_z\d+$/.test(k)) return 0.045 + 0.012 * +k.slice(3);
+    if (/^p_r\d+$/.test(k)) return 0.18 + 0.03 * +k.slice(3);
     if (MEMBERS[k].pet) return 0;
-    const i = HK.indexOf(k);
-    return i < 0 ? 0 : 5e-3 * i;
+    return KIT_STEP * kitTier(k);
   };
+  var kitNext = (k) => {
+    if (!MEMBERS[k] || MEMBERS[k].pet || kitTier(k) >= KIT_MAX) return null;
+    const t = kitTier(k) + 1;
+    return { t, cost: GP[t] * KIT_COST, req: REQ[t] };
+  };
+  function buyKit(k) {
+    const n = kitNext(k);
+    if (!n || !known(k) || gameState.a < n.cost || cl(k) < n.req) return false;
+    gameState.a -= n.cost;
+    gameState.mk[k] = n.t;
+    return true;
+  }
   var mst = (k) => {
-    const c = cl(k), m = STAT_MULT[MEMBERS[k].role] || [1, 1, 1], q = 1 + kit(k), f = (x) => Math.min(135, Math.max(1, Math.round(c * x * q)));
+    const c = cl(k), m = STAT_MULT[MEMBERS[k].role] || [1, 1, 1], f = (x) => Math.min(120, Math.max(1, Math.round(c * x)));
     return { a: f(m[0]), d: f(m[1]), v: f(m[2]) };
   };
   var PSTAT = { dmg: "a", acc: "a", taken: "d", heal: "v", hp: "v" };
@@ -415,7 +434,7 @@ nav button.on i{opacity:1}
     const s = PSTAT[n];
     return s ? mst(k)[s] : cl(k);
   };
-  var pk = (n) => Math.min({ taken: 0.45, speed: 0.4 }[n] || 99, fighters().reduce((s, k) => s + (MEMBERS[k].pk[n] || 0) * fw(k) * (1 + (plv(k, n) - 1) * 0.02) * pm() * (MEMBERS[k].pet ? 1.25 : 1), 0));
+  var pk = (n) => Math.min({ taken: 0.45, speed: 0.4 }[n] || 99, fighters().reduce((s, k) => s + (MEMBERS[k].pk[n] || 0) * fw(k) * (1 + (plv(k, n) - 1) * 0.02) * (1 + kit(k)) * pm() * (MEMBERS[k].pet ? 1.25 : 1), 0));
   function mxp(k, x) {
     const b = cl(k);
     gameState.cx[k] = (gameState.cx[k] || 0) + x * (MEMBERS[k].pet ? 1.5 : 1);
@@ -1412,7 +1431,7 @@ nav button.on i{opacity:1}
   var eAtk = (e) => elv(e) * 0.8 + 5 + (e.boss ? 10 : 0);
   var mdmg = (k, e) => {
     const c = mst(k).a;
-    return fw(k) * c * (1.5 + c / 60) * (MEMBERS[k].pet ? 1.25 : 1) * (1 + 0.25 * adv(MEMBERS[k].st, e.type));
+    return fw(k) * c * (1.5 + c / 60) * (1 + kit(k)) * (MEMBERS[k].pet ? 1.25 : 1) * (1 + 0.25 * adv(MEMBERS[k].st, e.type));
   };
   var memDpr = (e) => fighters().reduce((q, k) => q + mdmg(k, e), 0) * pm() * 0.9;
   var emax = (e) => Math.max(1, Math.round(e.dps * 3 * enr(e)));
@@ -3051,6 +3070,7 @@ nav button.on i{opacity:1}
     famLab: () => famLab,
     gatherPage: () => gatherPage,
     guideView: () => guideView,
+    kitRow: () => kitRow,
     leadView: () => leadView,
     logSub: () => logSub,
     logTabs: () => logTabs,
@@ -3132,9 +3152,14 @@ nav button.on i{opacity:1}
       return PKN[n][0] + x + PKN[n][1];
     }).join(", ");
   }
+  var kitRow = (k) => {
+    if (MEMBERS[k].pet) return "";
+    const t = kitTier(k), n = kitNext(k);
+    return '<div class="chips" style="margin:8px 0 0"><small style="align-self:center">Kit: ' + (t ? PRE[t] + " (tier " + t + ", +" + t + "% to perks and damage)" : "none") + "</small>" + (n ? '<button data-kit="' + k + '"' + (gameState.a < n.cost || cl(k) < n.req ? " disabled" : "") + ">Outfit " + PRE[n.t] + " \xB7 " + n.cost.toLocaleString() + (cl(k) < n.req ? " \xB7 needs level " + n.req : "") + "</button>" : "") + "</div>";
+  };
   var statTxt = (k) => {
     const s = mst(k);
-    return "Attack " + s.a + " \xB7 Defense " + s.d + " \xB7 Vitality " + s.v + (kit(k) > 0 ? " \xB7 kit +" + Math.round(kit(k) * 100) + "%" : "");
+    return "Attack " + s.a + " \xB7 Defense " + s.d + " \xB7 Vitality " + s.v + (kit(k) > 0 ? " \xB7 kit +" + Math.round(kit(k) * 1e3) / 10 + "%" : "");
   };
   function memName(k) {
     const t = asg(k);
@@ -3147,7 +3172,7 @@ nav button.on i{opacity:1}
     if (!roster().length) h += '<p class="mu">No one has joined yet. Recruit your first member below.</p>';
     h += hs.map((k) => {
       const m = MEMBERS[k], t = asg(k), work = t.k != "war" && t.k != "idle" && t.k != "bar" && t.k != "exp";
-      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + m.n + " \xB7 level " + cl(k) + (k == gameState.lead ? " \xB7 lead" : "") + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + perkTxt(k) + "</small><small>" + statTxt(k) + "</small></span><small>" + memName(k) + (work ? " \xB7 " + Math.round(mspd(k) * 100) + "% speed \xB7 " + Math.round(famShare() * 100) + "% to your pack \xB7 family stash " + (gameState.fam[k] || 0) : "") + "</small>" + (work ? '<div class="bar"><i id="mp_' + k + '"></i></div>' : "") + (t.k == "exp" ? "" : '<div class="chips" style="margin:8px 0 0"><button class="' + (t.k == "war" ? "on" : "") + '" data-assign="' + k + ':war">Fight with me</button><button class="' + (t.k == "idle" ? "on" : "") + '" data-assign="' + k + ':idle">Rest</button>' + (buL("bar") ? '<button class="' + (t.k == "bar" ? "on" : "") + '" data-assign="' + k + ':bar">Barracks</button>' : "") + '<button class="' + (gameState.lead == k ? "on" : "") + '" data-lead="' + k + '">Lead</button><button data-dismiss="' + k + '">Bench</button></div>') + "</div>";
+      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + m.n + " \xB7 level " + cl(k) + (k == gameState.lead ? " \xB7 lead" : "") + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + perkTxt(k) + "</small><small>" + statTxt(k) + "</small></span><small>" + memName(k) + (work ? " \xB7 " + Math.round(mspd(k) * 100) + "% speed \xB7 " + Math.round(famShare() * 100) + "% to your pack \xB7 family stash " + (gameState.fam[k] || 0) : "") + "</small>" + (work ? '<div class="bar"><i id="mp_' + k + '"></i></div>' : "") + kitRow(k) + (t.k == "exp" ? "" : '<div class="chips" style="margin:8px 0 0"><button class="' + (t.k == "war" ? "on" : "") + '" data-assign="' + k + ':war">Fight with me</button><button class="' + (t.k == "idle" ? "on" : "") + '" data-assign="' + k + ':idle">Rest</button>' + (buL("bar") ? '<button class="' + (t.k == "bar" ? "on" : "") + '" data-assign="' + k + ':bar">Barracks</button>' : "") + '<button class="' + (gameState.lead == k ? "on" : "") + '" data-lead="' + k + '">Lead</button><button data-dismiss="' + k + '">Bench</button></div>') + "</div>";
     }).join("");
     if (hs.length) h += '<p class="mu">To put a member to work, open a skill and choose them under \u201CChoose who works\u201D. Benched members stay on your roster, keep their level and can train in the barracks. Combat perks apply only while fighting beside you. Speed, loot and odds perks apply on expeditions.</p>';
     const bs = Object.keys(gameState.bench);
@@ -3155,7 +3180,7 @@ nav button.on i{opacity:1}
       h += '<h2>Resting at home <span class="mu" style="display:inline">\xB7 ' + bs.length + ' on your roster, not in the party</span></h2><p class="mu">Benched members do no work and fight nothing, but they keep their level and can train in the barracks. Open a slot or swap one of your party to bring them back.</p>';
       h += bs.map((k) => {
         const m = MEMBERS[k], t = asg(k), free = nsl() < sl, sw = Object.keys(gameState.hired).filter((a) => asg(a).k != "exp");
-        return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + m.n + " \xB7 level " + cl(k) + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + perkTxt(k) + "</small></span><small>" + memName(k) + '</small><div class="chips" style="margin:8px 0 0"><button class="' + (t.k != "bar" ? "on" : "") + '" data-assign="' + k + ':idle">Rest</button>' + (buL("bar") ? '<button class="' + (t.k == "bar" ? "on" : "") + '" data-assign="' + k + ':bar">Barracks</button>' : "") + (free ? '<button data-call="' + k + '">Join party</button>' : "") + "</div>" + (free ? "" : '<small style="margin-top:8px">Swap in for:</small><div class="chips" style="margin:4px 0 0">' + sw.map((a) => '<button data-call="' + k + ":" + a + '">' + MEMBERS[a].n.split(" ")[0] + "</button>").join("") + "</div>") + "</div>";
+        return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + m.n + " \xB7 level " + cl(k) + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + perkTxt(k) + "</small></span><small>" + memName(k) + "</small>" + kitRow(k) + '<div class="chips" style="margin:8px 0 0"><button class="' + (t.k != "bar" ? "on" : "") + '" data-assign="' + k + ':idle">Rest</button>' + (buL("bar") ? '<button class="' + (t.k == "bar" ? "on" : "") + '" data-assign="' + k + ':bar">Barracks</button>' : "") + (free ? '<button data-call="' + k + '">Join party</button>' : "") + "</div>" + (free ? "" : '<small style="margin-top:8px">Swap in for:</small><div class="chips" style="margin:4px 0 0">' + sw.map((a) => '<button data-call="' + k + ":" + a + '">' + MEMBERS[a].n.split(" ")[0] + "</button>").join("") + "</div>") + "</div>";
       }).join("");
     }
     const rec = HK.filter((k) => !known(k));
@@ -3217,6 +3242,7 @@ nav button.on i{opacity:1}
     gameState.best = gameState.best || {};
     gameState.cx = gameState.cx || {};
     gameState.bench = gameState.bench || {};
+    gameState.mk = gameState.mk || {};
     gameState.lead = gameState.lead || null;
     gameState.style = gameState.style || "Melee";
     gameState.gear = gameState.gear || { Melee: 0, Ranged: 0, Magic: 0, arm: 0 };
@@ -3388,6 +3414,9 @@ nav button.on i{opacity:1}
         if (who == k) set_who("you");
         say(MEMBERS[k].n + " rests at home. They stay on your roster and can train in the barracks.");
       }
+    } else if (d.kit) {
+      const k = d.kit;
+      if (buyKit(k)) say(MEMBERS[k].n + " is outfitted with " + PRE[kitTier(k)] + " kit.");
     } else if (d.call) {
       const [k, out] = d.call.split(":");
       if (gameState.bench[k] && !(out && asg(out).k == "exp")) {

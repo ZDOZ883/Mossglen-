@@ -395,6 +395,34 @@ describe('gear slots', () => {
     assert.ok(g.ev('!!gameState.sp'), 'progress is kept without the typed confirmation');
   });
 
+  it('members can be outfitted tier by tier: level-gated, paid in acorns, small gains, and pets stay stronger', () => {
+    const g = load({ seed: 14 });
+    g.ev(`gameState.sp='Badger';gameState.xp.Leadership=XT[60];gameState.a=0;gameState.hired={mole:1};gameState.bench={};gameState.mt={mole:{k:'war'}};gameState.mk={};gameState.pets={};gameState.cx.mole=XT[1]`);
+    assert.equal(g.ev('kitNext("mole").cost'), g.ev('GP[1]*2'), 'first tier costs twice the matching gear tier');
+    g.click({ kit: 'mole' });
+    assert.equal(g.ev('kitTier("mole")'), 0, 'cannot buy without acorns');
+    g.ev('gameState.a=1e9');
+    g.click({ kit: 'mole' });
+    assert.equal(g.ev('kitTier("mole")'), 0, 'cannot buy a tier above the member level (needs ' + g.ev('REQ[1]') + ')');
+    g.ev('gameState.cx.mole=XT[5]');
+    const a0 = g.ev('gameState.a');
+    g.click({ kit: 'mole' });
+    assert.equal(g.ev('kitTier("mole")'), 1);
+    assert.equal(g.ev('gameState.a'), a0 - g.ev('GP[1]*2'));
+    g.click({ kit: 'mole' });
+    assert.equal(g.ev('kitTier("mole")'), 1, 'the next tier needs a higher level');
+    // The whole ladder adds only about ten percent to what a member does, and never touches pets.
+    g.ev('gameState.cx.mole=XT[60]');
+    const e = 'ENEMIES[20]';
+    const base = g.ev(`gameState.mk.mole=0;mdmg('mole',${e})`);
+    const full = g.ev(`gameState.mk.mole=KIT_MAX;mdmg('mole',${e})`);
+    assert.ok(full / base > 1.05 && full / base < 1.15, 'full kit adds about 10%: ' + full / base);
+    assert.equal(g.ev('kitNext("p_Attack")'), null, 'pets cannot be bought kit');
+    g.ev(`gameState.cx.p_Attack=XT[60];gameState.cx.p_z6=XT[60];gameState.cx.p_r0=XT[60];gameState.cx.mole=XT[60];gameState.mk.mole=KIT_MAX`);
+    assert.ok(g.ev(`mdmg('p_Attack',${e})`) > g.ev(`mdmg('mole',${e})`), 'a skill pet still out-damages a fully outfitted recruit');
+    assert.ok(g.ev(`mdmg('p_z6',${e})`) > g.ev(`mdmg('p_Attack',${e})`) && g.ev(`mdmg('p_r0',${e})`) > g.ev(`mdmg('p_z6',${e})`), 'boss pets beat skill pets and raid pets beat boss pets');
+  });
+
   it('old saves start Ranged and Magic at their Attack xp', () => {
     const g = load({ seed: 6 });
     g.ev(`gameState.xp.Attack=XT[50];delete gameState.xp.Ranged;delete gameState.xp.Magic;gameState.v=2;migrate()`);

@@ -1,6 +1,6 @@
 import { gameState, save, say } from './00-state';
-import { FM, MEMBERS, LD, SELL_VALUE, asg, cb, joinParty, known, maxhp, nsl } from './01-species-pets';
-import { KEEP } from './02-gear-data';
+import { FM, MEMBERS, LD, SELL_VALUE, asg, cb, buyKit, joinParty, kitTier, known, maxhp, nsl } from './01-species-pets';
+import { KEEP, PRE } from './02-gear-data';
 import { exRecall, exSel, exStart, openGate, set_exSel, startHR, startRaid } from './03-world-expeditions';
 import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadout';
 import { cycle, shopBuy } from './05-combat';
@@ -26,6 +26,7 @@ document.addEventListener('click',e=>{
   else if(d.who)set_who(d.who);
   else if(d.assign){const [k,a]=d.assign.split(':');assign(k,a)}
   else if(d.dismiss){const k=d.dismiss;if(asg(k).k=='exp'){say(MEMBERS[k].n+' is away on an expedition.');}else if(gameState.hired[k]){delete gameState.hired[k];gameState.bench[k]=1;gameState.mt[k]={k:'idle'};if(gameState.lead==k)gameState.lead=Object.keys(gameState.hired)[0]||null;if(who==k)set_who('you');say(MEMBERS[k].n+' rests at home. They stay on your roster and can train in the barracks.')}}
+  else if(d.kit){const k=d.kit;if(buyKit(k))say(MEMBERS[k].n+' is outfitted with '+PRE[kitTier(k)]+' kit.')}
   else if(d.call){const [k,out]=d.call.split(':');if(gameState.bench[k]&&!(out&&asg(out).k=='exp')){if(out&&gameState.hired[out]){delete gameState.hired[out];gameState.bench[out]=1;gameState.mt[out]={k:'idle'};if(gameState.lead==out)gameState.lead=null;if(who==out)set_who('you')}if(nsl()<slots()){delete gameState.bench[k];gameState.hired[k]=1;gameState.mt[k]={k:'war'};if(!gameState.lead)gameState.lead=k;say(MEMBERS[k].n+' joins the party'+(out?', taking '+MEMBERS[out].n+"'s place.":'.'))}}}
   else if(d.form){if(FM[d.form]&&CL()>=FM[d.form].cl)gameState.form=d.form}
   else if(d.do){const [k,id]=d.do.split(':');if(who!='you'&&gameState.hired[who]&&'skfr'.includes(k))assign(who,k,id);else{if(k=='c'&&!(gameState.cur&&gameState.cur.k=='c'&&gameState.cur.id==id)){gameState.ehp=null;set_hits([])}gameState.cur={k,id};gameState.p=0}}
