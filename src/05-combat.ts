@@ -72,6 +72,24 @@ export function onKill(e:Enemy,quiet?:boolean){
   if(e.raid)raidKill(e,quiet);else loot(e);
 }
 export const HEAL_IN=.55;
+// Food rules: when to eat, and which food. One food per round either way.
+export const eatAt=()=>gameState.eat||.55;
+export const FMODES:[string,string][]=[['auto','Auto'],['best','Best'],['worst','Weakest'],['pick','Specific']];
+export function pickFood(fk:string[],hl:number,m:number){
+  const md=gameState.fmode||'auto';
+  if(md=='best')return fk[fk.length-1];
+  if(md=='worst')return fk[0];
+  if(md=='pick'&&gameState.fpick&&gameState.inv[gameState.fpick]>0)return gameState.fpick;
+  return fk.find(q=>FOOD[q]*hl>=m*.15)||fk[fk.length-1];
+}
+export function foodRules(){
+  const md=gameState.fmode||'auto',have=Object.keys(FOOD).filter(k=>(gameState.inv[k]||0)>0||gameState.fpick==k).sort((a,b)=>FOOD[a]-FOOD[b]);
+  let h='<h2>Food <span class="mu" style="display:inline">· one food per round</span></h2><div class="chips">'+FMODES.map(f=>'<button class="'+(md==f[0]?'on':'')+'" data-fmode="'+f[0]+'">'+f[1]+'</button>').join('')+'</div>';
+  if(md=='pick')h+=have.length?'<div class="chips">'+have.map(k=>'<button class="'+(gameState.fpick==k?'on':'')+'" data-fpick="'+k+'">'+k+' ×'+(gameState.inv[k]||0)+'</button>').join('')+'</div>':'<p class="mu">You have no food to choose.</p>';
+  h+='<div class="chips">'+[.35,.55,.75].map(v=>'<button class="'+(eatAt()==v?'on':'')+'" data-eat="'+v+'">Eat below '+Math.round(v*100)+'%</button>').join('')+'</div>';
+  const t={auto:'Auto eats the weakest food that heals at least 15% of your max health, or your best if none does.',best:'Always eats your strongest food.',worst:'Always eats your weakest food.',pick:'Eats the food you choose, and falls back to Auto when you run out.'}[md];
+  return h+'<p class="mu">'+t+' Eating is free: you still attack that round.</p>';
+}
 const memMax=(k:string)=>mhpx(k);
 export const memHp=(k:string)=>{const g=gameState;g.mh=g.mh||{};if(g.mh[k]==null)g.mh[k]=memMax(k);return g.mh[k]};
 export const memFrac=(k:string)=>memHp(k)/memMax(k);
@@ -96,8 +114,8 @@ export function cround(e:Enemy,quiet?:boolean){
   const m=maxhp();
   if(e.raid){const r=RD.find(x=>x.id==e.raid)!;if(!raidOk(r)){gameState.cur=null;gameState.ehp=null;say('The raid party broke up. You pull out of '+r.n+'.');return}gameState.rr=(gameState.rr||0)+1}
   if(gameState.ehid!==e.id||gameState.ehp==null){gameState.ehid=e.id;gameState.ehp=e.hp;gameState.rr=0;Object.keys(gameState.down||{}).forEach(k=>{gameState.mh![k]=memMax(k)*.25});gameState.down={};gameState.hrr=Math.max(1,e.hp/Math.max(.01,hitP(e)*(maxHit(e)+1)/2*(1+dwf())+memDpr(e)));if(!quiet)set_hits([])}
-  if(gameState.hp<m*.55){
-    const hl=1+ef('heal')+cb('heal')+lv(gameState.xp.Cooking)*.004,fk=Object.keys(FOOD).filter(k=>gameState.inv[k]>0).sort((a,b)=>FOOD[a]-FOOD[b]),k=fk.find(q=>FOOD[q]*hl>=m*.15)||fk[fk.length-1];
+  if(gameState.hp<m*eatAt()){
+    const hl=1+ef('heal')+cb('heal')+lv(gameState.xp.Cooking)*.004,fk=Object.keys(FOOD).filter(k=>gameState.inv[k]>0).sort((a,b)=>FOOD[a]-FOOD[b]),k=pickFood(fk,hl,m);
     if(k){gameState.inv[k]--;const h=Math.round(FOOD[k]*hl);gameState.hp=Math.min(m,gameState.hp+h);if(!quiet)hit('You eat '+k+' (+'+h+').')}
   }
   if(Math.random()<hitP(e)){let d=1+Math.floor(Math.random()*maxHit(e));const cr=Math.random()<cb('crit');if(cr)d*=2;gameState.ehp-=d+Math.round(memDpr(e)*(.75+Math.random()*.5));if(cb('lsteal'))gameState.hp=Math.min(m,gameState.hp+d*cb('lsteal'));if(!quiet)hit('You '+(cr?'crit for ':'hit ')+d+'.')}else if(!quiet)hit('You miss.');
@@ -124,7 +142,7 @@ export function istat(it:Item){if(it.eff){const N:Record<string,any>={gold:'acor
 export function reqText(it:Item){if(it.rs)return ({gath:'any gathering skill',prod:'any production skill'}[it.rs]||it.rs)+' '+it.req;return it.slot=='body'||it.slot=='head'||it.slot=='legs'?'Defense '+it.req:'Attack '+it.req}
 export function arenaView(){
   const c=gameState.cur&&gameState.cur.k=='c'?ENEMIES.find(e=>e.id==gameState.cur.id):null,food=Object.keys(FOOD).reduce((s,k)=>s+(gameState.inv[k]||0),0);
-  let h='<div class="arena"><div class="nm"><b>You</b><span id="ph" class="mu"></span></div><div class="bar"><i id="hp"></i></div><small class="mu" id="pty" style="display:block;margin:4px 0">'+partyHp()+'</small><small class="mu">'+gameState.style+(c?' · hit '+Math.round(hitP(c)*100)+'% · max hit '+maxHit(c)+(adv(gameState.style,c.type)>0?' · type advantage':adv(gameState.style,c.type)<0?' · type disadvantage':''):'')+' · food '+food+' (eaten below 55% hp)</small>';
+  let h='<div class="arena"><div class="nm"><b>You</b><span id="ph" class="mu"></span></div><div class="bar"><i id="hp"></i></div><small class="mu" id="pty" style="display:block;margin:4px 0">'+partyHp()+'</small><small class="mu">'+gameState.style+(c?' · hit '+Math.round(hitP(c)*100)+'% · max hit '+maxHit(c)+(adv(gameState.style,c.type)>0?' · type advantage':adv(gameState.style,c.type)<0?' · type disadvantage':''):'')+' · food '+food+' (eaten below '+Math.round(eatAt()*100)+'% hp)</small>';
   if(c)h+='<div class="nm" style="margin-top:12px"><b>'+(c.boss?'Boss: ':'')+c.n+'</b><span id="eh" class="mu"></span></div><div class="bar hp"><i id="ehb"></i></div><small class="mu">'+c.type+' · weak to '+weak(c.type)+' · hit '+Math.round(eHitP(c)*100)+'% · max hit '+emax(c)+(c.raid?' · enrages after '+c.soft+' rounds (round '+(gameState.rr||0)+')':'')+'</small>'+dropPanel(c);
   else h+='<p class="mu" style="margin:12px 0 0">Not fighting. Pick an enemy below.</p>';
   return h+'<div id="hits" class="hits"></div></div>';
@@ -146,6 +164,7 @@ export function combatView(){
   h+='<p class="sub">Melee beats Ranged, Ranged beats Magic, Magic beats Melee: counter an enemy for +25% damage.</p>';
   h+='<div class="pick" style="grid-template-columns:repeat(3,1fr)">'+SL.map(s=>'<button class="row'+(st==s?' on':'')+'" data-style="'+s+'">'+s+'<small>'+(gameState.eq[s]?IT[gameState.eq[s]].n:'No weapon')+'</small></button>').join('')+'</div>';
   h+='<h2>Combat stats</h2>'+statTiles();
+  h+=foodRules();
   h+='<h2>Stance <span class="mu" style="display:inline">· where xp goes</span></h2><div class="chips">'+stanceList().map(k=>'<button class="'+(stanceNow()==k?'on':'')+'" data-stance="'+k+'">'+stanceName(k)+'</button>').join('')+'</div><p class="mu">'+stanceNote(stanceNow())+'</p><div class="chips"><button class="'+(gameState.cmd?'on':'')+'" data-cmd="1">Command: '+(gameState.cmd?'on':'off')+'</button></div><p class="mu">Command splits your xp with Leadership. While members fight beside you, your stat xp drops to 60% and Leadership gains 2.4× a kill’s base xp.'+(gameState.cmd&&!fgn.length?' No members are fighting with you, so Command is doing nothing and you keep full xp.':'')+'</p>';
   h+='<h2>Form <span class="mu" style="display:inline">· combat buffs</span></h2><div class="chips">'+Object.keys(FM).map(k=>'<button class="'+(gameState.form==k?'on':'')+'" data-form="'+k+'"'+(cl<FM[k].cl?' disabled':'')+'>'+FM[k].n+(cl<FM[k].cl?' (CL '+FM[k].cl+')':'')+'</button>').join('')+'</div><p class="mu">'+FM[gameState.form].d+'</p>';
   h+='<p class="mu">Fighting beside you: '+(fgn.length?fgn.map(k=>MEMBERS[k].n).join(', '):'no one. Recruit members in the Party tab.')+'</p>';

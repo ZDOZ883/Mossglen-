@@ -44,6 +44,9 @@ document.addEventListener('click',e=>{
   else if(d.style)gameState.style=d.style;
   else if(d.tool)buyTool(d.tool);
   else if(d.stance)gameState.stance=d.stance;
+  else if(d.fmode)gameState.fmode=d.fmode;
+  else if(d.fpick){gameState.fpick=d.fpick;gameState.fmode='pick'}
+  else if(d.eat)gameState.eat=+d.eat;
   else if(d.zone)gameState.zone=+d.zone;
   else if(d.eqc)cycle(d.eqc);
   else if(d.gt)set_gtab(d.gt);

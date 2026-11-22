@@ -1344,3 +1344,24 @@ describe('party hp', () => {
     assert.equal(g.ev(`sicOn()`), false);
   });
 });
+
+describe('food rules', () => {
+  it('modes pick the food they say, one per round', () => {
+    const g = load({ seed: 4 });
+    expectedSetup(g, 5, { members: 0 });
+    g.ev(`gameState.inv.berries=5;gameState.inv.trout=5;gameState.inv.eels=5`);
+    const pick = m => g.ev(`(function(){gameState.fmode='${m}';gameState.fpick='trout';const fk=Object.keys(FOOD).filter(k=>gameState.inv[k]>0).sort((a,b)=>FOOD[a]-FOOD[b]);return pickFood(fk,1,maxhp())})()`);
+    assert.equal(pick('best'), g.ev(`Object.keys(FOOD).filter(k=>gameState.inv[k]>0).sort((a,b)=>FOOD[a]-FOOD[b]).pop()`));
+    assert.equal(pick('worst'), g.ev(`Object.keys(FOOD).filter(k=>gameState.inv[k]>0).sort((a,b)=>FOOD[a]-FOOD[b])[0]`));
+    assert.equal(pick('pick'), 'trout');
+    g.ev(`gameState.inv.trout=0`);
+    assert.notEqual(pick('pick'), 'trout');
+  });
+  it('the food chips render and click', () => {
+    const g = load({ seed: 4 });
+    g.click({ fmode: 'best' });
+    assert.equal(g.ev(`gameState.fmode`), 'best');
+    g.click({ eat: '0.75' });
+    assert.equal(g.ev(`gameState.eat`), 0.75);
+  });
+});

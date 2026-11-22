@@ -1713,6 +1713,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   // src/05-combat.ts
   var combat_exports = {};
   __export(combat_exports, {
+    FMODES: () => FMODES,
     HEAL_IN: () => HEAL_IN,
     arenaView: () => arenaView,
     autoEq: () => autoEq,
@@ -1722,7 +1723,9 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     cycle: () => cycle,
     dropInfo: () => dropInfo,
     dropPanel: () => dropPanel,
+    eatAt: () => eatAt,
     fight: () => fight,
+    foodRules: () => foodRules,
     gainItem: () => gainItem,
     gearPoolHtml: () => gearPoolHtml,
     healers: () => healers,
@@ -1733,6 +1736,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     memRecover: () => memRecover,
     onKill: () => onKill,
     partyHp: () => partyHp,
+    pickFood: () => pickFood,
     price: () => price,
     reqText: () => reqText,
     rndGear: () => rndGear,
@@ -1905,6 +1909,23 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     else loot(e);
   }
   var HEAL_IN = 0.55;
+  var eatAt = () => gameState.eat || 0.55;
+  var FMODES = [["auto", "Auto"], ["best", "Best"], ["worst", "Weakest"], ["pick", "Specific"]];
+  function pickFood(fk, hl, m) {
+    const md = gameState.fmode || "auto";
+    if (md == "best") return fk[fk.length - 1];
+    if (md == "worst") return fk[0];
+    if (md == "pick" && gameState.fpick && gameState.inv[gameState.fpick] > 0) return gameState.fpick;
+    return fk.find((q) => FOOD[q] * hl >= m * 0.15) || fk[fk.length - 1];
+  }
+  function foodRules() {
+    const md = gameState.fmode || "auto", have = Object.keys(FOOD).filter((k) => (gameState.inv[k] || 0) > 0 || gameState.fpick == k).sort((a, b) => FOOD[a] - FOOD[b]);
+    let h = '<h2>Food <span class="mu" style="display:inline">\xB7 one food per round</span></h2><div class="chips">' + FMODES.map((f) => '<button class="' + (md == f[0] ? "on" : "") + '" data-fmode="' + f[0] + '">' + f[1] + "</button>").join("") + "</div>";
+    if (md == "pick") h += have.length ? '<div class="chips">' + have.map((k) => '<button class="' + (gameState.fpick == k ? "on" : "") + '" data-fpick="' + k + '">' + k + " \xD7" + (gameState.inv[k] || 0) + "</button>").join("") + "</div>" : '<p class="mu">You have no food to choose.</p>';
+    h += '<div class="chips">' + [0.35, 0.55, 0.75].map((v) => '<button class="' + (eatAt() == v ? "on" : "") + '" data-eat="' + v + '">Eat below ' + Math.round(v * 100) + "%</button>").join("") + "</div>";
+    const t = { auto: "Auto eats the weakest food that heals at least 15% of your max health, or your best if none does.", best: "Always eats your strongest food.", worst: "Always eats your weakest food.", pick: "Eats the food you choose, and falls back to Auto when you run out." }[md];
+    return h + '<p class="mu">' + t + " Eating is free: you still attack that round.</p>";
+  }
   var memMax = (k) => mhpx(k);
   var memHp = (k) => {
     const g = gameState;
@@ -1973,8 +1994,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       gameState.hrr = Math.max(1, e.hp / Math.max(0.01, hitP(e) * (maxHit(e) + 1) / 2 * (1 + dwf()) + memDpr(e)));
       if (!quiet) set_hits([]);
     }
-    if (gameState.hp < m * 0.55) {
-      const hl = 1 + ef("heal") + cb("heal") + lv(gameState.xp.Cooking) * 4e-3, fk = Object.keys(FOOD).filter((k2) => gameState.inv[k2] > 0).sort((a, b) => FOOD[a] - FOOD[b]), k = fk.find((q) => FOOD[q] * hl >= m * 0.15) || fk[fk.length - 1];
+    if (gameState.hp < m * eatAt()) {
+      const hl = 1 + ef("heal") + cb("heal") + lv(gameState.xp.Cooking) * 4e-3, fk = Object.keys(FOOD).filter((k2) => gameState.inv[k2] > 0).sort((a, b) => FOOD[a] - FOOD[b]), k = pickFood(fk, hl, m);
       if (k) {
         gameState.inv[k]--;
         const h = Math.round(FOOD[k] * hl);
@@ -2074,7 +2095,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   }
   function arenaView() {
     const c = gameState.cur && gameState.cur.k == "c" ? ENEMIES.find((e) => e.id == gameState.cur.id) : null, food = Object.keys(FOOD).reduce((s, k) => s + (gameState.inv[k] || 0), 0);
-    let h = '<div class="arena"><div class="nm"><b>You</b><span id="ph" class="mu"></span></div><div class="bar"><i id="hp"></i></div><small class="mu" id="pty" style="display:block;margin:4px 0">' + partyHp() + '</small><small class="mu">' + gameState.style + (c ? " \xB7 hit " + Math.round(hitP(c) * 100) + "% \xB7 max hit " + maxHit(c) + (adv(gameState.style, c.type) > 0 ? " \xB7 type advantage" : adv(gameState.style, c.type) < 0 ? " \xB7 type disadvantage" : "") : "") + " \xB7 food " + food + " (eaten below 55% hp)</small>";
+    let h = '<div class="arena"><div class="nm"><b>You</b><span id="ph" class="mu"></span></div><div class="bar"><i id="hp"></i></div><small class="mu" id="pty" style="display:block;margin:4px 0">' + partyHp() + '</small><small class="mu">' + gameState.style + (c ? " \xB7 hit " + Math.round(hitP(c) * 100) + "% \xB7 max hit " + maxHit(c) + (adv(gameState.style, c.type) > 0 ? " \xB7 type advantage" : adv(gameState.style, c.type) < 0 ? " \xB7 type disadvantage" : "") : "") + " \xB7 food " + food + " (eaten below " + Math.round(eatAt() * 100) + "% hp)</small>";
     if (c) h += '<div class="nm" style="margin-top:12px"><b>' + (c.boss ? "Boss: " : "") + c.n + '</b><span id="eh" class="mu"></span></div><div class="bar hp"><i id="ehb"></i></div><small class="mu">' + c.type + " \xB7 weak to " + weak(c.type) + " \xB7 hit " + Math.round(eHitP(c) * 100) + "% \xB7 max hit " + emax(c) + (c.raid ? " \xB7 enrages after " + c.soft + " rounds (round " + (gameState.rr || 0) + ")" : "") + "</small>" + dropPanel(c);
     else h += '<p class="mu" style="margin:12px 0 0">Not fighting. Pick an enemy below.</p>';
     return h + '<div id="hits" class="hits"></div></div>';
@@ -2098,6 +2119,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     h += '<p class="sub">Melee beats Ranged, Ranged beats Magic, Magic beats Melee: counter an enemy for +25% damage.</p>';
     h += '<div class="pick" style="grid-template-columns:repeat(3,1fr)">' + SL.map((s) => '<button class="row' + (st == s ? " on" : "") + '" data-style="' + s + '">' + s + "<small>" + (gameState.eq[s] ? IT[gameState.eq[s]].n : "No weapon") + "</small></button>").join("") + "</div>";
     h += "<h2>Combat stats</h2>" + statTiles();
+    h += foodRules();
     h += '<h2>Stance <span class="mu" style="display:inline">\xB7 where xp goes</span></h2><div class="chips">' + stanceList().map((k) => '<button class="' + (stanceNow() == k ? "on" : "") + '" data-stance="' + k + '">' + stanceName(k) + "</button>").join("") + '</div><p class="mu">' + stanceNote(stanceNow()) + '</p><div class="chips"><button class="' + (gameState.cmd ? "on" : "") + '" data-cmd="1">Command: ' + (gameState.cmd ? "on" : "off") + '</button></div><p class="mu">Command splits your xp with Leadership. While members fight beside you, your stat xp drops to 60% and Leadership gains 2.4\xD7 a kill\u2019s base xp.' + (gameState.cmd && !fgn.length ? " No members are fighting with you, so Command is doing nothing and you keep full xp." : "") + "</p>";
     h += '<h2>Form <span class="mu" style="display:inline">\xB7 combat buffs</span></h2><div class="chips">' + Object.keys(FM).map((k) => '<button class="' + (gameState.form == k ? "on" : "") + '" data-form="' + k + '"' + (cl2 < FM[k].cl ? " disabled" : "") + ">" + FM[k].n + (cl2 < FM[k].cl ? " (CL " + FM[k].cl + ")" : "") + "</button>").join("") + '</div><p class="mu">' + FM[gameState.form].d + "</p>";
     h += '<p class="mu">Fighting beside you: ' + (fgn.length ? fgn.map((k) => MEMBERS[k].n).join(", ") : "no one. Recruit members in the Party tab.") + "</p>";
@@ -4154,6 +4176,11 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     } else if (d.style) gameState.style = d.style;
     else if (d.tool) buyTool(d.tool);
     else if (d.stance) gameState.stance = d.stance;
+    else if (d.fmode) gameState.fmode = d.fmode;
+    else if (d.fpick) {
+      gameState.fpick = d.fpick;
+      gameState.fmode = "pick";
+    } else if (d.eat) gameState.eat = +d.eat;
     else if (d.zone) gameState.zone = +d.zone;
     else if (d.eqc) cycle(d.eqc);
     else if (d.gt) set_gtab(d.gt);
