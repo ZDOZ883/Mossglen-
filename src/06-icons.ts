@@ -1,6 +1,11 @@
+import { X } from './registry';
+import { IT, SL } from './01-species-pets';
+import { gearSync, qrank, skey } from './02-gear-data';
+import { is2h, offIt } from './04-loadout';
+import { canEq, istat, reqText } from './05-combat';
 // Hand-drawn SVG icons. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- hand-drawn fantasy icons (32x32, line art)
-const ICN:Record<string,string>={
+export const ICN:Record<string,string>={
 sword:'<path class="f" d="M23 5H27V9L13 23L9 19Z"/><path d="M7 17L15 25"/><path d="M10 22L5.5 26.5"/><circle cx="4.5" cy="27.5" r="1.6" class="f"/>',
 axe:'<path d="M6 27L23 10"/><path class="f" d="M17 4Q29 5 28 17Q22 15 14 11Z"/><path d="M5 28l2-2"/>',
 dagger:'<path class="f" d="M22 6L26 10L16 20L12 16Z"/><path d="M9 14L18 23"/><path d="M12 19L7 24"/><circle cx="6" cy="25" r="1.5" class="f"/>',
@@ -24,8 +29,8 @@ paw:'<ellipse cx="16" cy="21" rx="6.5" ry="5.5" class="f"/><circle cx="7.5" cy="
 lantern:'<path d="M12.5 6Q16 1.5 19.5 6"/><path d="M10.5 8H21.5"/><path class="f" d="M12 8V23H20V8Z"/><path d="M16 11Q19.5 15 16 19Q12.5 15 16 11"/><path d="M9.5 26H22.5"/>',
 burrow:'<path class="f" d="M3 27Q3 7 16 7Q29 7 29 27Z"/><path d="M12 27V19Q12 14 16 14Q20 14 20 19V27"/><path d="M8 11Q10 9 12 8.5"/>',
 satchel:'<path class="f" d="M7 12H25V27H7Z"/><path d="M7 12Q16 21 25 12"/><path d="M12 12V8Q16 3 20 8V12"/><circle cx="16" cy="19" r="1.4"/>'};
-const icon=(n:string,z?:number)=>'<svg class="ico" viewBox="0 0 32 32" width="'+(z||34)+'" height="'+(z||34)+'" aria-hidden="true">'+(ICN[n]||'')+'</svg>';
-function iconOf(it:Item){
+export const icon=(n:string,z?:number)=>'<svg class="ico" viewBox="0 0 32 32" width="'+(z||34)+'" height="'+(z||34)+'" aria-hidden="true">'+(ICN[n]||'')+'</svg>';
+export function iconOf(it:Item){
   if(!it)return 'shield';
   const sl=it.slot;
   if(sl=='Melee')return it.kind=='2h'?'axe':'sword';
@@ -34,35 +39,38 @@ function iconOf(it:Item){
   if(sl=='off')return it.kind=='shield'?'shield':it.st=='Melee'?'dagger':it.st=='Ranged'?'crossbow':'tome';
   return {head:'helm',body:'chest',legs:'legs',neck:'amulet',ring:'ring',cloak:'cape',trinket:'charm'}[sl]||'charm';
 }
-const SLIC:Record<string,string>={Melee:'sword',Ranged:'shortbow',Magic:'wand',head:'helm',body:'chest',legs:'legs',neck:'amulet',ring1:'ring',ring2:'ring',trinket:'charm',off:'shield',cape:'cape'};
-let gtab='eq',gsel:any=null;
-const SLI:Record<string,string[]>={off:['🛡️','Off-hand'],Melee:['🗡️','Melee'],Ranged:['🏹','Ranged'],Magic:['🪄','Magic'],head:['⛑️','Helm'],body:['🦺','Chest'],legs:['👖','Legs'],neck:['📿','Necklace'],ring1:['💍','Ring'],ring2:['💍','Ring'],trinket:['🔮','Trinket'],cape:['🧣','Cape']};
-const grade=(it:Item)=>it.slot=='trinket'?['u','Unique']:it.q=='d'?['d','Heirloom']:it.q=='s'?['s','Plain']:['c','Crafted'];
-function equipSlot(k:string,id:string){
-  if(!id){S.eq[k]=null}
-  else{if(!S.own[id]||!IT[id]||!canEq(IT[id]))return;
-    if(k=='ring1'&&S.eq.ring2==id)S.eq.ring2=S.eq.ring1||null;
-    if(k=='ring2'&&S.eq.ring1==id)S.eq.ring1=S.eq.ring2||null;
-    S.eq[k]=id}
+export const SLIC:Record<string,string>={Melee:'sword',Ranged:'shortbow',Magic:'wand',head:'helm',body:'chest',legs:'legs',neck:'amulet',ring1:'ring',ring2:'ring',trinket:'charm',off:'shield',cape:'cape'};
+export let gtab='eq',gsel:any=null;
+export const SLI:Record<string,string[]>={off:['🛡️','Off-hand'],Melee:['🗡️','Melee'],Ranged:['🏹','Ranged'],Magic:['🪄','Magic'],head:['⛑️','Helm'],body:['🦺','Chest'],legs:['👖','Legs'],neck:['📿','Necklace'],ring1:['💍','Ring'],ring2:['💍','Ring'],trinket:['🔮','Trinket'],cape:['🧣','Cape']};
+export const grade=(it:Item)=>it.slot=='trinket'?['u','Unique']:it.q=='d'?['d','Heirloom']:it.q=='s'?['s','Plain']:['c','Crafted'];
+export function equipSlot(k:string,id:string){
+  if(!id){X.S.eq[k]=null}
+  else{if(!X.S.own[id]||!IT[id]||!canEq(IT[id]))return;
+    if(k=='ring1'&&X.S.eq.ring2==id)X.S.eq.ring2=X.S.eq.ring1||null;
+    if(k=='ring2'&&X.S.eq.ring1==id)X.S.eq.ring1=X.S.eq.ring2||null;
+    X.S.eq[k]=id}
   gearSync();
 }
-function tileHtml(k:string){
+export function tileHtml(k:string){
   const lab=SLI[k][1],w3=false;let ic;
-  if(k=='cape'){const c=S.cape;ic=icon('cape');return '<button class="gt'+(w3?' w3':'')+(c?' q-c':' empty')+'" data-gt="capes"><span class="ic">'+ic+'</span><span class="sl">'+lab+'</span><span class="nm">'+(c?capeLabel(c):'None')+'</span><span class="st">'+(c?'Tap to change':'Skill capes and cloaks')+'</span></button>'}
-  const id=S.eq[k],it=id?IT[id]:null,g=it?grade(it):null;ic=icon(it?iconOf(it):SLIC[k]);
-  return '<button class="gt'+(w3?' w3':'')+(it?' q-'+g![0]:' empty')+(gsel==k?' sel':'')+'" data-gs="'+k+'"><span class="ic">'+ic+'</span><span class="sl">'+lab+(SL.includes(k)&&S.style==k?' · style':'')+(it&&it.kind=='2h'?' · 2H':'')+'</span><span class="nm">'+(it?it.n:'Empty')+'</span>'+(it?'<span class="st">'+(k=='off'&&!offIt()?(is2h()?'Hands full (two-hander)':'Inactive: wrong style'):istat(it))+'</span><span class="badge '+g![0]+'">'+g![1]+'</span>':'<span class="st">Nothing equipped</span>')+'</button>';
+  if(k=='cape'){const c=X.S.cape;ic=icon('cape');return '<button class="gt'+(w3?' w3':'')+(c?' q-c':' empty')+'" data-gt="capes"><span class="ic">'+ic+'</span><span class="sl">'+lab+'</span><span class="nm">'+(c?X.capeLabel(c):'None')+'</span><span class="st">'+(c?'Tap to change':'Skill capes and cloaks')+'</span></button>'}
+  const id=X.S.eq[k],it=id?IT[id]:null,g=it?grade(it):null;ic=icon(it?iconOf(it):SLIC[k]);
+  return '<button class="gt'+(w3?' w3':'')+(it?' q-'+g![0]:' empty')+(gsel==k?' sel':'')+'" data-gs="'+k+'"><span class="ic">'+ic+'</span><span class="sl">'+lab+(SL.includes(k)&&X.S.style==k?' · style':'')+(it&&it.kind=='2h'?' · 2H':'')+'</span><span class="nm">'+(it?it.n:'Empty')+'</span>'+(it?'<span class="st">'+(k=='off'&&!offIt()?(is2h()?'Hands full (two-hander)':'Inactive: wrong style'):istat(it))+'</span><span class="badge '+g![0]+'">'+g![1]+'</span>':'<span class="st">Nothing equipped</span>')+'</button>';
 }
-function pickerHtml(k:string){
-  const ot=k=='ring1'?S.eq.ring2:k=='ring2'?S.eq.ring1:null,cur=S.eq[k];
-  const o=Object.keys(S.own).filter(i=>IT[i]&&IT[i].slot==skey(k)).sort((a,b)=>IT[b].tier-IT[a].tier||qrank(IT[b])-qrank(IT[a])||(IT[a].fam||0)-(IT[b].fam||0));
+export function pickerHtml(k:string){
+  const ot=k=='ring1'?X.S.eq.ring2:k=='ring2'?X.S.eq.ring1:null,cur=X.S.eq[k];
+  const o=Object.keys(X.S.own).filter(i=>IT[i]&&IT[i].slot==skey(k)).sort((a,b)=>IT[b].tier-IT[a].tier||qrank(IT[b])-qrank(IT[a])||(IT[a].fam||0)-(IT[b].fam||0));
   let h='<h2>'+SLI[k][1]+' · choose</h2>';
   if(!o.length)return h+'<p class="mu">You own nothing for this slot yet. Buy Plain gear in the shop, craft better, or find Heirlooms.</p>';
   h+=o.map(i=>{const it=IT[i],g=grade(it),ok=canEq(it),on=cur==i,mv=ot==i;
     return '<div class="row'+(on?' on':'')+'"><span class="ri">'+icon(iconOf(it),30)+'</span><span style="flex:1">'+it.n+' <span class="badge '+g[0]+'">'+g[1]+'</span><small>'+istat(it)+(ok?'':' · needs '+reqText(it))+(mv?' · in your other ring slot':'')+'</small></span>'+(on?'<button class="btn" data-eq="'+k+':">Remove</button>':ok?'<button class="btn" data-eq="'+k+':'+i+'">'+(mv?'Move here':'Equip')+'</button>':'<span class="mu">Locked</span>')+'</div>'}).join('');
   return h;
 }
-function bonusSummary(){
-  const l:any[]=[];['neck','ring1','ring2'].forEach(k=>{const id=S.eq[k];if(id&&IT[id]&&IT[id].fx)IT[id].fx.forEach(e=>l.push([e[0],e[1]]))});
-  if(S.cape){if(S.cape.indexOf('I:')==0){const it=IT[S.cape.slice(2)];if(it&&it.fx)it.fx.forEach(e=>l.push([e[0],e[1]]))}}
-  return l.length?fxTxt(l):'';
+export function bonusSummary(){
+  const l:any[]=[];['neck','ring1','ring2'].forEach(k=>{const id=X.S.eq[k];if(id&&IT[id]&&IT[id].fx)IT[id].fx.forEach(e=>l.push([e[0],e[1]]))});
+  if(X.S.cape){if(X.S.cape.indexOf('I:')==0){const it=IT[X.S.cape.slice(2)];if(it&&it.fx)it.fx.forEach(e=>l.push([e[0],e[1]]))}}
+  return l.length?X.fxTxt(l):'';
 }
+
+export function set_gtab(v:any){gtab=v}
+export function set_gsel(v:any){gsel=v}

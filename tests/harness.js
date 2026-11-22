@@ -61,22 +61,25 @@ function load(opts = {}) {
   vm.createContext(ctx);
   let src = extractScript();
   if (opts.awaySec != null) {
-    src = src.replace(/const away\s*=\s*Math\.min\(Date\.now\(\)\s*-\s*S\.t\s*,[^;]*\);/, 'const away=' + Math.min(opts.awaySec, 8 * 3600) * 1000 + ';');
-    if (!/const away=\d/.test(src)) throw new Error('harness: could not patch offline-away line');
+    src = src.replace(/(?:const|var|let)\s+away\s*=\s*Math\.min\(Date\.now\(\)\s*-\s*S\.t\s*,[^;]*\);/, 'var away=' + Math.min(opts.awaySec, 8 * 3600) * 1000 + ';');
+    if (!/var away=\d/.test(src)) throw new Error('harness: could not patch offline-away line');
   }
+  ctx.__MG_TEST = true;
   vm.runInContext(src, ctx, { filename: 'mossglen.html.js' });
+  // Run code with every game name in scope (reads are live; assignments go through set_* functions).
+  const runIn = vm.runInContext('(function(__c){ with(__mg){ return eval(__c); } })', ctx);
 
   const g = {
     ctx, store, els,
     /** Evaluate an expression or statements inside the game's scope. */
-    ev: code => vm.runInContext(code, ctx),
+    ev: code => runIn(code),
     /** Simulate a click on a button carrying the given data attributes. */
     click(ds) { handlers.click({ target: { closest: () => ({ dataset: ds }) } }); },
     /** The HTML currently rendered into #app. */
     html: () => getEl('app').innerHTML || '',
     /** Render a tab (and optionally a skill page) and return its HTML. */
     view(tab, skill) {
-      vm.runInContext(`tab=${JSON.stringify(tab)};skill=${skill ? JSON.stringify(skill) : 'null'};render()`, ctx);
+      runIn(`tab=${JSON.stringify(tab)};skill=${skill ? JSON.stringify(skill) : 'null'};render()`);
       return getEl('app').innerHTML || '';
     },
     reseed(n) { ctx.Math.random = mulberry32(n); },

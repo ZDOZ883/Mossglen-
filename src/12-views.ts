@@ -1,20 +1,31 @@
+import { CS, FOOD, H, HK, IT, LT, PETS, REQ, SK, SP, SPX, V, lv, nsl, spTxt } from './01-species-pets';
+import { AF, KEEP, KP, RF, RFN, gateOk, refRecipe } from './02-gear-data';
+import { GATE, exFmt, exView, gatesView, hrView, raidView } from './03-world-expeditions';
+import { set_hitsStr } from './04-loadout';
+import { combatView, istat } from './05-combat';
+import { icon } from './06-icons';
+import { A, CR, CSK, DISH, GL, LD, S, asg, bspd, burn, cl, gearView, mspd, power, recipe, skill, slayerView, slots, tab, toolRow, tt, who } from './07-gear-ui';
+import { pm } from './08-party-state';
+import { BRATE, buL, burrowView, wxView } from './09-seasons-burrow';
+import { famShare, logView } from './10-achievements-log';
+import { SKG, actorChips, bars, capeRow, cb, crew, curName, hasWork, isOn, pcx, tile, workNames } from './11-engine';
 // Skills, party and top-level views. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
-function skillsView(){
+export function skillsView(){
   if(skill)return skillPage(skill);
   return wxView()+'<div class="row" style="flex-direction:column;align-items:stretch"><span>'+S.sp+' traits<small>'+spTxt(S.sp)+'</small></span></div><p class="sub">Pick a skill to work on it. Party members can gather, cook and craft while you do something else.</p>'+SKG.map((g:any)=>'<h2>'+g[0]+'</h2><div class="pick">'+g[1].map(tile).join('')+'</div>').join('')+hrView()+gatesView();
 }
-function skillPage(k:string){
+export function skillPage(k:string){
   const body=SK.includes(k)?gatherPage(k):k=='Cooking'?cookPage():CR.includes(k)?craftPage(k):k=='Slayer'?slayerView():leadView();
   return '<p style="margin:0 0 4px"><button class="btn" data-back="1">← Skills</button></p><h2 style="margin-top:8px">'+k+' · level '+lv(S.xp[k])+(SP[S.sp!]==k?' <span class="mu" style="display:inline">(+15% xp)</span>':'')+'</h2><div class="bar xp"><i style="width:'+pcx(k)+'%"></i></div><p class="mu" style="margin:4px 0 0">'+Math.floor(S.xp[k]).toLocaleString()+' xp</p>'+capeRow(k)+body;
 }
-function gatherPage(k:string){
+export function gatherPage(k:string){
   const chips=actorChips(),l=lv(S.xp[k]),sp=who=='you'?1:mspd(who);
   return wxView()+chips+toolRow(k)+A.filter(a=>a.sk==k).map(a=>{
     const gl=!gateOk(a.gate),lock=l<a.lv||gl,on=isOn('s',a.id),sec=Math.round(tt(a)/sp*10)/10;
     return '<button class="row'+(on?' on':'')+'" data-do="s:'+a.id+'"'+(lock?' disabled':'')+'><span>'+a.n+'<small>Yields '+a.item+' · in pack '+(S.inv[a.item]||0)+'</small></span><small>'+(lock?(gl?'Needs '+GATE[a.gate-1].n:'Needs level '+a.lv):sec+'s'+(who=='you'?' · '+a.xp+' xp':''))+crew('s',a.id)+'</small></button>';
   }).join('');
 }
-function cookPage(){
+export function cookPage(){
   const l=lv(S.xp.Cooking);
   let h='<p class="sub">Meals heal far more than raw food, and each Cooking level adds 0.4% healing. Burning gets rarer as you outlevel a recipe.</p>'+actorChips();
   h+=Object.keys(DISH).sort((a,b)=>DISH[a].lv-DISH[b].lv).map(id=>{
@@ -24,11 +35,11 @@ function cookPage(){
   }).join('');
   return h;
 }
-const CGN:Record<string,string>={w0:'Melee weapons',w1:'Ranged weapons',w2:'Magic weapons',x0:'Melee two-handers',x1:'Ranged two-handers',x2:'Magic two-handers',o0:'Melee off-hands',o1:'Ranged off-hands',o2:'Magic off-hands',y:'Shields',b:'Chest armor',h:'Helms',g:'Legs',r:'Rings',n:'Necklaces',c:'Cloaks'};
-const cgOf=(id:string)=>'wxo'.includes(id[0])?id.slice(0,2):id[0];
-const CF:Record<string,any>={g:{},f:{}};
-const famLab=(sl:string)=>AF[sl].map((f:Item)=>f.n.replace(/^(Band|Pendant|Cloak) of (the )?/,''));
-function craftPage(sk:string){
+export const CGN:Record<string,string>={w0:'Melee weapons',w1:'Ranged weapons',w2:'Magic weapons',x0:'Melee two-handers',x1:'Ranged two-handers',x2:'Magic two-handers',o0:'Melee off-hands',o1:'Ranged off-hands',o2:'Magic off-hands',y:'Shields',b:'Chest armor',h:'Helms',g:'Legs',r:'Rings',n:'Necklaces',c:'Cloaks'};
+export const cgOf=(id:string)=>'wxo'.includes(id[0])?id.slice(0,2):id[0];
+export const CF:Record<string,any>={g:{},f:{}};
+export const famLab=(sl:string)=>AF[sl].map((f:Item)=>f.n.replace(/^(Band|Pendant|Cloak) of (the )?/,''));
+export function craftPage(sk:string){
   const l=lv(S.xp[sk]);
   let h='<p class="sub">Turn gathered goods and zone materials into gear. A craft repeats until you run out; spares are sold as scrap.</p>'+actorChips();
   if(RF[sk]){const rl=Object.keys(RFN).filter(id=>RFN[id].sk==sk&&l>=REQ[RFN[id].t-1]);if(rl.length)h+='<h2>Refining</h2><p class="mu">Heavy components for the deepest gear. Slow, costly, and gated.</p>';rl.forEach(id=>{const f=RFN[id],r=refRecipe(id),gl=!gateOk(f.t-7),ok=l>=f.req&&!gl,on=isOn('r',id);h+='<button class="row'+(on?' on':'')+'" data-do="r:'+id+'"'+(ok?'':' disabled')+'><span>'+f.n+'<small>Refined component · in pack '+(S.inv[f.n]||0)+' · '+Object.keys(r).map(k=>k+' '+(S.inv[k]||0)+'/'+(r as any)[k]).join(', ')+'</small></span><small>'+(ok?'':gl?'Needs '+GATE[f.t-8].n:'Level '+f.req)+crew('r',id)+'</small></button>'})}
@@ -43,7 +54,7 @@ function craftPage(sk:string){
   });
   return h;
 }
-function leadView(){
+export function leadView(){
   const l=LD(),n=nsl(),nx=LT.find(t=>t>l),nu=HK.find(k=>H[k].lt==nx);
   return '<p class="sub">Leadership grows when party members work or fight beside you. It opens party slots and speeds up everyone you lead.</p>'+
   '<div class="row"><span>Party slots<small>'+n+' of '+slots()+' used'+(nx?' · next slot at level '+nx+(nu?' ('+H[nu].n+')':''):'')+'</small></span></div>'+
@@ -52,10 +63,10 @@ function leadView(){
   '<div class="row"><span>Fast ways to train<small>Turn on Command in Fight with members beside you, or keep members busy on skills.</small></span></div>'+
   '<p><button class="btn" data-tab="party">Manage party</button></p>';
 }
-const PKN:Record<string,string[]>={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['delves ','% faster'],loot:['+','% delve loot'],succ:['+','% delve odds']};
-function perkTxt(k:string){return Object.keys(H[k].pk).map(n=>{const v=H[k].pk[n]*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),x=n=='succ'?Math.round(v):Math.round(v*100);return PKN[n][0]+x+PKN[n][1]}).join(', ')}
-function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(S.ex?S.ex.dur-S.ex.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+BRATE(buL('bar')).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id!].n:t.k=='f'?'Crafting: '+IT[t.id!].n:t.k=='r'?'Refining: '+RFN[t.id!].n:'Resting. Send them to work from a skill page.'}
-function partyView(){
+export const PKN:Record<string,string[]>={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['delves ','% faster'],loot:['+','% delve loot'],succ:['+','% delve odds']};
+export function perkTxt(k:string){return Object.keys(H[k].pk).map(n=>{const v=H[k].pk[n]*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),x=n=='succ'?Math.round(v):Math.round(v*100);return PKN[n][0]+x+PKN[n][1]}).join(', ')}
+export function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(S.ex?S.ex.dur-S.ex.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+BRATE(buL('bar')).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id!].n:t.k=='f'?'Crafting: '+IT[t.id!].n:t.k=='r'?'Refining: '+RFN[t.id!].n:'Resting. Send them to work from a skill page.'}
+export function partyView(){
   const hs=Object.keys(S.hired),l=LD(),sl=slots();
   let h='<h2>Your party</h2><p class="sub">Leadership '+l+' · '+nsl()+' of '+sl+' slots · members work at '+Math.round(bspd()*100)+'% of your speed. Raise Leadership for more slots and faster work.</p>';
   h+='<p>Party power: <b>'+power()+'</b> <span class="mu" style="display:inline">(half your total levels, plus members fighting with you)</span></p>';
@@ -75,7 +86,7 @@ function partyView(){
   h+='<h2>Pet collection <span class="mu" style="display:inline">· '+Object.keys(S.pets).length+'/'+PETS.length+'</span></h2><p class="mu">Extremely rare drops, found only once each, modelled on RuneScape: skill pets roll about 1 in 100,000 per action (slightly better at higher levels, 15× better at 200M xp), boss pets 1 in 1,000 to 1 in 5,000 per boss kill, raid pets 1 in 80 to 1 in 150 per clear. Skill pets can drop while you or a member trains that skill. Boss pets drop from zone bosses. Raid pets drop when you clear a raid. Pets take a party slot like any member, but fight and work better than the members you can recruit.</p><p class="mu">'+PETS.map(q=>S.pets[q[0]]?'<b>'+q[1]+'</b>':'???').join(' · ')+'</p>';
   return h;
 }
-function view(){
+export function view(){
   if(tab=='burrow')return burrowView();
   if(tab=='log')return logView();
   if(tab=='skills')return skillsView();
@@ -86,8 +97,8 @@ function view(){
   const items=Object.keys(S.inv).filter(k=>S.inv[k]>0),tot=Math.round(items.reduce((s,k)=>s+(KEEP(k)?0:S.inv[k]*V[k]),0)*(1+cb('sell')));
   return '<h2>Pack</h2><p class="sub">Crafting uses gathered goods and zone materials, so sell selectively.</p>'+(items.length?items.map(k=>'<div class="row"><span>'+k+'<small>'+V[k]+' acorns each'+(FOOD[k]?' · heals '+FOOD[k]:KP[k]?' · keepsake':'')+'</small></span><b>×'+S.inv[k]+'</b>'+(KEEP(k)?'':'<button class="btn" data-sellone="'+k+'">Sell</button>')+'</div>').join('')+'<p><button class="btn" data-sell="1">Sell all but food and keepsakes for '+tot+' acorns</button></p>':'<p class="sub">Your pack is empty. Gather something first.</p>');
 }
-function render(){
-  hitsStr=null;
+export function render(){
+  set_hitsStr(null);
   const app=document.getElementById('app');
   if(!S.sp){
     app!.innerHTML='<div class="hero"><span class="leaf">🍃</span><h1>Mossglen</h1></div><p class="sub" style="text-align:center">A quiet valley where small folk work, delve, and nap. Who are you?</p><div class="pick">'+
