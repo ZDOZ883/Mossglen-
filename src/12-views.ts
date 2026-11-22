@@ -13,7 +13,7 @@ import { SKG, actorChips, bars, capeRow, cb, crew, curName, hasWork, isOn, pcx, 
 // Skills, party and top-level views. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 export function skillsView(){
   if(skill)return skillPage(skill);
-  return wxView()+'<div class="row" style="flex-direction:column;align-items:stretch"><span>'+S.sp+' traits<small>'+spTxt(S.sp)+'</small></span></div><p class="sub">Pick a skill to work on it. Party members can gather, cook and craft while you do something else.</p>'+SKG.map((g:any)=>'<h2>'+g[0]+'</h2><div class="pick">'+g[1].map(tile).join('')+'</div>').join('')+hrView()+gatesView();
+  return wxView()+'<details class="chip"><summary><span>'+S.sp+' traits</span><em>tap</em></summary><div class="mu">'+spTxt(S.sp)+'</div></details>'+SKG.map((g:any)=>'<h2>'+g[0]+'</h2><div class="pick">'+g[1].map(tile).join('')+'</div>').join('')+hrView()+gatesView();
 }
 export function skillPage(k:string){
   const body=SK.includes(k)?gatherPage(k):k=='Cooking'?cookPage():CR.includes(k)?craftPage(k):k=='Slayer'?slayerView():leadView();

@@ -90,6 +90,17 @@ nav button.on i{opacity:1}
 .badge{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;padding:1px 8px;border-radius:999px;border:1px solid var(--ln);color:var(--mu);font-family:'Alegreya Sans',system-ui,sans-serif;vertical-align:middle}
 .badge.c{border-color:var(--ok2);color:var(--ok)}
 .badge.d,.badge.u{border-color:var(--ac);background:var(--acbg);color:var(--tx)}
+.chip{border:1px solid var(--ln);background:var(--sf);border-radius:var(--r);padding:9px 14px;margin:0 0 6px}
+.chip summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none;font-size:16px}
+.chip summary::-webkit-details-marker{display:none}
+.chip summary em{color:var(--mu);font-size:14px}
+.chip[open] summary{margin-bottom:6px}
+.chip .mu{font-size:14px}
+.fold>summary{list-style:none;cursor:pointer}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary h2{display:flex;justify-content:space-between;align-items:center}
+.fold>summary h2::after{content:'▸';color:var(--mu);font-size:14px}
+.fold[open]>summary h2::after{content:'▾'}
 .hero{text-align:center;padding:34px 0 8px}
 .hero h1{font-size:44px}
 .hero .leaf{font-size:44px;display:block;margin-bottom:2px}
@@ -558,6 +569,7 @@ nav button.on i{opacity:1}
     EXK: () => EXK,
     GATE: () => GATE,
     HR: () => HR,
+    OPEN: () => OPEN,
     RD: () => RD,
     dvTd: () => dvTd,
     dvTm: () => dvTm,
@@ -573,6 +585,7 @@ nav button.on i{opacity:1}
     exSel: () => exSel,
     exStart: () => exStart,
     exView: () => exView,
+    fold: () => fold,
     gateChecks: () => gateChecks,
     gatesView: () => gatesView,
     hrCount: () => hrCount,
@@ -613,11 +626,13 @@ nav button.on i{opacity:1}
     S.gates[i] = 1;
     say(g.n + " grinds open!" + ZN.filter((z) => z[5] == i).map((z) => " New zone: " + z[0] + ".").join(""));
   }
+  var OPEN = {};
+  var fold = (id, title, body) => '<details class="fold" data-fold="' + id + '"' + (OPEN[id] ? " open" : "") + "><summary><h2>" + title + "</h2></summary>" + body + "</details>";
   function gatesView() {
-    return '<h2>Ancient gates</h2><p class="sub">Past level 99 the valley is sealed. Each gate is a long job: levels, rare goods and a heavy toll. Opening one unlocks deeper gathering, a new zone, craft-only gear, harder raids and food.</p>' + GATE.map((g, j) => {
+    return fold("gates", "Ancient gates", '<p class="sub">Past level 99 the valley is sealed. Each gate is a long job: levels, rare goods and a heavy toll. Opening one unlocks deeper gathering, a new zone, craft-only gear, harder raids and food.</p>' + GATE.map((g, j) => {
       const i = j + 1, open = gateOk(i), ck = gateChecks(i);
       return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + g.n + (open ? ' \xB7 <b class="good">Open</b>' : "") + "<small>" + g.d + "</small></span>" + (open ? "" : "<small>" + ck.map((c) => (c[1] ? "\u2713 " : "\u2717 ") + c[0]).join("<br>") + '</small><div style="margin-top:8px"><button class="btn" data-gate="' + i + '"' + (ck.every((c) => c[1]) ? "" : " disabled") + ">Open the gate</button></div>") + "</div>";
-    }).join("");
+    }).join(""));
   }
   var RD = [
     { id: "r0", n: "The Hollow Warren", cl: 85, gate: 0, party: 2, mlv: 25, lvl: 90, H: 112740, D: 91.3, ref: 1278, rw: 36e3, core: null, tr: "t11", st: [["Warren Sentries", "Melee", 1, 1], ["Burrow Alchemist", "Magic", 1.2, 1.1], ["Tunnel Behemoth", "Melee", 1.6, 1.3], ["Matriarch Brindlemaw", "Ranged", 4, 1.7]] },
@@ -886,10 +901,10 @@ nav button.on i{opacity:1}
     say(r.n + " begins. Gather tier " + (r.tier + 1) + " goods or better, alone or with your party.");
   }
   function hrView() {
-    return '<h2>Harvest raids</h2><p class="sub">A raid for gatherers. Collect a quota from every gathering skill, at or above the stated tier. You and your party members all count. The first clear of each grants a permanent blessing.</p>' + HR.map((r) => {
+    return fold("hr", "Harvest raids", '<p class="sub">A raid for gatherers. Collect a quota from every gathering skill, at or above the stated tier. You and your party members all count. The first clear of each grants a permanent blessing.</p>' + HR.map((r) => {
       const on = S.hr && S.hr.id == r.id, ok = hrOk(r), n = S.hrc[r.id] || 0, it = X.GN.Foraging[r.tier][1];
       return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + r.n + (n ? " \xB7 cleared \xD7" + n : "") + "<small>" + r.q + " from each gathering skill at tier " + (r.tier + 1) + " (" + X.GL[r.tier] + "+) or better. Blessing: " + hrTxt(r) + ".</small></span>" + (on ? "<small>" + GSK.map((k) => k + " " + (S.hr.q[k] || 0) + "/" + r.q).join(" \xB7 ") + "</small>" : ok ? "" : "<small>" + (gateOk(r.gate) ? "" : "\u2717 " + GATE[r.gate - 1].n + " open<br>") + (GSK.every((k) => lv(S.xp[k]) >= X.GL[r.tier]) ? "" : "\u2717 Every gathering skill at " + X.GL[r.tier]) + "</small>") + '<div style="margin-top:8px"><button class="btn" data-hraid="' + r.id + '"' + (ok || on ? "" : " disabled") + ">" + (on ? "Abandon" : "Begin") + "</button></div></div>";
-    }).join("");
+    }).join(""));
   }
   function set_exSel(v) {
     exSel = v;
@@ -2032,7 +2047,8 @@ nav button.on i{opacity:1}
   var wxTxt = (w) => w.fx.map((e) => e[2].map((sk) => sk + " " + (e[1] > 0 ? "+" : "\u2212") + Math.round(Math.abs(e[1]) * 100) + "% " + (e[0] == "burn" ? e[1] > 0 ? "less burning" : "more burning" : { spd: "speed", yld: "double yields", xp: "xp" }[e[0]] || e[0])).join(", ")).join(" \xB7 ");
   function wxView() {
     const w = wxNow(), s0 = wxSlot(), left = Math.max(0, (s0 + 1) * WS * 1e3 - Date.now()), m = Math.ceil(left / 6e4), nx = wxAt(s0 + 1), n2 = wxAt(s0 + 2);
-    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + w.i + " " + w.n + "<small>" + w.d + "</small></span><small>" + wxTxt(w) + "<br>Season ends in " + (m >= 60 ? Math.floor(m / 60) + "h " : "") + m % 60 + "m. Next: " + nx.i + " " + nx.n + ", then " + n2.i + " " + n2.n + ". Combat is never affected.</small></div>";
+    const ends = (m >= 60 ? Math.floor(m / 60) + "h " : "") + m % 60 + "m";
+    return '<details class="chip"><summary><span>' + w.i + " " + w.n + "</span><em>" + ends + '</em></summary><div class="mu">' + w.d + "<br>" + wxTxt(w) + "<br>Next: " + nx.i + " " + nx.n + ", then " + n2.i + " " + n2.n + ". Combat is never affected.</div></details>";
   }
   var CRS = ["Smithing", "Fletching", "Enchanting", "Tailoring"];
   var BUA = [3e3, 25e3, 15e4, 9e5, 5e6], BUQ = [40, 80, 150, 250, 400], BUI = [1, 3, 5, 7, 9];
@@ -2629,7 +2645,7 @@ nav button.on i{opacity:1}
   });
   function skillsView() {
     if (skill) return skillPage(skill);
-    return wxView() + '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + S.sp + " traits<small>" + spTxt(S.sp) + '</small></span></div><p class="sub">Pick a skill to work on it. Party members can gather, cook and craft while you do something else.</p>' + SKG.map((g) => "<h2>" + g[0] + '</h2><div class="pick">' + g[1].map(tile).join("") + "</div>").join("") + hrView() + gatesView();
+    return wxView() + '<details class="chip"><summary><span>' + S.sp + ' traits</span><em>tap</em></summary><div class="mu">' + spTxt(S.sp) + "</div></details>" + SKG.map((g) => "<h2>" + g[0] + '</h2><div class="pick">' + g[1].map(tile).join("") + "</div>").join("") + hrView() + gatesView();
   }
   function skillPage(k) {
     const body = SK.includes(k) ? gatherPage(k) : k == "Cooking" ? cookPage() : CR.includes(k) ? craftPage(k) : k == "Slayer" ? slayerView() : leadView();
@@ -3025,6 +3041,10 @@ nav button.on i{opacity:1}
     if (++sv % 25 == 0) save();
   }, 200);
   render();
+  document.addEventListener("toggle", (e) => {
+    const d = e.target, id = d.dataset && d.dataset.fold;
+    if (id) OPEN[id] = d.open;
+  }, true);
 
   // src/main.ts
   if (globalThis.__MG_TEST) {

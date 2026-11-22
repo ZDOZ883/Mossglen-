@@ -62,6 +62,7 @@ document.addEventListener('click',e=>{
   if(S.auto&&(d.raid||d.hraid||d.task=='fight'||(d.do&&!(who!='you'&&S.hired[who]&&'skfr'.includes(d.do.split(':')[0]))))){if(d.hraid)optimize({kind:'gather',label:'the harvest'});else autoLoad()}
   save();render();
 });
+import { OPEN } from './03-world-expeditions';
 import { migrate } from './13-migrate';
 migrate();
 export const away=Math.min(Date.now()-S.t,8*3600e3);
@@ -75,3 +76,5 @@ setInterval(()=>{
   if(++sv%25==0)save();
 },200);
 render();
+
+document.addEventListener('toggle',(e:Event)=>{const d=e.target as HTMLElement,id=d.dataset&&d.dataset.fold;if(id)OPEN[id]=(d as HTMLDetailsElement).open},true);

@@ -32,7 +32,8 @@ export function wxCheck(){const sl=wxSlot();if(S.wxs!==sl){const first=S.wxs==nu
 export const wxTxt=(w:any)=>w.fx.map((e:Enemy)=>e[2].map((sk:string)=>sk+' '+(e[1]>0?'+':'−')+Math.round(Math.abs(e[1])*100)+'% '+(e[0]=='burn'?(e[1]>0?'less burning':'more burning'):({spd:'speed',yld:'double yields',xp:'xp'} as any)[e[0]]||e[0])).join(', ')).join(' · ');
 export function wxView(){
   const w=wxNow(),s0=wxSlot(),left=Math.max(0,(s0+1)*WS*1000-Date.now()),m=Math.ceil(left/60000),nx=wxAt(s0+1),n2=wxAt(s0+2);
-  return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+w.i+' '+w.n+'<small>'+w.d+'</small></span><small>'+wxTxt(w)+'<br>Season ends in '+(m>=60?Math.floor(m/60)+'h ':'')+m%60+'m. Next: '+nx.i+' '+nx.n+', then '+n2.i+' '+n2.n+'. Combat is never affected.</small></div>';
+  const ends=(m>=60?Math.floor(m/60)+'h ':'')+m%60+'m';
+  return '<details class="chip"><summary><span>'+w.i+' '+w.n+'</span><em>'+ends+'</em></summary><div class="mu">'+w.d+'<br>'+wxTxt(w)+'<br>Next: '+nx.i+' '+nx.n+', then '+n2.i+' '+n2.n+'. Combat is never affected.</div></details>';
 }
 // ---------- burrow home base
 export const CRS=['Smithing','Fletching','Enchanting','Tailoring'];

@@ -21,9 +21,11 @@ export function openGate(i:number){
   const g=GATE[i-1];Object.keys(g.items).forEach(k=>S.inv[k]-=(g.items as any)[k]);S.a-=g.a;S.gates[i]=1;
   say(g.n+' grinds open!'+ZN.filter(z=>z[5]==i).map(z=>' New zone: '+z[0]+'.').join(''));
 }
+export const OPEN:Record<string,boolean>={};
+export const fold=(id:string,title:string,body:string)=>'<details class="fold" data-fold="'+id+'"'+(OPEN[id]?' open':'')+'><summary><h2>'+title+'</h2></summary>'+body+'</details>';
 export function gatesView(){
-  return '<h2>Ancient gates</h2><p class="sub">Past level 99 the valley is sealed. Each gate is a long job: levels, rare goods and a heavy toll. Opening one unlocks deeper gathering, a new zone, craft-only gear, harder raids and food.</p>'+GATE.map((g,j)=>{const i=j+1,open=gateOk(i),ck=gateChecks(i);
-    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+g.n+(open?' · <b class="good">Open</b>':'')+'<small>'+g.d+'</small></span>'+(open?'':'<small>'+ck.map(c=>(c[1]?'✓ ':'✗ ')+c[0]).join('<br>')+'</small><div style="margin-top:8px"><button class="btn" data-gate="'+i+'"'+(ck.every(c=>c[1])?'':' disabled')+'>Open the gate</button></div>')+'</div>'}).join('');
+  return fold('gates','Ancient gates','<p class="sub">Past level 99 the valley is sealed. Each gate is a long job: levels, rare goods and a heavy toll. Opening one unlocks deeper gathering, a new zone, craft-only gear, harder raids and food.</p>'+GATE.map((g,j)=>{const i=j+1,open=gateOk(i),ck=gateChecks(i);
+    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+g.n+(open?' · <b class="good">Open</b>':'')+'<small>'+g.d+'</small></span>'+(open?'':'<small>'+ck.map(c=>(c[1]?'✓ ':'✗ ')+c[0]).join('<br>')+'</small><div style="margin-top:8px"><button class="btn" data-gate="'+i+'"'+(ck.every(c=>c[1])?'':' disabled')+'>Open the gate</button></div>')+'</div>'}).join(''));
 }
 
 // ---------- combat raids
@@ -163,11 +165,11 @@ export function hrCount(a:any,n:number){
 }
 export function startHR(id:string){const r=HR.find(x=>x.id==id);if(!r||!hrOk(r))return;if(S.hr&&S.hr.id==id){S.hr=null;return}S.hr={id,q:{}};say(r.n+' begins. Gather tier '+(r.tier+1)+' goods or better, alone or with your party.')}
 export function hrView(){
-  return '<h2>Harvest raids</h2><p class="sub">A raid for gatherers. Collect a quota from every gathering skill, at or above the stated tier. You and your party members all count. The first clear of each grants a permanent blessing.</p>'+HR.map(r=>{
+  return fold('hr','Harvest raids','<p class="sub">A raid for gatherers. Collect a quota from every gathering skill, at or above the stated tier. You and your party members all count. The first clear of each grants a permanent blessing.</p>'+HR.map(r=>{
     const on=S.hr&&S.hr.id==r.id,ok=hrOk(r),n=S.hrc[r.id]||0,it=X.GN.Foraging[r.tier][1];
     return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+r.n+(n?' · cleared ×'+n:'')+'<small>'+r.q+' from each gathering skill at tier '+(r.tier+1)+' ('+X.GL[r.tier]+'+) or better. Blessing: '+hrTxt(r)+'.</small></span>'+
     (on?'<small>'+GSK.map(k=>k+' '+(S.hr.q[k]||0)+'/'+r.q).join(' · ')+'</small>':(ok?'':'<small>'+(gateOk(r.gate)?'':'✗ '+GATE[r.gate!-1].n+' open<br>')+(GSK.every(k=>lv(S.xp[k])>=X.GL[r.tier])?'':'✗ Every gathering skill at '+X.GL[r.tier])+'</small>'))+
-    '<div style="margin-top:8px"><button class="btn" data-hraid="'+r.id+'"'+(ok||on?'':' disabled')+'>'+(on?'Abandon':'Begin')+'</button></div></div>'}).join('');
+    '<div style="margin-top:8px"><button class="btn" data-hraid="'+r.id+'"'+(ok||on?'':' disabled')+'>'+(on?'Abandon':'Begin')+'</button></div></div>'}).join(''));
 }
 
 
