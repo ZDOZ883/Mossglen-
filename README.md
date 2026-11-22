@@ -24,5 +24,8 @@ Tests load the built HTML into a sandbox with a seeded RNG, so runs are determin
 
 Note: the save key stays `hollowbrook1` so existing saves keep working after the rename.
 
+## Saves
+Saves carry a version (`S.v`). `ensureDefaults()` in `src/13-migrate.ts` fills missing fields; for changes that are not idempotent, add an entry to `MIGRATIONS` with the next version. Tests cover old, current and newer-than-known saves.
+
 ## Module rules
 Modules may import only from earlier-numbered modules, so load order is safe. When code in an early file must call something defined later, it goes through `X.name` (the registry), which the defining module fills in at load. Adding a new forward call means adding the name to `registry.ts`; typecheck will tell you.

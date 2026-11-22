@@ -61,14 +61,8 @@ document.addEventListener('click',e=>{
   if(S.auto&&(d.raid||d.hraid||d.task=='fight'||(d.do&&!(who!='you'&&S.hired[who]&&'skfr'.includes(d.do.split(':')[0]))))){if(d.hraid)optimize({kind:'gather',label:'the harvest'});else autoLoad()}
   save();render();
 });
-S.mt=S.mt||{};S.ct=S.ct||{};S.cg=S.cg||{};S.cape=S.cape||null;S.gates=S.gates||{};S.rc=S.rc||{};S.hrc=S.hrc||{};S.hr=S.hr||null;S.lo=S.lo||{};S.pets=S.pets||{};S.fam=S.fam||{};S.bu=S.bu||{};S.ex=S.ex||null;if(S.cur&&S.cur.k=='c'&&String(S.cur.id).indexOf('d_')==0){S.cur=null;S.ehp=null}Object.keys(S.mt).forEach(k=>{if(S.mt[k]&&S.mt[k].k=='exp'&&!S.ex)S.mt[k]={k:'war'}});S.sg=S.sg||{};if(!S.mig19&&S.own&&S.eq){S.mig19=1;const b=S.eq.body;if(b&&IT[b]){S.own['g'+IT[b].tier]=1;if(!S.eq.legs)S.eq.legs='g'+IT[b].tier}}S.ach=S.ach||{};S.seen=S.seen||{};if(S.cur&&S.cur.k=='d')S.cur=null;if(!S.autoSet)S.auto=true;S.rr=S.rr||0;clampXp();refreshFx();
-if(!S.form){S.form=S.stance=='agg'?'fury':S.stance=='def'?'bulwark':'steady';if(S.stance=='agg'||S.stance=='def')S.stance='bal'}
-if(S.stance=='ldr'){S.stance='bal';S.cmd=true}
-if(!XS[S.stance])S.stance='bal';
-S.cmd=!!S.cmd;
-if(S.ehp===undefined||!(S.cur&&S.cur.k=='c'))S.ehp=null;
-{const np=Object.keys(S.hired).filter(k=>!H[k].pet).length;if(np>slots())S.xp.Leadership=XT[LT[Math.min(np,LT.length)-1]];const ps=Object.keys(S.hired).filter(k=>H[k].pet);while(Object.keys(S.hired).length>slots()&&ps.length){const k=ps.pop();delete S.hired[k!];delete S.mt[k!]}}
-Object.keys(S.mt).forEach(k=>{if(!S.hired[k])delete S.mt[k];else if(!validTask(S.mt[k]))S.mt[k]={k:'idle'}});
+import { migrate } from './13-migrate';
+migrate();
 export const away=Math.min(Date.now()-S.t,8*3600e3);
 if(S.sp&&(S.cur||hasWork())&&away>20000){const a0=S.a;tick(away/1000,true);say('You were away '+Math.round(away/60000)+' min. Your work carried on.')}
 S.t=Date.now();

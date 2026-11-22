@@ -426,6 +426,26 @@ describe('save and load', () => {
     }
   });
 
+  it('saves carry a version; old saves are upgraded and newer ones are never downgraded', () => {
+    const g = load({ seed: 4, save: OLD_SAVE, awaySec: 0 });
+    assert.equal(g.ev('S.v'), g.ev('SAVE_VERSION'));
+    const future = JSON.parse(OLD_SAVE);
+    future.v = 99;
+    const g2 = load({ seed: 4, save: JSON.stringify(future), awaySec: 0 });
+    assert.equal(g2.ev('S.v'), 99);
+    const fresh = load({ seed: 4 });
+    assert.equal(fresh.ev('S.v'), fresh.ev('SAVE_VERSION'));
+  });
+
+  it('migrations run once, in order, only when the save is older', () => {
+    const g = load({ seed: 4, save: OLD_SAVE, awaySec: 0 });
+    g.ev("MIGRATIONS.push({v:2,run:()=>{S.__ran=(S.__ran||0)+1}},{v:3,run:()=>{S.__ran=(S.__ran||0)+10}})");
+    g.ev('S.v=1;migrate();migrate()');
+    assert.equal(g.ev('S.__ran'), 11);
+    assert.equal(g.ev('S.v'), 3);
+    g.ev('MIGRATIONS.length=0;delete S.__ran');
+  });
+
   it('eight hours offline does not corrupt anything', () => {
     const g = load({ seed: 4, save: OLD_SAVE, awaySec: 8 * 3600 });
     assertSane(g);
