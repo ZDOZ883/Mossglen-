@@ -798,3 +798,36 @@ describe('leadership past 70', () => {
     assert.equal(g.ev("'ex' in S"), false);
   });
 });
+
+describe('economy guards', () => {
+  // Acorns per hour from each source, measured against farming the matching zone with an expected character.
+  function zoneRates(g) {
+    const zr = [];
+    for (let z = 0; z < 11; z++) {
+      expectedSetup(g, z);
+      const r = g.ev(`(function(){const e=E.find(q=>q.id=='z${z}m1');S.style=weak(e.type);const f=fight(e);return [e.a,f.ttk]})()`);
+      zr[z] = r[0] / (r[1] + 1.2) * 3600;
+    }
+    return zr;
+  }
+
+  it('raids pay about what their matching zone does, never far above it', () => {
+    const g = load({ seed: 1 });
+    const zr = zoneRates(g), ks = ['mole', 'hare', 'owl', 'otter', 'badger', 'fox'];
+    [[0, 7, 2, 25], [1, 8, 3, 50], [2, 9, 4, 75], [3, 10, 5, 100]].forEach(([r, z, n, ml]) => {
+      expectedSetup(g, z);
+      const o = g.ev(`(function(){S.hired={};S.mt={};${JSON.stringify(ks.slice(0, n))}.forEach(k=>{S.hired[k]=1;S.mt[k]={k:'war'};S.cx[k]=XT[${ml + 5}]});S.xp.Leadership=XT[75];refreshFx();
+        const rd=RD[${r}];let t=0,a=0;E.filter(e=>e.raid==rd.id).forEach(e=>{S.style=weak(e.type);t+=fight(e).ttk+1.2;a+=e.a});return [t,a+rd.rw*RPAY[rd.id]]})()`);
+      const ratio = (o[1] / o[0] * 3600) / zr[z];
+      assert.ok(ratio < 1.1, `raid ${r} pays ${ratio.toFixed(2)}x its zone`);
+    });
+  });
+
+  it('even a fully boosted expedition earns no more than farming its zone', () => {
+    const g = load({ seed: 1 });
+    const zr = zoneRates(g);
+    g.ev(`S.hired={mole:1,hare:1,owl:1,otter:1,badger:1,fox:1};S.cx={};Object.keys(S.hired).forEach(k=>S.cx[k]=XT[100])`);
+    const out = JSON.parse(g.ev(`JSON.stringify(D.map(d=>{const t=5,dur=exDur(d,t),m=Math.min(1.3,(1+exPk(['owl'],'loot'))*1.25*(1+exLead('mole')/2))*(1+.6*(t-1)),full=Math.round(E.filter(x=>x.dv==d.id&&x.tier==t).reduce((q,x)=>q+x.a,0)*.65*m*(2+dur/7200));return [d.zb,full/(dur/3600)]}))`));
+    out.forEach(([zb, rate]) => assert.ok(rate / zr[zb] <= 1.0, `expedition in zone ${zb} earns ${(rate / zr[zb]).toFixed(2)}x farming`));
+  });
+});

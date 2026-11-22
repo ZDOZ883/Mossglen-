@@ -34,7 +34,9 @@ export const RD:Raid[]=[
 {id:'r1',n:'Thornspire Keep',cl:100,gate:1,party:3,mlv:50,lvl:105,H:310720,D:101.5,ref:2113,rw:150000,core:['Deepwood Core',2],tr:'t12',st:[['Thorn Wardens','Melee',1,1],['Keep Sappers','Ranged',1.1,1.1],['Spire Hexcaller','Magic',1.4,1.2],['Barbfang the Gatekeeper','Melee',1.8,1.4],['Queen Bramblethorn','Ranged',4.5,1.8]]},
 {id:'r2',n:'The Gloamwyrm Lair',cl:110,gate:2,party:4,mlv:75,lvl:115,H:752120,D:195.8,ref:3487,rw:540000,core:['Wyrm Core',2],tr:'t13',st:[['Scale Cultists','Magic',1,1],['Ashen Drakelings','Ranged',1.1,1.1],['Gloam Brood Mother','Melee',1.5,1.25],['Twin Wyrmguards','Melee',1.8,1.4],['Ember Oracle','Magic',2,1.5],['Gloamwyrm Vaerath','Ranged',5,2]]},
 {id:'r3',n:'The Eclipse Citadel',cl:118,gate:3,party:5,mlv:100,lvl:125,H:1842473,D:237.6,ref:5873,rw:1800000,core:['Eclipse Core',3],tr:'t14',st:[['Citadel Vanguard','Melee',1,1],['Dusk Archers','Ranged',1.1,1.1],['Umbral Magi','Magic',1.3,1.25],['Eclipse Knight-Commander','Melee',1.7,1.4],['The Hollow Choir','Magic',1.9,1.5],['Warden of the Last Light','Ranged',2.2,1.6],['The Eclipse Sovereign','Melee',5.5,2.1]]}];
-RD.forEach(r=>r.st.forEach((st:any,j:number)=>{const hp=Math.round(r.H*st[2]);E.push({id:r.id+'s'+j,zone:7,raid:r.id,inst:1,stage:j,lvl:r.lvl,n:st[0],type:st[1],hp,dps:r.D*st[3],soft:Math.round(hp/r.ref),xp:Math.round(hp*XK[10]*.5),a:Math.round(hp*AK[10]*.3),boss:j==r.st.length-1})}));
+// Acorn payout per raid, tuned so a raid earns about what farming its matching zone does (the first raid used to pay well above that).
+export const RPAY:Record<string,number>={r0:.7,r1:.9,r2:1,r3:1};
+RD.forEach(r=>r.st.forEach((st:any,j:number)=>{const hp=Math.round(r.H*st[2]);E.push({id:r.id+'s'+j,zone:7,raid:r.id,inst:1,stage:j,lvl:r.lvl,n:st[0],type:st[1],hp,dps:r.D*st[3],soft:Math.round(hp/r.ref),xp:Math.round(hp*XK[10]*.5),a:Math.round(hp*AK[10]*.3*RPAY[r.id]),boss:j==r.st.length-1})}));
 
 // ---------- delves: short raids with boons
 export const DX:Record<string,Partial<Delve>>={hollow:{cl:10,party:0,mlv:0,zb:1,st:[['Oak Gnawers','Melee'],['Rot Sprites','Magic'],['The Hollow Heart','Magic']]},
@@ -87,8 +89,8 @@ export function exRecall(i:number){const e=exs()[i];if(!e)return;const d=D.find(
 export function exFinish(quiet:any,e:Expedition){
   const d=D.find(x=>x.id==e.id)!,t=e.tier,win=Math.random()<e.odds;
   const bn=e.boon=='fortune'?.25:0,lead=e.leader,scale=e.dur/600;
-  const m=(1+exPk(e.mem,'loot'))*(1+bn)*(1+.6*(t-1))*(1+exLead(lead)/2);
-  const full=Math.round(E.filter(x=>x.dv==d.id&&x.tier==t).reduce((q,x)=>q+x.a,0)*.8*m*(2+e.dur/7200));
+  const m=Math.min(1.3,(1+exPk(e.mem,'loot'))*(1+bn)*(1+exLead(lead)/2))*(1+.6*(t-1));// boosters stack, but cap at +30%
+  const full=Math.round(E.filter(x=>x.dv==d.id&&x.tier==t).reduce((q,x)=>q+x.a,0)*.65*m*(2+e.dur/7200));
   const g=Math.round((win?full:Math.round(full*.25))*(e.par||1));S.a+=g;
   let s=(win?'Expedition to '+d.n+' (tier '+t+') returned in triumph! +':'Expedition to '+d.n+' (tier '+t+') was driven back. +')+g.toLocaleString()+' acorns.';
   if(win){
@@ -137,7 +139,7 @@ export function raidKill(e:Enemy,quiet?:any){
   const r=RD.find(x=>x.id==e.raid)!,n=r.st.length;
   if(e.stage!<n-1){S.cur={k:'c',id:r.id+'s'+(e.stage!+1)};S.ehp=null;say(r.n+': '+e.n+' falls. '+r.st[e.stage!+1][0]+' steps forward.');return}
   S.rc[r.id]=(S.rc[r.id]||0)+1;petRoll('p_r'+RD.indexOf(r),[80,100,120,150][RD.indexOf(r)]);petRoll('p_Leadership',150);
-  const g=Math.round(r.rw*(1+X.ef('gold')+FM[S.form].gold));S.a+=g;let m=r.n+' cleared! +'+g.toLocaleString()+' acorns.';
+  const g=Math.round(r.rw*RPAY[r.id]*(1+X.ef('gold')+FM[S.form].gold));S.a+=g;let m=r.n+' cleared! +'+g.toLocaleString()+' acorns.';
   if(r.core){const q=r.core[1]+(Math.random()<.5?1:0);S.inv[r.core[0]]=(S.inv[r.core[0]]||0)+q;m+=' +'+q+' '+r.core[0]+'.'}
   const k='rt'+r.id;S.pity[k]=(S.pity[k]||0)+1;
   if(Math.random()<(1+X.ef('drop')+X.cb('drop'))*.06||S.pity[k]>=25){S.pity[k]=0;X.gainItem(r.tr)}
