@@ -1198,6 +1198,78 @@ describe('tutorial and item directory', () => {
     g.click({ do: 'c:' + g.ev(`ENEMIES.find(e=>!e.inst&&!e.raid&&e.type=='Magic').id`) });
     assert.equal(g.ev('gameState.style'), 'Magic', 'starting a fight keeps the chosen style');
   });
+  it('skilling outfit pieces give xp and the set bonus follows the weakest piece', () => {
+    const g = load({ seed: 6 });
+    g.ev(`gameState.sp='Badger';gameState.og={};refreshFx()`);
+    const base = {};
+    for (const k of ['xp', 'spd', 'yld', 'save', 'burn']) for (const sk of ['Mining', 'Foraging', 'Cooking']) base[k + sk] = g.ev(`cb('${k}','${sk}')`);
+    const d = (k, sk) => g.ev(`cb('${k}','${sk}')`) - base[k + sk];
+    g.ev(`gameState.og={'Mining:0':3,'Mining:1':3,'Mining:2':3};refreshFx()`);
+    assert.ok(Math.abs(d('xp', 'Mining') - 0.045) < 1e-9, 'three Master pieces give 4.5% xp');
+    assert.equal(g.ev(`outSet('Mining')`), 0, 'three pieces are not a set');
+    assert.ok(Math.abs(d('spd', 'Mining')) < 1e-9);
+    g.ev(`gameState.og['Mining:3']=1;refreshFx()`);
+    assert.equal(g.ev(`outSet('Mining')`), 1, 'one Novice piece holds the set at Novice');
+    assert.ok(Math.abs(d('spd', 'Mining') - 0.03) < 1e-9);
+    assert.ok(Math.abs(d('yld', 'Mining')) < 1e-9, 'Novice set has no yield bonus yet');
+    assert.ok(Math.abs(d('spd', 'Foraging')) < 1e-9, 'it only applies to its own skill');
+    g.ev(`gameState.og['Mining:3']=3;refreshFx()`);
+    assert.equal(g.ev(`outSet('Mining')`), 3);
+    assert.ok(d('yld', 'Mining') > 0 && d('xp', 'Mining') > 0.06);
+    g.ev(`gameState.og={'Cooking:0':3,'Cooking:1':3,'Cooking:2':3,'Cooking:3':3};refreshFx()`);
+    assert.ok(d('burn', 'Cooking') > 0 && d('save', 'Cooking') > 0, 'crafters save materials and burn less');
+  });
+
+  it('outfit drops only roll for missing pieces, favour a chosen skill, and never touch combat', () => {
+    const g = load({ seed: 6 });
+    g.ev(`gameState.sp='Badger'`);
+    const eq0 = g.ev(`JSON.stringify(gameState.eq)+gameState.style`);
+    for (let i = 0; i < 48; i++) g.ev(`outfitGive(1)`);
+    assert.equal(g.ev(`outMissing(1)`), 0, 'every missing piece is found with no wasted drops');
+    const a0 = g.ev('gameState.a');
+    g.ev(`outfitGive(1)`);
+    assert.ok(g.ev('gameState.a') > a0, 'extra drops pay acorns instead');
+    assert.equal(g.ev(`JSON.stringify(gameState.eq)+gameState.style`), eq0, 'combat gear untouched');
+    g.ev(`gameState.og={}`);
+    g.click({ ofocus: 'Alchemy' });
+    assert.equal(g.ev('gameState.ofocus'), 'Alchemy');
+    let hits = 0;
+    for (let i = 0; i < 40; i++) { const k = g.ev(`outfitGive(3)`); if (k && k.startsWith('Alchemy')) hits++; }
+    assert.ok(hits >= 4, 'drops lean toward the favoured skill (' + hits + ')');
+    g.click({ ofocus: '' });
+    assert.equal(g.ev('gameState.ofocus'), null);
+  });
+
+  it('training a skill can turn up its own Novice pieces only', () => {
+    const g = load({ seed: 8 });
+    g.ev(`gameState.sp='Badger';gameState.og={}`);
+    g.ev(`for(let i=0;i<30000;i++)skPet('Mining')`);
+    const mine = g.ev(`outPieces('Mining')`);
+    assert.ok(mine.some(t => t == 1), 'a Mining piece turned up');
+    assert.ok(mine.every(t => t <= 1), 'only Novice pieces come from training');
+    assert.equal(g.ev(`outFound()`), g.ev(`outPieces('Mining').filter(t=>t>0).length`), 'no other skill gets pieces');
+    g.ev(`for(let i=0;i<30000;i++)skPet('Attack')`);
+    assert.equal(g.ev(`outFound()`), g.ev(`outPieces('Mining').filter(t=>t>0).length`), 'combat skills never roll outfit pieces');
+  });
+
+  it('pity guarantees an outfit piece and the Outfits tab, guide and drop panels render clean', () => {
+    const g = load({ seed: 6 });
+    g.ev(`gameState.sp='Badger';gameState.og={};gameState.pity={}`);
+    g.ev(`for(let i=0;i<9;i++)outfitRoll('t',1,0,10)`);
+    assert.equal(g.ev('outFound()'), 0);
+    g.ev(`outfitRoll('t',1,0,10)`);
+    assert.equal(g.ev('outFound()'), 1, 'guaranteed on the 10th try');
+    g.click({ tab: 'gear' }); g.click({ gt: 'out' });
+    const h = g.view('gear');
+    assert.ok(/Skilling outfits/.test(h) && /Foraging/.test(h) && !/undefined|NaN/.test(h));
+    assert.ok(/skilling outfits/.test(g.ev('itemDir()')));
+    for (let i = 0; i < 4; i++) assert.ok(/outfit piece/.test(g.ev(`raidDrops(RD[${i}],${i})`)));
+    assert.ok(/outfit piece/.test(g.ev(`dropInfo(ENEMIES.find(e=>e.boss&&!e.inst&&!e.raid)).join(' ')`)));
+    g.ev(`gameState.og={'Foraging:0':2}`);
+    const code = g.ev(`exportSave()`);
+    assert.ok(g.ev(`importSave(${JSON.stringify(code)})`) !== false);
+    assert.equal(g.ev(`outTier('Foraging',0)`), 2, 'outfits survive a save code');
+  });
   it('existing saves do not get the tour', () => {
     const g = load({ seed: 4 });
     g.ev(`gameState.sp='Badger'`);

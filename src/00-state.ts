@@ -10,6 +10,8 @@ export const say=(m:any)=>{gameState.log.unshift(m);gameState.log=gameState.log.
 // Extension points so new skills plug in without editing every system: task kinds, effect sources, per-tick work, gather hooks.
 export interface TaskKind{sk:string;dur:(c:any)=>number;done:(c:any)=>void;name:(c:any)=>string;valid:(c:any)=>boolean;mdur?:(k:string,t:any)=>number;mact?:(k:string,t:any)=>void;mname?:(t:any)=>string}
 export const TASKS:Record<string,TaskKind>={};
+// Called once per skill action (gathering, crafting, cooking, farming, brewing) with the skill name.
+export const SKACT:((sk:string)=>void)[]=[];
 export const FXSRC:(()=>FxEntry[])[]=[];
 export const TICKS:((dt:number,quiet:any)=>void)[]=[];
 export const GATHERED:((a:any)=>void)[]=[];

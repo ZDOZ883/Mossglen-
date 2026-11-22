@@ -1,6 +1,7 @@
 import { gameState, say, TASKS } from './00-state';
 import { X } from './registry';
 import { COMBAT_SKILLS, DISHES, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, PB, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, KITSIG, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
+import { OUTFIT_SK, OUT_TIERS, outPerkTxt } from './02-outfits';
 import { AF, CE, KEEPX, ZN, dropTier, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
 import { GATE, RD, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
@@ -189,7 +190,9 @@ export function itemDir():string{
   const dl=DISHES.map(d=>{const m=ZN[(d as any).zb];return '<div style="margin-top:6px"><b>'+d.n+'</b> · needs '+d.req+' combat power, '+(m?'also pays '+m[4]+(((d as any).zb>=8)?' and sometimes '+m[6]:''):'')+'<br>Trophy <b>'+d.tr+'</b> from winning expeditions, better with a good leader and Fortune. Tier 4 and 5 runs can also give a piece of gear.</div>'}).join('');
   const rl=RD.map((r,i)=>'<div style="margin-top:6px"><b>'+r.n+'</b> · combat level '+r.cl+', '+r.party+' members of level '+r.mlv+'+<br>'+(r.core?r.core[0]+' ('+r.core[1]+' or '+(r.core[1]+1)+' per clear), ':'')+'trophy <b>'+IT[r.tr].n+'</b> (about 6% per clear, guaranteed by 25), '+PRE[Math.min(10,[7,8,9,10][i])]+' gear (about 1 in 5, guaranteed by 8), and the raid pet.</div>').join('');
   const note='<p style="margin-top:6px">Chances shown are base rates. Rare-drop bonuses from gear, pets, blessings and tasks multiply them, and bad-luck protection guarantees a drop eventually. Gear can also be bought in the Shop and crafted from materials in the Gear tab.</p>';
-  return dens('Item directory · zones',note+zl)+dens('Item directory · delves and expeditions',dl)+dens('Item directory · raids',rl);
+  const od=OUTFIT_SK.map(sk=>'<div style="margin-top:6px"><b>'+sk+'</b>: '+[1,2,3].map(t=>OUT_TIERS[t]+' set, '+outPerkTxt(sk,t)).join('; ')+'</div>').join('');
+  const ol='<p>Four pieces per skill (Cap, Vest, Gloves, Boots), three tiers. Each piece gives a little xp. A full set gives the bonus of its weakest piece. Novice pieces also turn up while you train that skill (about 1 in 1,500 actions). Zone bosses drop Novice pieces in zones 1 to 4, Adept in zones 5 to 8 and Master in the deep zones. Expeditions and raids drop them too (raids give Adept and Master). Drops only roll for pieces you are missing, and you can set the skill they favour in Gear > Outfits.</p>'+od;
+  return dens('Item directory · skilling outfits',ol)+dens('Item directory · zones',note+zl)+dens('Item directory · delves and expeditions',dl)+dens('Item directory · raids',rl);
 }
 export function guideView(){
   const found=(id:string)=>gameState.pets[id]?'✓ ':'';

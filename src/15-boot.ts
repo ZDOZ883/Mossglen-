@@ -47,6 +47,7 @@ document.addEventListener('click',e=>{
   else if(d.zone)gameState.zone=+d.zone;
   else if(d.eqc)cycle(d.eqc);
   else if(d.gt)set_gtab(d.gt);
+  else if(d.ofocus!==undefined)gameState.ofocus=d.ofocus||null;
   else if(d.gs)set_gsel(gsel==d.gs?null:d.gs);
   else if(d.eq!==undefined){const q=d.eq.split(':');equipSlot(q[0],q[1])}
   else if(d.shop)shopBuy(d.shop);

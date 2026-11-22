@@ -1,4 +1,4 @@
-import { gameState, say } from './00-state';
+import { SKACT, gameState, say } from './00-state';
 import { X } from './registry';
 // Species traits and pets. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 export const GATHER_SKILLS=['Foraging','Woodcutting','Fishing','Mining','Hunting'];
@@ -42,7 +42,7 @@ export function gainPet(id:string){
   say('★ Extremely rare! '+MEMBERS[id].n+(joinParty(id)?' has joined your party.':' has joined your roster. Your party is full, so they are resting at home.'));
 }
 export const PB:Record<string,number>={Attack:40000,Strength:40000,Ranged:40000,Magic:40000,Defense:40000,Vitality:40000,Foraging:150000,Woodcutting:160000,Fishing:130000,Mining:250000,Hunting:100000,Cooking:110000,Smithing:90000,Fletching:80000,Enchanting:90000,Tailoring:85000,Farming:95000,Alchemy:90000};
-export function skPet(sk:string){if(typeof sk!='string')return;let r=PB[sk]-25*lv(gameState.xp[sk]);if(gameState.xp[sk]>=2e8)r/=15;petRoll('p_'+sk,r)}
+export function skPet(sk:string){if(typeof sk!='string')return;let r=PB[sk]-25*lv(gameState.xp[sk]);if(gameState.xp[sk]>=2e8)r/=15;petRoll('p_'+sk,r);SKACT.forEach(f=>f(sk))}
 export function petRoll(id:string,rate:number){if(gameState.pets[id])return;if(Math.random()*rate<1+Math.max(0,cb('drop'))+X.ef('drop'))gainPet(id)}
 
 export const DISHES=[

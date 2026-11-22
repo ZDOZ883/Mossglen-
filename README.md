@@ -8,7 +8,7 @@ A woodland idle game. Single-file HTML output, written in TypeScript.
 - `src/main.ts`   entry point; also a test-only hook (`__MG_TEST`) so tests can read and set any name
 - `src/index.html` page shell and CSS
 - `scripts/build.js` transpiles TS (esbuild) and inlines it -> `mossglen.html`
-- `tests/`        harness + 100 tests (data integrity, grips, expeditions, saves, rendering, balance and economy guards, performance)
+- `tests/`        harness + 104 tests (data integrity, grips, expeditions, saves, rendering, balance and economy guards, performance)
 
 ## Commands
 - `npm ci`            install

@@ -140,6 +140,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   __export(state_exports, {
     FXSRC: () => FXSRC,
     GATHERED: () => GATHERED,
+    SKACT: () => SKACT,
     TASKS: () => TASKS,
     TICKS: () => TICKS,
     gameState: () => gameState,
@@ -181,6 +182,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     gameState.log = gameState.log.slice(0, 12);
   };
   var TASKS = {};
+  var SKACT = [];
   var FXSRC = [];
   var TICKS = [];
   var GATHERED = [];
@@ -362,6 +364,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     let r = PB[sk] - 25 * lv(gameState.xp[sk]);
     if (gameState.xp[sk] >= 2e8) r /= 15;
     petRoll("p_" + sk, r);
+    SKACT.forEach((f) => f(sk));
   }
   function petRoll(id, rate) {
     if (gameState.pets[id]) return;
@@ -842,6 +845,122 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     return out;
   }
 
+  // src/02-outfits.ts
+  var outfits_exports = {};
+  __export(outfits_exports, {
+    OUTFIT_SK: () => OUTFIT_SK,
+    OUT_ACT_RATE: () => OUT_ACT_RATE,
+    OUT_DUP: () => OUT_DUP,
+    OUT_GATHER: () => OUT_GATHER,
+    OUT_NOUN: () => OUT_NOUN,
+    OUT_RAID_TIER: () => OUT_RAID_TIER,
+    OUT_SETNAME: () => OUT_SETNAME,
+    OUT_SLOTS: () => OUT_SLOTS,
+    OUT_TIERS: () => OUT_TIERS,
+    OUT_XP: () => OUT_XP,
+    PERK_TXT: () => PERK_TXT,
+    outFound: () => outFound,
+    outKey: () => outKey,
+    outLine: () => outLine,
+    outMissing: () => outMissing,
+    outName: () => outName,
+    outOwned: () => outOwned,
+    outPerkTxt: () => outPerkTxt,
+    outPerks: () => outPerks,
+    outPieces: () => outPieces,
+    outSeek: () => outSeek,
+    outSet: () => outSet,
+    outTier: () => outTier,
+    outXp: () => outXp,
+    outZoneTier: () => outZoneTier,
+    outfitGive: () => outfitGive,
+    outfitRoll: () => outfitRoll
+  });
+  var OUTFIT_SK = ["Foraging", "Woodcutting", "Fishing", "Mining", "Hunting", "Farming", "Cooking", "Smithing", "Fletching", "Enchanting", "Tailoring", "Alchemy"];
+  var OUT_GATHER = ["Foraging", "Woodcutting", "Fishing", "Mining", "Hunting", "Farming"];
+  var OUT_SLOTS = ["Cap", "Vest", "Gloves", "Boots"];
+  var OUT_TIERS = ["", "Novice", "Adept", "Master"];
+  var OUT_NOUN = { Foraging: "Forager", Woodcutting: "Woodcutter", Fishing: "Angler", Mining: "Miner", Hunting: "Hunter", Farming: "Farmer", Cooking: "Cook", Smithing: "Smith", Fletching: "Fletcher", Enchanting: "Enchanter", Tailoring: "Tailor", Alchemy: "Alchemist" };
+  var OUT_XP = [0, 5e-3, 0.01, 0.015];
+  var OUT_DUP = [0, 150, 600, 2e3];
+  var OUT_SETNAME = ["", "Steady Hands", "Bountiful", "Mastery"];
+  var outName = (sk, slot, tier) => OUT_TIERS[tier] + " " + OUT_NOUN[sk] + "\u2019s " + OUT_SLOTS[slot];
+  var outKey = (sk, slot) => sk + ":" + slot;
+  var outOwned = () => gameState.og = gameState.og || {};
+  var outTier = (sk, slot) => outOwned()[outKey(sk, slot)] || 0;
+  var outPieces = (sk) => OUT_SLOTS.map((_, i) => outTier(sk, i));
+  var outSet = (sk) => Math.min(...outPieces(sk));
+  var outXp = (sk) => outPieces(sk).reduce((s, t) => s + OUT_XP[t], 0);
+  var outMissing = (tier) => OUTFIT_SK.reduce((s, sk) => s + OUT_SLOTS.filter((_, i) => outTier(sk, i) < tier).length, 0);
+  var outLine = (tier, chance) => {
+    const m = outMissing(tier), t = OUT_TIERS[tier] + " skilling outfit piece: " + chance + (m ? " (" + m + " pieces still to find)" : "");
+    return m ? t : "<s>" + t + "</s>";
+  };
+  var outFound = () => OUTFIT_SK.reduce((s, sk) => s + outPieces(sk).filter((t) => t > 0).length, 0);
+  function outPerks(sk, tier) {
+    if (tier <= 0) return [];
+    const gather = OUT_GATHER.includes(sk), extra = gather ? "yld" : "save";
+    const p = tier == 1 ? [["spd", 0.03]] : tier == 2 ? [["spd", 0.03], [extra, 0.04]] : [["spd", 0.04], [extra, 0.06], ["xp", 0.03]];
+    if (tier == 3 && sk == "Cooking") p.push(["burn", 0.2]);
+    return p;
+  }
+  var PERK_TXT = {
+    spd: (v) => "+" + Math.round(v * 100) + "% speed",
+    yld: (v) => "+" + Math.round(v * 100) + "% chance of an extra find",
+    save: (v) => "+" + Math.round(v * 100) + "% chance to save materials",
+    xp: (v) => "+" + Math.round(v * 100) + "% xp",
+    burn: (v) => Math.round(v * 100) + "% fewer burnt dishes"
+  };
+  var outPerkTxt = (sk, tier) => outPerks(sk, tier).map(([k, v]) => PERK_TXT[k](v)).join(", ");
+  FXSRC.push(() => {
+    const o = [];
+    OUTFIT_SK.forEach((sk) => {
+      const x = outXp(sk);
+      if (x > 0) o.push({ k: "xp", v: x, sk });
+      outPerks(sk, outSet(sk)).forEach(([k, v]) => o.push({ k, v, sk }));
+    });
+    return o;
+  });
+  function outfitGive(tier, only) {
+    const c = [];
+    OUTFIT_SK.filter((sk2) => !only || sk2 == only).forEach((sk2) => OUT_SLOTS.forEach((_, i2) => {
+      if (outTier(sk2, i2) < tier) c.push([sk2, i2]);
+    }));
+    if (!c.length) {
+      const v = OUT_DUP[tier];
+      gameState.a += v;
+      say("You already have every " + OUT_TIERS[tier] + " outfit piece. This one was sold for " + v + " acorns.");
+      return null;
+    }
+    const fav = gameState.ofocus, fc = fav ? c.filter((q) => q[0] == fav) : [];
+    const pool = fc.length && Math.random() < 0.6 ? fc : c;
+    const [sk, i] = pool[Math.floor(Math.random() * pool.length)];
+    const was = outSet(sk);
+    outOwned()[outKey(sk, i)] = tier;
+    const now = outSet(sk);
+    say("\u2605 Found the " + outName(sk, i, tier) + "." + (now > was ? " Your " + sk + " outfit now gives its " + OUT_TIERS[now] + " set bonus." : ""));
+    X.refreshFx();
+    return outKey(sk, i);
+  }
+  var OUT_ACT_RATE = 1500;
+  SKACT.push((sk) => {
+    if (!OUTFIT_SK.includes(sk) || Math.random() * OUT_ACT_RATE >= 1) return;
+    if (OUT_SLOTS.some((_, i) => outTier(sk, i) < 1)) outfitGive(1, sk);
+  });
+  function outfitRoll(key, tier, p, pity, mult) {
+    const g = gameState;
+    g.pity[key] = (g.pity[key] || 0) + 1;
+    if (Math.random() < p * (mult || 1) || g.pity[key] >= pity) {
+      g.pity[key] = 0;
+      outfitGive(tier);
+    }
+  }
+  var outZoneTier = (z) => z <= 3 ? 1 : z <= 7 ? 2 : 3;
+  var OUT_RAID_TIER = [2, 3, 3, 3];
+  var outSeek = (sk) => {
+    gameState.ofocus = sk;
+  };
+
   // src/03-world-expeditions.ts
   var world_expeditions_exports = {};
   __export(world_expeditions_exports, {
@@ -1052,6 +1171,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       if (t >= 4 && Math.random() < 0.04 * (t - 3) * (1 + cb("drop"))) {
         X.gainItem(X.rndGear(Math.min(10, d.zb)));
       }
+      outfitRoll("oe" + d.id, outZoneTier(d.zb), 0.05 + 0.03 * t, 10, 1 + X.ef("drop") + cb("drop"));
       const prev = gameState.best[d.id] || 0;
       gameState.best[d.id] = Math.max(prev, t);
       if (t > prev && t < 5) say("Tier " + (t + 1) + " of " + d.n + " unlocked.");
@@ -1070,6 +1190,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     if (d.zb >= 8) L.push(m[6] + ": " + Math.round(Math.min(1, 0.2 * t) * 100) + "% chance of 1 on a win.");
     L.push(d.tr + " (trophy): about 40% on a win, higher with a good leader and Fortune.");
     if (t >= 4) L.push("A random " + PRE[Math.min(10, d.zb)] + " gear piece: about " + Math.round(0.04 * (t - 3) * 100) + "% on a win.");
+    L.push(outLine(outZoneTier(d.zb), "about " + Math.round((0.05 + 0.03 * t) * 100) + "% on a win, guaranteed by 10 wins."));
     L.push("XP for every member who goes, and Leadership xp for you. Winning a tier unlocks the next.");
     return '<details class="chip" style="margin:8px 0"><summary><span>Possible drops at tier ' + t + '</span><em>open</em></summary><div class="mu">' + L.map((l) => "<div>\u2022 " + l + "</div>").join("") + "</div></details>";
   }
@@ -1149,6 +1270,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       gameState.pity[hk2] = 0;
       X.gainItem(X.rndGear(Math.min(10, [7, 8, 9, 10][RD.indexOf(r)] + (Math.random() < 0.25 ? 1 : 0))));
     }
+    outfitRoll("or" + r.id, OUT_RAID_TIER[RD.indexOf(r)], 0.25, 6, 1 + X.ef("drop") + cb("drop"));
     say(m);
     const fg = fighters();
     fg.forEach((q) => mxp(q, r.rw * 0.01));
@@ -1162,6 +1284,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     const tg = !!(gameState.col[r.tr] || gameState.own[r.tr]), pk2 = "p_r" + i, pg = !!gameState.pets[pk2];
     L.push((tg ? "<s>" : "") + IT[r.tr].n + (tg ? "</s>" : "") + " (trinket): about 6% per clear, guaranteed by 25 clears.");
     L.push(PRE[Math.min(10, [7, 8, 9, 10][i])] + " gear piece: about 1 in 5 per clear (sometimes one tier higher), guaranteed by 8 clears.");
+    L.push(outLine(OUT_RAID_TIER[i], "about 25% per clear, guaranteed by 6 clears."));
     L.push((pg ? "<s>" : "") + "Raid pet " + PETS[PETS.findIndex((q) => q[0] == pk2)][1] + (pg ? "</s>" : "") + ": 1 in " + [80, 100, 120, 150][i] + " per clear.");
     L.push("Leadership pet: 1 in 150 per clear.");
     L.push("Loot only comes at the end of a full clear. Losing a fight pays nothing.");
@@ -1638,6 +1761,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
         gainItem(rndGear(z));
       }
     }
+    if (e.boss) outfitRoll("obz" + z, outZoneTier(z), 0.1, 40, g);
     if (e.boss) {
       const tk = "z" + z + "t";
       gameState.pity[tk] = (gameState.pity[tk] || 0) + 1;
@@ -1670,6 +1794,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     if (e.boss) {
       const tg = !!(gameState.col["t" + z] || gameState.own["t" + z]), pg = !!gameState.pets["p_z" + z];
       o.push((tg ? "<s>" : "") + IT["t" + z].n + (tg ? "</s>" : "") + " (trinket): about 1 in 12, guaranteed by 60 boss kills.");
+      o.push(outLine(outZoneTier(z), "about 1 in 10, guaranteed by 40 boss kills here."));
       o.push((pg ? "<s>" : "") + "Boss pet" + (pg ? "</s>" : "") + ": 1 in " + (1e3 + 400 * z).toLocaleString() + " per boss kill.");
     }
     o.push("Crossed out means you already have it. Materials and acorns never run out. Rare-drop bonuses from gear, pets, blessings and Slayer tasks raise these chances.");
@@ -2013,6 +2138,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     need: () => need,
     newTask: () => newTask,
     offlineCap: () => offlineCap,
+    outfitsView: () => outfitsView,
     power: () => power,
     recipe: () => recipe,
     scrap: () => scrap,
@@ -2031,8 +2157,19 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     unlockText: () => unlockText,
     who: () => who
   });
+  function outfitsView() {
+    const act = gameState.cur ? X.skOf(gameState.cur) : null, fav = gameState.ofocus || "";
+    let h = '<h2>Skilling outfits</h2><p class="sub">Each skill has a four-piece outfit in three tiers. Every piece adds a little xp. Wear all four and you get a set bonus at the tier of your weakest piece. The best outfit for the skill you train is worn automatically, and your combat gear stays as it was. Novice pieces turn up while you train the skill itself (about 1 in 1,500 actions). Better pieces drop from zone bosses, expeditions and raids.</p>';
+    h += '<p class="mu" style="margin:0 0 4px">Drops lean toward (60%):</p><div class="chips"><button class="' + (fav ? "" : "on") + '" data-ofocus="">Any skill</button>' + OUTFIT_SK.map((s) => '<button class="' + (fav == s ? "on" : "") + '" data-ofocus="' + s + '">' + s + "</button>").join("") + "</div>";
+    h += '<p class="mu">Pieces found: ' + outFound() + " of " + OUTFIT_SK.length * OUT_SLOTS.length + ". Dropping an outfit upgrades a piece you are missing first.</p>";
+    h += OUTFIT_SK.map((sk) => {
+      const p = outPieces(sk), set = outSet(sk), worn = act == sk, nxt = set < 3 ? set + 1 : 0;
+      return '<div class="row' + (worn ? " on" : "") + '" style="flex-direction:column;align-items:stretch"><span>' + sk + (worn ? " \xB7 worn now" : "") + "<small>" + (set ? OUT_TIERS[set] + " set: " + OUT_SETNAME[set] + " \xB7 " + outPerkTxt(sk, set) : "No set bonus yet") + (outXp(sk) > 0 ? " \xB7 pieces +" + Math.round(outXp(sk) * 1e3) / 10 + "% xp" : "") + '</small></span><div class="chips" style="margin:6px 0 0">' + OUT_SLOTS.map((n, i) => '<span class="mu" style="border:1px solid var(--ln);border-radius:999px;padding:2px 10px;font-size:14px;' + (p[i] ? "color:var(--tx);" : "") + '">' + n + " \xB7 " + (p[i] ? OUT_TIERS[p[i]] : "none") + "</span>").join("") + "</div>" + (nxt ? '<small class="mu" style="margin-top:6px">Next, the ' + OUT_TIERS[nxt] + " set" + (set == 0 ? " (needs all four pieces)" : " (upgrade every piece to " + OUT_TIERS[nxt] + ")") + ": " + outPerkTxt(sk, nxt) + ".</small>" : "") + "</div>";
+    }).join("");
+    return h;
+  }
   function gearView() {
-    const tabs = [["eq", "Equipment"], ["shop", "Shop"], ["lo", "Loadout"], ["capes", "Capes"]];
+    const tabs = [["eq", "Equipment"], ["shop", "Shop"], ["lo", "Loadout"], ["capes", "Capes"], ["out", "Outfits"]];
     let h = '<div class="chips" style="margin-top:12px">' + tabs.map((t) => '<button class="' + (gtab == t[0] ? "on" : "") + '" data-gt="' + t[0] + '">' + t[1] + "</button>").join("") + "</div>";
     if (gtab == "eq") {
       const bs = bonusSummary();
@@ -2055,7 +2192,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       h += '<p class="sub">The shop sells Plain starter gear for the first two tiers. Everything better is crafted or found.</p>' + (sh || '<p class="mu">You own everything the shop sells.</p>');
     } else if (gtab == "lo") {
       h += loadoutView();
-    } else h += X.capesView();
+    } else if (gtab == "out") h += outfitsView();
+    else h += X.capesView();
     return h;
   }
   var CR = ["Smithing", "Fletching", "Enchanting", "Tailoring"];
@@ -3417,7 +3555,9 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     }).join("");
     const rl = RD.map((r, i) => '<div style="margin-top:6px"><b>' + r.n + "</b> \xB7 combat level " + r.cl + ", " + r.party + " members of level " + r.mlv + "+<br>" + (r.core ? r.core[0] + " (" + r.core[1] + " or " + (r.core[1] + 1) + " per clear), " : "") + "trophy <b>" + IT[r.tr].n + "</b> (about 6% per clear, guaranteed by 25), " + PRE[Math.min(10, [7, 8, 9, 10][i])] + " gear (about 1 in 5, guaranteed by 8), and the raid pet.</div>").join("");
     const note = '<p style="margin-top:6px">Chances shown are base rates. Rare-drop bonuses from gear, pets, blessings and tasks multiply them, and bad-luck protection guarantees a drop eventually. Gear can also be bought in the Shop and crafted from materials in the Gear tab.</p>';
-    return dens("Item directory \xB7 zones", note + zl) + dens("Item directory \xB7 delves and expeditions", dl) + dens("Item directory \xB7 raids", rl);
+    const od = OUTFIT_SK.map((sk) => '<div style="margin-top:6px"><b>' + sk + "</b>: " + [1, 2, 3].map((t) => OUT_TIERS[t] + " set, " + outPerkTxt(sk, t)).join("; ") + "</div>").join("");
+    const ol = "<p>Four pieces per skill (Cap, Vest, Gloves, Boots), three tiers. Each piece gives a little xp. A full set gives the bonus of its weakest piece. Novice pieces also turn up while you train that skill (about 1 in 1,500 actions). Zone bosses drop Novice pieces in zones 1 to 4, Adept in zones 5 to 8 and Master in the deep zones. Expeditions and raids drop them too (raids give Adept and Master). Drops only roll for pieces you are missing, and you can set the skill they favour in Gear > Outfits.</p>" + od;
+    return dens("Item directory \xB7 skilling outfits", ol) + dens("Item directory \xB7 zones", note + zl) + dens("Item directory \xB7 delves and expeditions", dl) + dens("Item directory \xB7 raids", rl);
   }
   function guideView() {
     const found = (id) => gameState.pets[id] ? "\u2713 " : "";
@@ -3858,6 +3998,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     else if (d.zone) gameState.zone = +d.zone;
     else if (d.eqc) cycle(d.eqc);
     else if (d.gt) set_gtab(d.gt);
+    else if (d.ofocus !== void 0) gameState.ofocus = d.ofocus || null;
     else if (d.gs) set_gsel(gsel == d.gs ? null : d.gs);
     else if (d.eq !== void 0) {
       const q = d.eq.split(":");
@@ -3969,7 +4110,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
 
   // src/main.ts
   if (globalThis.__MG_TEST) {
-    const NS = [state_exports, species_pets_exports, gear_data_exports, world_expeditions_exports, loadout_exports, combat_exports, icons_exports, gear_ui_exports, party_state_exports, seasons_burrow_exports, achievements_log_exports, engine_exports, farm_alchemy_exports, views_exports, migrate_exports, boot_exports];
+    const NS = [state_exports, species_pets_exports, gear_data_exports, outfits_exports, world_expeditions_exports, loadout_exports, combat_exports, icons_exports, gear_ui_exports, party_state_exports, seasons_burrow_exports, achievements_log_exports, engine_exports, farm_alchemy_exports, views_exports, migrate_exports, boot_exports];
     globalThis.__mg = new Proxy({}, {
       has: (_t, k) => typeof k === "string" && NS.some((n) => k in n),
       get: (_t, k) => {

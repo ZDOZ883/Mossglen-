@@ -1,5 +1,6 @@
 import { gameState, say } from './00-state';
 import { X } from './registry';
+import { OUT_RAID_TIER, outLine, outZoneTier, outfitRoll } from './02-outfits';
 import { DISHES, FM, PETS, GL, MEMBERS, IT, T, asg, cb, cl, fighters, known, ldx, lv, maxhp, mxp, petRoll, pm, roster, sigPk } from './01-species-pets';
 import { AK, CTX, D0, ENEMIES, GSK, H0, PRE, PSK, XK, ZN, fxTxt, gateOk } from './02-gear-data';
 // Gates, raids, expeditions, harvest raids. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
@@ -98,6 +99,7 @@ export function exFinish(quiet:any,e:Expedition){
     if(d.zb>=8&&Math.random()<.2*t){const c=ZN[d.zb][6];gameState.inv[c!]=(gameState.inv[c!]||0)+1;s+=' +1 '+c+'.'}
     if(Math.random()<(.4+exLead(lead))*(1+X.ef('drop')+cb('drop'))){gameState.seen[d.tr]=1;gameState.inv[d.tr]=(gameState.inv[d.tr]||0)+1;s+=' Trophy: '+d.tr+'.'}
     if(t>=4&&Math.random()<.04*(t-3)*(1+cb('drop'))){X.gainItem(X.rndGear(Math.min(10,d.zb)))}
+    outfitRoll('oe'+d.id,outZoneTier(d.zb),.05+.03*t,10,1+X.ef('drop')+cb('drop'));
     const prev=gameState.best[d.id]||0;gameState.best[d.id]=Math.max(prev,t);if(t>prev&&t<5)say('Tier '+(t+1)+' of '+d.n+' unlocked.');
   }
   e.mem.forEach(k=>{if(known(k))mxp(k,12*t*scale*(win?1:.4)*(k==lead?1.5:1))});
@@ -110,6 +112,7 @@ export function exDrops(d:Delve,t:number){
   if(d.zb>=8)L.push(m[6]+': '+Math.round(Math.min(1,.2*t)*100)+'% chance of 1 on a win.');
   L.push(d.tr+' (trophy): about 40% on a win, higher with a good leader and Fortune.');
   if(t>=4)L.push('A random '+PRE[Math.min(10,d.zb)]+' gear piece: about '+Math.round(.04*(t-3)*100)+'% on a win.');
+  L.push(outLine(outZoneTier(d.zb),'about '+Math.round((.05+.03*t)*100)+'% on a win, guaranteed by 10 wins.'));
   L.push('XP for every member who goes, and Leadership xp for you. Winning a tier unlocks the next.');
   return '<details class="chip" style="margin:8px 0"><summary><span>Possible drops at tier '+t+'</span><em>open</em></summary><div class="mu">'+L.map(l=>'<div>• '+l+'</div>').join('')+'</div></details>';
 }
@@ -153,6 +156,7 @@ export function raidKill(e:Enemy,quiet?:any){
   const k='rt'+r.id;gameState.pity[k]=(gameState.pity[k]||0)+1;
   if(Math.random()<(1+X.ef('drop')+cb('drop'))*.06||gameState.pity[k]>=25){gameState.pity[k]=0;X.gainItem(r.tr)}
   const hk2='rh'+r.id;gameState.pity[hk2]=(gameState.pity[hk2]||0)+1;if(Math.random()<(1+X.ef('drop')+cb('drop'))*.2||gameState.pity[hk2]>=8){gameState.pity[hk2]=0;X.gainItem(X.rndGear(Math.min(10,[7,8,9,10][RD.indexOf(r)]+(Math.random()<.25?1:0))))}
+  outfitRoll('or'+r.id,OUT_RAID_TIER[RD.indexOf(r)],.25,6,1+X.ef('drop')+cb('drop'));
   say(m);
   const fg=fighters();fg.forEach(q=>mxp(q,r.rw*.01));if(fg.length)ldx(r.rw*.004*fg.length);
   gameState.cur={k:'c',id:r.id+'s0'};gameState.ehp=null;
@@ -163,6 +167,7 @@ export function raidDrops(r:Raid,i:number){
   const tg=!!(gameState.col[r.tr]||gameState.own[r.tr]),pk='p_r'+i,pg=!!gameState.pets[pk];
   L.push((tg?'<s>':'')+IT[r.tr].n+(tg?'</s>':'')+' (trinket): about 6% per clear, guaranteed by 25 clears.');
   L.push(PRE[Math.min(10,[7,8,9,10][i])]+' gear piece: about 1 in 5 per clear (sometimes one tier higher), guaranteed by 8 clears.');
+  L.push(outLine(OUT_RAID_TIER[i],'about 25% per clear, guaranteed by 6 clears.'));
   L.push((pg?'<s>':'')+'Raid pet '+PETS[PETS.findIndex(q=>q[0]==pk)][1]+(pg?'</s>':'')+': 1 in '+[80,100,120,150][i]+' per clear.');
   L.push('Leadership pet: 1 in 150 per clear.');
   L.push('Loot only comes at the end of a full clear. Losing a fight pays nothing.');
