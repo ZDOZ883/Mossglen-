@@ -850,9 +850,12 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   __export(outfits_exports, {
     OUTFIT_SK: () => OUTFIT_SK,
     OUT_ACT_RATE: () => OUT_ACT_RATE,
+    OUT_BOSS: () => OUT_BOSS,
     OUT_DUP: () => OUT_DUP,
+    OUT_EXP: () => OUT_EXP,
     OUT_GATHER: () => OUT_GATHER,
     OUT_NOUN: () => OUT_NOUN,
+    OUT_RAID: () => OUT_RAID,
     OUT_RAID_TIER: () => OUT_RAID_TIER,
     OUT_SETNAME: () => OUT_SETNAME,
     OUT_SLOTS: () => OUT_SLOTS,
@@ -942,7 +945,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     X.refreshFx();
     return outKey(sk, i);
   }
-  var OUT_ACT_RATE = 1500;
+  var OUT_ACT_RATE = 5e3;
+  var OUT_BOSS = [0.04, 100], OUT_EXP = [0.02, 0.01, 25], OUT_RAID = [0.12, 12];
   SKACT.push((sk) => {
     if (!OUTFIT_SK.includes(sk) || Math.random() * OUT_ACT_RATE >= 1) return;
     if (OUT_SLOTS.some((_, i) => outTier(sk, i) < 1)) outfitGive(1, sk);
@@ -1171,7 +1175,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       if (t >= 4 && Math.random() < 0.04 * (t - 3) * (1 + cb("drop"))) {
         X.gainItem(X.rndGear(Math.min(10, d.zb)));
       }
-      outfitRoll("oe" + d.id, outZoneTier(d.zb), 0.05 + 0.03 * t, 10, 1 + X.ef("drop") + cb("drop"));
+      outfitRoll("oe" + d.id, outZoneTier(d.zb), OUT_EXP[0] + OUT_EXP[1] * t, OUT_EXP[2], 1 + X.ef("drop") + cb("drop"));
       const prev = gameState.best[d.id] || 0;
       gameState.best[d.id] = Math.max(prev, t);
       if (t > prev && t < 5) say("Tier " + (t + 1) + " of " + d.n + " unlocked.");
@@ -1190,7 +1194,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     if (d.zb >= 8) L.push(m[6] + ": " + Math.round(Math.min(1, 0.2 * t) * 100) + "% chance of 1 on a win.");
     L.push(d.tr + " (trophy): about 40% on a win, higher with a good leader and Fortune.");
     if (t >= 4) L.push("A random " + PRE[Math.min(10, d.zb)] + " gear piece: about " + Math.round(0.04 * (t - 3) * 100) + "% on a win.");
-    L.push(outLine(outZoneTier(d.zb), "about " + Math.round((0.05 + 0.03 * t) * 100) + "% on a win, guaranteed by 10 wins."));
+    L.push(outLine(outZoneTier(d.zb), "about " + Math.round((OUT_EXP[0] + OUT_EXP[1] * t) * 100) + "% on a win, guaranteed by " + OUT_EXP[2] + " wins."));
     L.push("XP for every member who goes, and Leadership xp for you. Winning a tier unlocks the next.");
     return '<details class="chip" style="margin:8px 0"><summary><span>Possible drops at tier ' + t + '</span><em>open</em></summary><div class="mu">' + L.map((l) => "<div>\u2022 " + l + "</div>").join("") + "</div></details>";
   }
@@ -1270,7 +1274,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       gameState.pity[hk2] = 0;
       X.gainItem(X.rndGear(Math.min(10, [7, 8, 9, 10][RD.indexOf(r)] + (Math.random() < 0.25 ? 1 : 0))));
     }
-    outfitRoll("or" + r.id, OUT_RAID_TIER[RD.indexOf(r)], 0.25, 6, 1 + X.ef("drop") + cb("drop"));
+    outfitRoll("or" + r.id, OUT_RAID_TIER[RD.indexOf(r)], OUT_RAID[0], OUT_RAID[1], 1 + X.ef("drop") + cb("drop"));
     say(m);
     const fg = fighters();
     fg.forEach((q) => mxp(q, r.rw * 0.01));
@@ -1284,7 +1288,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     const tg = !!(gameState.col[r.tr] || gameState.own[r.tr]), pk2 = "p_r" + i, pg = !!gameState.pets[pk2];
     L.push((tg ? "<s>" : "") + IT[r.tr].n + (tg ? "</s>" : "") + " (trinket): about 6% per clear, guaranteed by 25 clears.");
     L.push(PRE[Math.min(10, [7, 8, 9, 10][i])] + " gear piece: about 1 in 5 per clear (sometimes one tier higher), guaranteed by 8 clears.");
-    L.push(outLine(OUT_RAID_TIER[i], "about 25% per clear, guaranteed by 6 clears."));
+    L.push(outLine(OUT_RAID_TIER[i], "about " + Math.round(OUT_RAID[0] * 100) + "% per clear, guaranteed by " + OUT_RAID[1] + " clears."));
     L.push((pg ? "<s>" : "") + "Raid pet " + PETS[PETS.findIndex((q) => q[0] == pk2)][1] + (pg ? "</s>" : "") + ": 1 in " + [80, 100, 120, 150][i] + " per clear.");
     L.push("Leadership pet: 1 in 150 per clear.");
     L.push("Loot only comes at the end of a full clear. Losing a fight pays nothing.");
@@ -1761,7 +1765,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
         gainItem(rndGear(z));
       }
     }
-    if (e.boss) outfitRoll("obz" + z, outZoneTier(z), 0.1, 40, g);
+    if (e.boss) outfitRoll("obz" + z, outZoneTier(z), OUT_BOSS[0], OUT_BOSS[1], g);
     if (e.boss) {
       const tk = "z" + z + "t";
       gameState.pity[tk] = (gameState.pity[tk] || 0) + 1;
@@ -1794,7 +1798,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     if (e.boss) {
       const tg = !!(gameState.col["t" + z] || gameState.own["t" + z]), pg = !!gameState.pets["p_z" + z];
       o.push((tg ? "<s>" : "") + IT["t" + z].n + (tg ? "</s>" : "") + " (trinket): about 1 in 12, guaranteed by 60 boss kills.");
-      o.push(outLine(outZoneTier(z), "about 1 in 10, guaranteed by 40 boss kills here."));
+      o.push(outLine(outZoneTier(z), "about 1 in " + Math.round(1 / OUT_BOSS[0]) + ", guaranteed by " + OUT_BOSS[1] + " boss kills here."));
       o.push((pg ? "<s>" : "") + "Boss pet" + (pg ? "</s>" : "") + ": 1 in " + (1e3 + 400 * z).toLocaleString() + " per boss kill.");
     }
     o.push("Crossed out means you already have it. Materials and acorns never run out. Rare-drop bonuses from gear, pets, blessings and Slayer tasks raise these chances.");
@@ -2159,7 +2163,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   });
   function outfitsView() {
     const act = gameState.cur ? X.skOf(gameState.cur) : null, fav = gameState.ofocus || "";
-    let h = '<h2>Skilling outfits</h2><p class="sub">Each skill has a four-piece outfit in three tiers. Every piece adds a little xp. Wear all four and you get a set bonus at the tier of your weakest piece. The best outfit for the skill you train is worn automatically, and your combat gear stays as it was. Novice pieces turn up while you train the skill itself (about 1 in 1,500 actions). Better pieces drop from zone bosses, expeditions and raids.</p>';
+    let h = '<h2>Skilling outfits</h2><p class="sub">Each skill has a four-piece outfit in three tiers. Every piece adds a little xp. Wear all four and you get a set bonus at the tier of your weakest piece. The best outfit for the skill you train is worn automatically, and your combat gear stays as it was. Novice pieces turn up while you train the skill itself (about 1 in 5,000 actions). Better pieces drop from zone bosses, expeditions and raids.</p>';
     h += '<p class="mu" style="margin:0 0 4px">Drops lean toward (60%):</p><div class="chips"><button class="' + (fav ? "" : "on") + '" data-ofocus="">Any skill</button>' + OUTFIT_SK.map((s) => '<button class="' + (fav == s ? "on" : "") + '" data-ofocus="' + s + '">' + s + "</button>").join("") + "</div>";
     h += '<p class="mu">Pieces found: ' + outFound() + " of " + OUTFIT_SK.length * OUT_SLOTS.length + ". Dropping an outfit upgrades a piece you are missing first.</p>";
     h += OUTFIT_SK.map((sk) => {
@@ -3556,7 +3560,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     const rl = RD.map((r, i) => '<div style="margin-top:6px"><b>' + r.n + "</b> \xB7 combat level " + r.cl + ", " + r.party + " members of level " + r.mlv + "+<br>" + (r.core ? r.core[0] + " (" + r.core[1] + " or " + (r.core[1] + 1) + " per clear), " : "") + "trophy <b>" + IT[r.tr].n + "</b> (about 6% per clear, guaranteed by 25), " + PRE[Math.min(10, [7, 8, 9, 10][i])] + " gear (about 1 in 5, guaranteed by 8), and the raid pet.</div>").join("");
     const note = '<p style="margin-top:6px">Chances shown are base rates. Rare-drop bonuses from gear, pets, blessings and tasks multiply them, and bad-luck protection guarantees a drop eventually. Gear can also be bought in the Shop and crafted from materials in the Gear tab.</p>';
     const od = OUTFIT_SK.map((sk) => '<div style="margin-top:6px"><b>' + sk + "</b>: " + [1, 2, 3].map((t) => OUT_TIERS[t] + " set, " + outPerkTxt(sk, t)).join("; ") + "</div>").join("");
-    const ol = "<p>Four pieces per skill (Cap, Vest, Gloves, Boots), three tiers. Each piece gives a little xp. A full set gives the bonus of its weakest piece. Novice pieces also turn up while you train that skill (about 1 in 1,500 actions). Zone bosses drop Novice pieces in zones 1 to 4, Adept in zones 5 to 8 and Master in the deep zones. Expeditions and raids drop them too (raids give Adept and Master). Drops only roll for pieces you are missing, and you can set the skill they favour in Gear > Outfits.</p>" + od;
+    const ol = "<p>Four pieces per skill (Cap, Vest, Gloves, Boots), three tiers. Each piece gives a little xp. A full set gives the bonus of its weakest piece. Novice pieces also turn up while you train that skill (about 1 in 5,000 actions). Zone bosses drop Novice pieces in zones 1 to 4, Adept in zones 5 to 8 and Master in the deep zones. Expeditions and raids drop them too (raids give Adept and Master). Drops only roll for pieces you are missing, and you can set the skill they favour in Gear > Outfits.</p>" + od;
     return dens("Item directory \xB7 skilling outfits", ol) + dens("Item directory \xB7 zones", note + zl) + dens("Item directory \xB7 delves and expeditions", dl) + dens("Item directory \xB7 raids", rl);
   }
   function guideView() {

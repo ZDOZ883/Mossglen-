@@ -1243,12 +1243,12 @@ describe('tutorial and item directory', () => {
   it('training a skill can turn up its own Novice pieces only', () => {
     const g = load({ seed: 8 });
     g.ev(`gameState.sp='Badger';gameState.og={}`);
-    g.ev(`for(let i=0;i<30000;i++)skPet('Mining')`);
+    g.ev(`for(let i=0;i<120000;i++)skPet('Mining')`);
     const mine = g.ev(`outPieces('Mining')`);
     assert.ok(mine.some(t => t == 1), 'a Mining piece turned up');
     assert.ok(mine.every(t => t <= 1), 'only Novice pieces come from training');
     assert.equal(g.ev(`outFound()`), g.ev(`outPieces('Mining').filter(t=>t>0).length`), 'no other skill gets pieces');
-    g.ev(`for(let i=0;i<30000;i++)skPet('Attack')`);
+    g.ev(`for(let i=0;i<120000;i++)skPet('Attack')`);
     assert.equal(g.ev(`outFound()`), g.ev(`outPieces('Mining').filter(t=>t>0).length`), 'combat skills never roll outfit pieces');
   });
 
