@@ -28,13 +28,13 @@ export function memAct(k:string,t:any){
 Object.defineProperties(X,{validTask:{get:()=>validTask,configurable:true}});
 // Every recruit commands differently, so each has a buff of their own. Level scales it, up to +50% at level 100.
 export const SIC:Record<string,{n:string;fx:[string,number][]}>={
-  mole:{n:'Dig in',fx:[['taken',.03],['hpm',.04]]},
-  hare:{n:'Swift orders',fx:[['pmult',.04],['mspd',.06]]},
+  mole:{n:'Dig in',fx:[['taken',.02],['hpm',.03]]},
+  hare:{n:'Swift orders',fx:[['pmult',.06],['mspd',.06]]},
   owl:{n:'Eagle eye',fx:[['drop',.05],['acc',.03]]},
-  otter:{n:'Field hospital',fx:[['regen',.3],['heal',.06]]},
+  otter:{n:'Field hospital',fx:[['regen',.1],['heal',.04]]},
   badger:{n:'Stand firm',fx:[['ttaken',.07],['hpm',.05]]},
-  fox:{n:'Opening strike',fx:[['crit',.04],['dmgm',.04]]},
-  dormouse:{n:'Well fed',fx:[['heal',.1],['regen',.12]]},
+  fox:{n:'Opening strike',fx:[['crit',.05],['dmgm',.05]]},
+  dormouse:{n:'Well fed',fx:[['heal',.05],['regen',.05]]},
   shrew:{n:'Brewer’s boon',fx:[['pot',.15],['xpm',.04]]},
   magpie:{n:'Spoils of war',fx:[['sell',.05],['drop',.03]]}};
 export const sicBuff=(k:string)=>{const b=SIC[k];if(!b)return null;const s=1+Math.min(1,cl(k)/100)*.5;return{n:b.n,fx:b.fx,s,d:fxTxt(b.fx.map(([q,v])=>[q,v*s]))}};
