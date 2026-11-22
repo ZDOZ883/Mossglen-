@@ -38,9 +38,9 @@ export const AC:Ach[]=[
 ['c3','Scourge of the Valley','Defeat 10,000 foes.',()=>kills()>=10000,300000],
 ['c4','Boss Hunter','Defeat 3 zone bosses.',()=>bossDone()>=3,5000],
 ['c5','Boss Slayer','Defeat every zone boss.',()=>bossDone()>=ZN.length,500000],
-['c6','Delver','Clear any delve.',()=>Object.keys(S.best).some(k=>S.best[k]>=1),2000],
-['c7','Deep Delver','Clear a delve at tier 5.',()=>Object.keys(S.best).some(k=>S.best[k]>=5),100000],
-['c8','Master Delver','Clear every delve at tier 5.',()=>D.every(d=>(S.best[d.id]||0)>=5),2000000],
+['c6','Pathfinder','Clear any expedition.',()=>Object.keys(S.best).some(k=>S.best[k]>=1),2000],
+['c7','Deep Pathfinder','Clear an expedition at tier 5.',()=>Object.keys(S.best).some(k=>S.best[k]>=5),100000],
+['c8','Master Pathfinder','Clear every expedition at tier 5.',()=>D.every(d=>(S.best[d.id]||0)>=5),2000000],
 ['c9','Raider','Clear a raid.',()=>raidClears()>=1,50000],
 ['c10','Citadel Breaker','Clear the Eclipse Citadel.',()=>(S.rc.r3||0)>=1,5000000],
 ['c11','Raid Veteran','Clear raids 25 times.',()=>raidClears()>=25,1000000],
@@ -83,7 +83,7 @@ export function logView(){
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Crafted deep gear · '+cnt(craft)+'<small>'+names(craft)+'</small></span></div>';
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Legs, rings, necklaces, cloaks, two-handers, off-hands and shields · '+nf.length+'/'+nw.length+'<small>'+(nf.length?nf.map(i=>'<b>'+IT[i].n+'</b>').join(' · '):'None yet.')+'</small></span></div>';
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Trinkets · '+cnt(tr)+'<small>'+names(tr)+'</small></span></div>';
-  h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Delve trophies · '+D.filter(d=>S.seen[d.tr]||S.inv[d.tr]).length+'/'+D.length+'<small>'+D.map(d=>(S.seen[d.tr]||S.inv[d.tr])?'<b>'+d.tr+'</b> (best tier '+(S.best[d.id]||0)+')':'???').join(' · ')+'</small></span></div>';
+  h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Expedition trophies · '+D.filter(d=>S.seen[d.tr]||S.inv[d.tr]).length+'/'+D.length+'<small>'+D.map(d=>(S.seen[d.tr]||S.inv[d.tr])?'<b>'+d.tr+'</b> (best tier '+(S.best[d.id]||0)+')':'???').join(' · ')+'</small></span></div>';
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Zone bosses · '+bossDone()+'/'+ZN.length+'<small>'+ZN.map((z,i)=>(S.kc['z'+i+'m3']||0)>0?'<b>'+z[3][3]+'</b> ×'+S.kc['z'+i+'m3']:'???').join(' · ')+'</small></span></div>';
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Raids and harvests<small>'+RD.map(r=>S.rc[r.id]?'<b>'+r.n+'</b> ×'+S.rc[r.id]:'???').join(' · ')+'<br>'+HR.map(r=>S.hrc[r.id]?'<b>'+r.n+'</b> ×'+S.hrc[r.id]:'???').join(' · ')+'</small></span></div>';
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Capes<small>'+Object.keys(X.CE).map(k=>X.capeTier(k)?'<b>'+X.capeName(k,X.capeTier(k))+'</b>':'???').join(' · ')+'<br>'+Object.keys(X.GRP).map(g=>X.grpTier(g)?'<b>'+X.grpName(g,X.grpTier(g))+'</b>':'???').join(' · ')+'</small></span></div>';

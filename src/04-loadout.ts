@@ -56,7 +56,6 @@ export function ctxNow(){
 }
 export function optNow(k:string){
   if(k=='fight'){const e=(S.cur&&S.cur.k=='c'&&E.find(x=>x.id==S.cur.id))||(S.task&&E.find(x=>x.id==S.task.id))||null;optimize({kind:'combat',enemy:e,label:e?e.n:'fighting'})}
-  else if(k=='delve')optimize({kind:'combat',label:'delving'});
   else if(GSK.includes(k))optimize({kind:'gather',sk:k,label:k});
   else if(PSK.includes(k))optimize({kind:'craft',sk:k,label:k});
 }
@@ -69,8 +68,8 @@ export function loadoutSl(v:string){
 }
 export function loadoutView(){
   let h='<h2>Loadout</h2><p class="sub">Smart loadout equips the best gear you own for a job: weapon and style against the current enemy, armor and trinket by stats, and the cape whose bonuses suit the work.</p>';
-  h+='<div class="chips"><button class="'+(S.auto?'on':'')+'" data-auto="1">Auto-swap: '+(S.auto?'on':'off')+'</button></div><p class="mu">With auto-swap on, starting a fight, delve, raid, harvest, gathering or crafting job re-equips for it.</p>';
-  h+='<p class="mu" style="margin:6px 0 4px">Optimize now for:</p><div class="chips"><button data-opt="fight">Fight</button><button data-opt="delve">Delve</button>'+GSK.concat(PSK).map(k=>'<button data-opt="'+k+'">'+k+'</button>').join('')+'</div>';
+  h+='<div class="chips"><button class="'+(S.auto?'on':'')+'" data-auto="1">Auto-swap: '+(S.auto?'on':'off')+'</button></div><p class="mu">With auto-swap on, starting a fight, raid, harvest, gathering or crafting job re-equips for it.</p>';
+  h+='<p class="mu" style="margin:6px 0 4px">Optimize now for:</p><div class="chips"><button data-opt="fight">Fight</button>'+GSK.concat(PSK).map(k=>'<button data-opt="'+k+'">'+k+'</button>').join('')+'</div>';
   h+=[1,2,3].map(n=>{const l=S.lo[n];return '<div class="row"><span>Saved loadout '+n+'<small>'+(l?l.style+' · '+(l.cape?X.capeLabel(l.cape):'no cape')+' · '+FM[l.form].n:'Empty')+'</small></span><span><button class="btn" data-ls="save:'+n+'">Save</button>'+(l?' <button class="btn" data-ls="load:'+n+'">Load</button>':'')+'</span></div>'}).join('');
   return h;
 }

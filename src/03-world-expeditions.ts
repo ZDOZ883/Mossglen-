@@ -54,6 +54,7 @@ export const EXK=12;
 export const mhpx=(k:string)=>(30+X.cl(k)*10)*(H[k].pet?1.25:1);
 export const exLead=(k:string)=>k?Math.min(.35,.08+X.cl(k)/500):0;
 export function exEligible(d:Delve,k:string){return !!S.hired[k]&&X.asg(k).k!='exp'&&X.cl(k)>=d.mlv}
+export const exPk=(mem:string[],n:string)=>mem.reduce((s,k)=>s+(H[k].pk[n]||0)*(1+(X.cl(k)-1)*.02)*X.pm()*(H[k].pet?1.25:1),0);
 export function exOdds(d:Delve,t:number,lead:any,mem:any,boon:any){
   const all=(lead?[lead]:[]).concat(mem.filter((k:string)=>k!=lead)),need=Math.max(1,d.party);
   const lb=exLead(lead);let dm=1,hm=1,dt=1;
@@ -65,7 +66,7 @@ export function exOdds(d:Delve,t:number,lead:any,mem:any,boon:any){
   const ok=all.length>=need&&X.CL()>=d.cl&&gateOk(d.gate)&&all.every(k=>X.cl(k)>=d.mlv);
   const rho=all.length?PH*1.5/Math.max(1,dmg):0;
   const p=!all.length?0:Math.max(.03,Math.min(.97,.5+.55*(rho-1)));
-  return{p,ok,rho,dur:exDur(d,t),lb,need,n:all.length};
+  return{p:Math.max(.03,Math.min(.97,p+exPk(all,'succ')/100)),ok,rho,dur:Math.round(exDur(d,t)*(1-Math.min(.4,exPk(all,'speed')))),lb,need,n:all.length};
 }
 export function exStart(){
   const d=D.find(x=>x.id==exSel.d);if(!d||S.ex||!exSel.l)return;
@@ -81,7 +82,7 @@ export function exRecall(){const e=S.ex;if(!e)return;const d=D.find(x=>x.id==e.i
 export function exFinish(quiet:any){
   const e=S.ex;if(!e)return;const d=D.find(x=>x.id==e.id)!,t=e.tier,win=Math.random()<e.odds;
   const bn=e.boon=='fortune'?.25:0,lead=e.leader,scale=e.dur/600;
-  const m=(1+X.pk('loot'))*(1+bn)*(1+.6*(t-1))*(1+exLead(lead)/2);
+  const m=(1+exPk(e.mem,'loot'))*(1+bn)*(1+.6*(t-1))*(1+exLead(lead)/2);
   const full=Math.round(E.filter(x=>x.dv==d.id&&x.tier==t).reduce((q,x)=>q+x.a,0)*.8*m*(2+e.dur/7200));
   const g=win?full:Math.round(full*.25);S.a+=g;
   let s=(win?'Expedition to '+d.n+' (tier '+t+') returned in triumph! +':'Expedition to '+d.n+' (tier '+t+') was driven back. +')+g.toLocaleString()+' acorns.';
@@ -102,7 +103,7 @@ export function exView(){
     return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+d!.n+' · tier '+e.tier+'<small>Led by '+H[e.leader].n+' with '+e.mem.filter(k=>k!=e.leader).map(k=>H[k].n.split(" ")[0]).join(', ')+(e.mem.length==1?' (alone)':'')+(e.boon?' · '+EXB[e.boon][0]:'')+'</small></span><small>Odds when they set out: '+Math.round(e.odds*100)+'%. They return in '+exFmt(left)+', and these members are away until then.</small><div class="bar"><i id="exb"></i></div><div style="margin-top:8px"><button class="btn" data-exrecall="1">Recall party</button></div></div>';
   }
   const hs=Object.keys(S.hired);
-  let h='<p class="sub">Send your party into a delve without you. A leader gives the group a bonus. Everyone who goes is away until they return, so they cannot fight, work or train meanwhile. You stay free to do anything else, even while you are offline.</p>';
+  let h='<p class="sub">Send your party on an expedition without you. A leader gives the group a bonus. Everyone who goes is away until they return, so they cannot fight, work or train meanwhile. You stay free to do anything else, even while you are offline.</p>';
   if(!hs.length)return h+'<p class="mu">Recruit a party member in the Party tab first.</p>';
   const sel=exSel.d?D.find(x=>x.id==exSel.d):null;
   h+=D.map(d=>{

@@ -632,3 +632,15 @@ describe('performance budgets', () => {
     assert.ok(g.store.hollowbrook1.length < 100000, 'save is ' + g.store.hollowbrook1.length + ' bytes');
   });
 });
+
+describe('member perks on expeditions', () => {
+  it('hare shortens, otter raises odds, owl adds loot (no dead perks)', () => {
+    const g = load({ seed: 1 });
+    g.ev("S.hired={hare:1,otter:1,owl:1}");
+    const r = g.ev("(()=>{const d=D[0],a=exOdds(d,1,'hare',['hare'],null),b=exOdds(d,1,'hare',['hare','otter'],null);return JSON.stringify({a:a.dur,base:exDur(d,1),pa:a.p,pb:b.p,loot:exPk(['owl'],'loot')})})()");
+    const o = JSON.parse(r);
+    assert.ok(o.a < o.base, 'hare should shorten the trip');
+    assert.ok(o.pb > o.pa, 'otter should raise odds');
+    assert.ok(o.loot > 0, 'owl should add loot');
+  });
+});
