@@ -411,9 +411,15 @@ nav button.on i{opacity:1}
     ACCL: () => ACCL,
     AF: () => AF,
     AK: () => AK,
+    CAPN: () => CAPN,
+    CE: () => CE,
+    CTX: () => CTX,
     D0: () => D0,
     ENEMIES: () => ENEMIES,
+    FXT: () => FXT,
+    GE: () => GE,
     GM: () => GM,
+    GRP: () => GRP,
     GSIG: () => GSIG,
     GSK: () => GSK,
     H0: () => H0,
@@ -429,16 +435,29 @@ nav button.on i{opacity:1}
     PSK: () => PSK,
     RF: () => RF,
     RFN: () => RFN,
+    TNAME: () => TNAME,
     XK: () => XK,
     ZN: () => ZN,
     accScore: () => accScore,
+    capeFx: () => capeFx,
+    capeLabel: () => capeLabel,
+    capeName: () => capeName,
+    capeOk: () => capeOk,
+    capeTier: () => capeTier,
     ctime: () => ctime,
+    cumFx: () => cumFx,
     dropTier: () => dropTier,
     elv: () => elv,
+    fxTxt: () => fxTxt,
     gateOk: () => gateOk,
+    gcumFx: () => gcumFx,
     gearFx: () => gearFx,
     gearSync: () => gearSync,
+    grpName: () => grpName,
+    grpTier: () => grpTier,
+    gw: () => gw,
     itFx: () => itFx,
+    pc: () => pc,
     qrank: () => qrank,
     refRecipe: () => refRecipe,
     refineDone: () => refineDone,
@@ -636,6 +655,89 @@ nav button.on i{opacity:1}
   DISHES.forEach((d) => KP[d.tr] = 1);
   var KEEPX = {};
   var KEEP = (k) => !!FOOD[k] || !!KP[k] || !!KEEPX[k];
+  var CAPN = { Foraging: "Forager", Woodcutting: "Woodsman", Fishing: "Angler", Mining: "Delver", Hunting: "Trapper", Farming: "Gardener", Alchemy: "Alchemist", Cooking: "Cook", Smithing: "Smith", Fletching: "Fletcher", Enchanting: "Enchanter", Tailoring: "Tailor", Attack: "Duelist", Strength: "Brawler", Defense: "Warden", Vitality: "Survivor", Slayer: "Slayer", Leadership: "Commander" };
+  var TNAME = ["", "Skill Cape", "120 Cape", "Sub-master Cape", "Master Cape"];
+  var CE = {
+    Foraging: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["heal", 0.25]]],
+    Woodcutting: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["sell", 0.15]]],
+    Fishing: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["regen", 0.5]]],
+    Mining: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["taken", 0.08]]],
+    Hunting: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["drop", 0.15]]],
+    Cooking: [[["burn", 0.5]], [["xp", 0.1]], [["spd", 0.1]], [["heal", 0.25]]],
+    Smithing: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["dmgm", 0.05]]],
+    Fletching: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["acc", 0.05]]],
+    Enchanting: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["xpm", 0.08]]],
+    Tailoring: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["taken", 0.06]]],
+    Attack: [[["acc", 0.06]], [["xpm", 0.1]], [["crit", 0.08]], [["acc", 0.06]]],
+    Strength: [[["dmgm", 0.08]], [["xpm", 0.1]], [["lsteal", 0.05]], [["dmgm", 0.1]]],
+    Defense: [[["taken", 0.08]], [["xpm", 0.1]], [["ls", 1]], [["taken", 0.08]]],
+    Vitality: [[["hpm", 0.1]], [["xpm", 0.1]], [["regen", 0.5]], [["hpm", 0.1], ["heal", 0.15]]],
+    Slayer: [[["tdmg", 0.1]], [["pts", 0.25]], [["tdrop", 0.15]], [["tdmg", 0.15]]],
+    Farming: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["sell", 0.15]]],
+    Alchemy: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["pot", 0.25]]],
+    Leadership: [[["mspd", 0.15]], [["pmult", 0.15]], [["mspd", 0.15]], [["pmult", 0.15], ["mspd", 0.15]]]
+  };
+  var GRP = { Combat: ["Attack", "Strength", "Defense", "Vitality"], Gathering: GATHER_SKILLS, Production: ["Cooking", "Smithing", "Fletching", "Enchanting", "Tailoring"], Cultivation: ["Farming", "Alchemy"] };
+  var GE = {
+    Combat: [[["xpm", 0.05], ["taken", 0.04]], [["dmgm", 0.05], ["acc", 0.04]], [["crit", 0.05], ["regen", 0.25]], [["dmgm", 0.1], ["taken", 0.1], ["drop", 0.1]]],
+    Gathering: [[["yld", 0.1]], [["xp", 0.05]], [["spd", 0.05]], [["yld", 0.1], ["sell", 0.1]]],
+    Production: [[["save", 0.1]], [["xp", 0.05]], [["spd", 0.05]], [["save", 0.1], ["burn", 0.25], ["sell", 0.1]]],
+    Cultivation: [[["yld", 0.1]], [["xp", 0.05]], [["spd", 0.05]], [["pot", 0.15], ["sell", 0.1]]]
+  };
+  GRP.Max = Object.keys(CE);
+  GE.Max = [[["xp", 0.05], ["xpm", 0.05]], [["yld", 0.05], ["save", 0.05], ["drop", 0.05]], [["spd", 0.05], ["crit", 0.05]], [["xp", 0.1], ["xpm", 0.1], ["sell", 0.1], ["mspd", 0.1]]];
+  var gw = (g) => g == "Max" ? "skill" : g.toLowerCase();
+  var CTX = ["yld", "xp", "spd", "save", "burn"];
+  var pc = (v) => Math.round(v * 100);
+  var FXT = { pot: (v) => "+" + pc(v) + "% potion duration", yld: (v) => pc(v) + "% chance of a double yield", xp: (v) => "+" + pc(v) + "% xp", spd: (v) => pc(v) + "% faster work", save: (v) => pc(v) + "% chance to save materials", burn: (v) => pc(v) + "% less burning", heal: (v) => "+" + pc(v) + "% food healing", sell: (v) => "+" + pc(v) + "% acorns from sales", drop: (v) => "+" + pc(v) + "% rare drops", regen: (v) => "+" + pc(v) + "% health regeneration", taken: (v) => "\u2212" + pc(v) + "% damage taken", acc: (v) => "+" + pc(v) + "% hit chance", dmgm: (v) => "+" + pc(v) + "% max hit", crit: (v) => pc(v) + "% chance to hit twice as hard", lsteal: (v) => "heal " + pc(v) + "% of damage dealt", ls: (v) => "survive one lethal hit per fight", hpm: (v) => "+" + pc(v) + "% max health", xpm: (v) => "+" + pc(v) + "% combat xp", ttaken: (v) => "\u2212" + pc(v) + "% damage taken on task", txp: (v) => "+" + pc(v) + "% Slayer xp", tdmg: (v) => "+" + pc(v) + "% damage on Slayer tasks", tdrop: (v) => "+" + pc(v) + "% rare drops on task", pts: (v) => "+" + pc(v) + "% slayer points", mspd: (v) => "+" + pc(v) + "% member work speed", pmult: (v) => "+" + pc(v) + "% member perks" };
+  var fxTxt = (arr) => {
+    const m = {}, o = [];
+    arr.forEach((e) => {
+      if (!(e[0] in m)) {
+        m[e[0]] = 0;
+        o.push(e[0]);
+      }
+      m[e[0]] += e[1];
+    });
+    return o.map((k) => FXT[k](m[k])).join(", ");
+  };
+  var cumFx = (k, t) => {
+    let a = [];
+    for (let i = 0; i < t; i++) a = a.concat(CE[k][i]);
+    return fxTxt(a);
+  };
+  var gcumFx = (g, t) => {
+    let a = [];
+    for (let i = 0; i < t; i++) a = a.concat(GE[g][i]);
+    return fxTxt(a);
+  };
+  var capeTier = (k) => {
+    const x = gameState.xp[k], l = lv(x);
+    return x >= 2e8 ? 4 : x >= 15e7 ? 3 : l >= 120 ? 2 : l >= 99 ? 1 : 0;
+  };
+  var grpTier = (g) => Math.min.apply(null, GRP[g].map(capeTier));
+  var capeName = (k, t) => CAPN[k] + "\u2019s " + TNAME[t];
+  var grpName = (g, t) => g + " " + (t == 1 ? "Cape" : TNAME[t]);
+  var capeLabel = (id) => id.indexOf("I:") == 0 ? IT[id.slice(2)].n : id.indexOf("G:") == 0 ? grpName(id.slice(2), grpTier(id.slice(2))) : capeName(id, capeTier(id));
+  var capeOk = (id) => id.indexOf("I:") == 0 ? !!IT[id.slice(2)] && !!gameState.own[id.slice(2)] : id.indexOf("G:") == 0 ? grpTier(id.slice(2)) >= 1 : capeTier(id) >= 1;
+  function capeFx() {
+    const id = gameState.cape, out = [];
+    if (!id) return out;
+    if (id.indexOf("I:") == 0) return itFx(IT[id.slice(2)]);
+    const add = (arr, sk) => arr.forEach((e) => out.push({ k: e[0], v: e[1], sk: CTX.includes(e[0]) ? sk : null }));
+    if (id.indexOf("G:") == 0) {
+      const g = id.slice(2), t = grpTier(g);
+      for (let i = 0; i < t; i++) {
+        GRP[g].forEach((sk) => add(CE[sk][i], sk));
+        add(GE[g][i], "*");
+        if (g == "Max") ["Combat", "Gathering", "Production", "Cultivation"].forEach((q) => add(GE[q][i], "*"));
+      }
+    } else {
+      const t = capeTier(id);
+      for (let i = 0; i < t; i++) add(CE[id][i], id);
+    }
+    return out;
+  }
 
   // src/03-world-expeditions.ts
   var world_expeditions_exports = {};
@@ -954,13 +1056,13 @@ nav button.on i{opacity:1}
     { id: "h3", n: "The Eclipse Reaping", gate: 3, tier: 9, q: 300, fx: [["yld", 0.12], ["spd", 0.1], ["xp", 0.1], ["sell", 0.15]] }
   ];
   var hrOk = (r) => gateOk(r.gate) && GSK.every((k) => lv(gameState.xp[k]) >= GL[r.tier]);
-  var hrTxt = (r) => X.fxTxt(r.fx) + " on every gathering skill";
+  var hrTxt = (r) => fxTxt(r.fx) + " on every gathering skill";
   function hrFx() {
     const o = [];
     HR.forEach((r) => {
       if (!(gameState.hrc && gameState.hrc[r.id])) return;
       r.fx.forEach((e) => {
-        if (X.CTX.includes(e[0])) GSK.forEach((sk) => o.push({ k: e[0], v: e[1], sk }));
+        if (CTX.includes(e[0])) GSK.forEach((sk) => o.push({ k: e[0], v: e[1], sk }));
         else o.push({ k: e[0], v: e[1], sk: null });
       });
     });
@@ -1045,7 +1147,7 @@ nav button.on i{opacity:1}
   function capeScore(id, kind, sk) {
     const s0 = gameState.cape;
     gameState.cape = id;
-    const fx = X.capeFx();
+    const fx = capeFx();
     gameState.cape = s0;
     let v = 0;
     fx.forEach((e) => {
@@ -1062,7 +1164,7 @@ nav button.on i{opacity:1}
     return v;
   }
   function bestCape(kind, sk) {
-    const c = ["G:Max"].concat(Object.keys(X.GRP).filter((g) => g != "Max").map((g) => "G:" + g), Object.keys(X.CE), Object.keys(gameState.own).filter((i) => IT[i] && IT[i].slot == "cloak" && X.canEq(IT[i])).map((i) => "I:" + i)).filter(X.capeOk);
+    const c = ["G:Max"].concat(Object.keys(GRP).filter((g) => g != "Max").map((g) => "G:" + g), Object.keys(CE), Object.keys(gameState.own).filter((i) => IT[i] && IT[i].slot == "cloak" && X.canEq(IT[i])).map((i) => "I:" + i)).filter(capeOk);
     let b = null, bs = 0;
     c.forEach((id) => {
       const v = capeScore(id, kind, sk);
@@ -1152,7 +1254,7 @@ nav button.on i{opacity:1}
     if (cp && cp != gameState.cape) {
       gameState.cape = cp;
       X.refreshFx();
-      out.push(X.capeLabel(cp));
+      out.push(capeLabel(cp));
     }
     say(out.length ? "Loadout for " + c.label + ": " + out.join(", ") + "." : "Your loadout for " + c.label + " is already the best you own.");
   }
@@ -1191,7 +1293,7 @@ nav button.on i{opacity:1}
         if (!id) gameState.eq[k] = null;
         else if (gameState.own[id] && X.canEq(IT[id])) gameState.eq[k] = id;
       });
-      if (l.cape === null || X.capeOk(l.cape)) gameState.cape = l.cape;
+      if (l.cape === null || capeOk(l.cape)) gameState.cape = l.cape;
       gameState.style = l.style;
       if (FM[l.form] && CL() >= FM[l.form].cl) gameState.form = l.form;
       if (XS[l.stance]) gameState.stance = l.stance;
@@ -1206,7 +1308,7 @@ nav button.on i{opacity:1}
     h += '<p class="mu" style="margin:6px 0 4px">Optimize now for:</p><div class="chips"><button data-opt="fight">Fight</button>' + GSK.concat(PSK).map((k) => '<button data-opt="' + k + '">' + k + "</button>").join("") + "</div>";
     h += [1, 2, 3].map((n) => {
       const l = gameState.lo[n];
-      return '<div class="row"><span>Saved loadout ' + n + "<small>" + (l ? l.style + " \xB7 " + (l.cape ? X.capeLabel(l.cape) : "no cape") + " \xB7 " + FM[l.form].n : "Empty") + '</small></span><span><button class="btn" data-ls="save:' + n + '">Save</button>' + (l ? ' <button class="btn" data-ls="load:' + n + '">Load</button>' : "") + "</span></div>";
+      return '<div class="row"><span>Saved loadout ' + n + "<small>" + (l ? l.style + " \xB7 " + (l.cape ? capeLabel(l.cape) : "no cape") + " \xB7 " + FM[l.form].n : "Empty") + '</small></span><span><button class="btn" data-ls="save:' + n + '">Save</button>' + (l ? ' <button class="btn" data-ls="load:' + n + '">Load</button>' : "") + "</span></div>";
     }).join("");
     return h;
   }
@@ -1508,7 +1610,7 @@ nav button.on i{opacity:1}
       const N = { gold: "acorns", dmg: "damage", heal: "food healing", drop: "rare drops", xp: "combat xp" };
       return Object.keys(it.eff).map((k) => "+" + Math.round(it.eff[k] * 100) + "% " + N[k]).join(", ");
     }
-    if (it.fx) return X.fxTxt(it.fx.map((e) => [e[0], e[1]])) + scopeTxt(it);
+    if (it.fx) return fxTxt(it.fx.map((e) => [e[0], e[1]])) + scopeTxt(it);
     if (it.kind == "2h") return "+" + it.stat + " attack \xB7 two-handed: +30% damage, no off-hand";
     if (it.kind == "off") return "+" + it.stat + " attack \xB7 off-hand for " + it.st + ": dual wield adds an extra strike";
     if (it.kind == "shield") return "+" + it.stat + " defense \xB7 \u22128% damage taken";
@@ -1624,7 +1726,7 @@ nav button.on i{opacity:1}
     if (k == "cape") {
       const c = gameState.cape;
       ic = icon("cape");
-      return '<button class="gt' + (w3 ? " w3" : "") + (c ? " q-c" : " empty") + '" data-gt="capes"><span class="ic">' + ic + '</span><span class="sl">' + lab + '</span><span class="nm">' + (c ? X.capeLabel(c) : "None") + '</span><span class="st">' + (c ? "Tap to change" : "Skill capes and cloaks") + "</span></button>";
+      return '<button class="gt' + (w3 ? " w3" : "") + (c ? " q-c" : " empty") + '" data-gt="capes"><span class="ic">' + ic + '</span><span class="sl">' + lab + '</span><span class="nm">' + (c ? capeLabel(c) : "None") + '</span><span class="st">' + (c ? "Tap to change" : "Skill capes and cloaks") + "</span></button>";
     }
     const id = gameState.eq[k], it = id ? IT[id] : null, g = it ? grade(it) : null;
     ic = icon(it ? iconOf(it) : SLIC[k]);
@@ -1653,7 +1755,7 @@ nav button.on i{opacity:1}
         if (it && it.fx) it.fx.forEach((e) => l.push([e[0], e[1]]));
       }
     }
-    return l.length ? X.fxTxt(l) : "";
+    return l.length ? fxTxt(l) : "";
   }
   function set_gtab(v) {
     gtab = v;
@@ -2227,7 +2329,7 @@ nav button.on i{opacity:1}
     ["s5", "Warrior of the Hollow", "Reach level 99 in every combat stat.", () => COMBAT_SKILLS.slice(0, 4).every((k) => lv(gameState.xp[k]) >= 99), 15e4],
     ["s6", "Beyond the Limit", "Reach level 120 in any skill.", () => nSk(120) >= 1, 3e5],
     ["s7", "Maxed", "Reach level 99 in every skill.", () => nSk(99) >= GATHER_SKILLS.length + COMBAT_SKILLS.length, 1e6],
-    ["s8", "Master of Everything", "Earn the Max Master Cape.", () => X.grpTier("Max") >= 4, 2e7],
+    ["s8", "Master of Everything", "Earn the Max Master Cape.", () => grpTier("Max") >= 4, 2e7],
     ["c1", "Pest Control", "Defeat 100 foes.", () => kills() >= 100, 1e3],
     ["c2", "Exterminator", "Defeat 1,000 foes.", () => kills() >= 1e3, 2e4],
     ["c3", "Scourge of the Valley", "Defeat 10,000 foes.", () => kills() >= 1e4, 3e5],
@@ -2304,7 +2406,7 @@ nav button.on i{opacity:1}
     h += '<div class="row" style="flex-direction:column;align-items:stretch"><span>Expedition trophies \xB7 ' + DISHES.filter((d) => gameState.seen[d.tr] || gameState.inv[d.tr]).length + "/" + DISHES.length + "<small>" + DISHES.map((d) => gameState.seen[d.tr] || gameState.inv[d.tr] ? "<b>" + d.tr + "</b> (best tier " + (gameState.best[d.id] || 0) + ")" : "???").join(" \xB7 ") + "</small></span></div>";
     h += '<div class="row" style="flex-direction:column;align-items:stretch"><span>Zone bosses \xB7 ' + bossDone() + "/" + ZN.length + "<small>" + ZN.map((z, i) => (gameState.kc["z" + i + "m3"] || 0) > 0 ? "<b>" + z[3][3] + "</b> \xD7" + gameState.kc["z" + i + "m3"] : "???").join(" \xB7 ") + "</small></span></div>";
     h += '<div class="row" style="flex-direction:column;align-items:stretch"><span>Raids and harvests<small>' + RD.map((r) => gameState.rc[r.id] ? "<b>" + r.n + "</b> \xD7" + gameState.rc[r.id] : "???").join(" \xB7 ") + "<br>" + HR.map((r) => gameState.hrc[r.id] ? "<b>" + r.n + "</b> \xD7" + gameState.hrc[r.id] : "???").join(" \xB7 ") + "</small></span></div>";
-    h += '<div class="row" style="flex-direction:column;align-items:stretch"><span>Capes<small>' + Object.keys(X.CE).map((k) => X.capeTier(k) ? "<b>" + X.capeName(k, X.capeTier(k)) + "</b>" : "???").join(" \xB7 ") + "<br>" + Object.keys(X.GRP).map((g) => X.grpTier(g) ? "<b>" + X.grpName(g, X.grpTier(g)) + "</b>" : "???").join(" \xB7 ") + "</small></span></div>";
+    h += '<div class="row" style="flex-direction:column;align-items:stretch"><span>Capes<small>' + Object.keys(CE).map((k) => capeTier(k) ? "<b>" + capeName(k, capeTier(k)) + "</b>" : "???").join(" \xB7 ") + "<br>" + Object.keys(GRP).map((g) => grpTier(g) ? "<b>" + grpName(g, grpTier(g)) + "</b>" : "???").join(" \xB7 ") + "</small></span></div>";
     const done = AC.filter((a) => gameState.ach[a[0]]).length;
     h += '<h2>Achievements <span class="mu" style="display:inline">\xB7 ' + done + "/" + AC.length + "</span></h2>";
     h += AC.map((a) => '<div class="row"><span>' + (gameState.ach[a[0]] ? "\u{1F3C6} " : "") + a[1] + "<small>" + a[2] + (a[4] ? " Reward: " + a[4].toLocaleString() + " acorns." : "") + "</small></span>" + (gameState.ach[a[0]] ? '<span class="good">Done</span>' : "") + "</div>").join("");
@@ -2404,37 +2506,18 @@ nav button.on i{opacity:1}
   // src/11-engine.ts
   var engine_exports = {};
   __export(engine_exports, {
-    CAPN: () => CAPN,
-    CE: () => CE,
-    CTX: () => CTX,
-    FXT: () => FXT,
-    GE: () => GE,
-    GRP: () => GRP,
     SKG: () => SKG,
-    TNAME: () => TNAME,
     actorChips: () => actorChips,
     bars: () => bars,
-    capeFx: () => capeFx,
-    capeLabel: () => capeLabel,
-    capeName: () => capeName,
-    capeOk: () => capeOk,
     capeRow: () => capeRow,
-    capeTier: () => capeTier,
     capesView: () => capesView,
     checkCapes: () => checkCapes,
     clampXp: () => clampXp,
     crew: () => crew,
-    cumFx: () => cumFx,
     curName: () => curName,
-    fxTxt: () => fxTxt,
-    gcumFx: () => gcumFx,
-    grpName: () => grpName,
-    grpTier: () => grpTier,
-    gw: () => gw,
     hasWork: () => hasWork,
     ing: () => ing,
     isOn: () => isOn,
-    pc: () => pc,
     pcx: () => pcx,
     refreshFx: () => refreshFx,
     skOf: () => skOf,
@@ -2511,89 +2594,6 @@ nav button.on i{opacity:1}
   }
   function curName() {
     return gameState.cur ? taskName(gameState.cur) : null;
-  }
-  var CAPN = { Foraging: "Forager", Woodcutting: "Woodsman", Fishing: "Angler", Mining: "Delver", Hunting: "Trapper", Farming: "Gardener", Alchemy: "Alchemist", Cooking: "Cook", Smithing: "Smith", Fletching: "Fletcher", Enchanting: "Enchanter", Tailoring: "Tailor", Attack: "Duelist", Strength: "Brawler", Defense: "Warden", Vitality: "Survivor", Slayer: "Slayer", Leadership: "Commander" };
-  var TNAME = ["", "Skill Cape", "120 Cape", "Sub-master Cape", "Master Cape"];
-  var CE = {
-    Foraging: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["heal", 0.25]]],
-    Woodcutting: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["sell", 0.15]]],
-    Fishing: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["regen", 0.5]]],
-    Mining: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["taken", 0.08]]],
-    Hunting: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["drop", 0.15]]],
-    Cooking: [[["burn", 0.5]], [["xp", 0.1]], [["spd", 0.1]], [["heal", 0.25]]],
-    Smithing: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["dmgm", 0.05]]],
-    Fletching: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["acc", 0.05]]],
-    Enchanting: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["xpm", 0.08]]],
-    Tailoring: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["taken", 0.06]]],
-    Attack: [[["acc", 0.06]], [["xpm", 0.1]], [["crit", 0.08]], [["acc", 0.06]]],
-    Strength: [[["dmgm", 0.08]], [["xpm", 0.1]], [["lsteal", 0.05]], [["dmgm", 0.1]]],
-    Defense: [[["taken", 0.08]], [["xpm", 0.1]], [["ls", 1]], [["taken", 0.08]]],
-    Vitality: [[["hpm", 0.1]], [["xpm", 0.1]], [["regen", 0.5]], [["hpm", 0.1], ["heal", 0.15]]],
-    Slayer: [[["tdmg", 0.1]], [["pts", 0.25]], [["tdrop", 0.15]], [["tdmg", 0.15]]],
-    Farming: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["sell", 0.15]]],
-    Alchemy: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["pot", 0.25]]],
-    Leadership: [[["mspd", 0.15]], [["pmult", 0.15]], [["mspd", 0.15]], [["pmult", 0.15], ["mspd", 0.15]]]
-  };
-  var GRP = { Combat: ["Attack", "Strength", "Defense", "Vitality"], Gathering: GATHER_SKILLS, Production: ["Cooking", "Smithing", "Fletching", "Enchanting", "Tailoring"], Cultivation: ["Farming", "Alchemy"] };
-  var GE = {
-    Combat: [[["xpm", 0.05], ["taken", 0.04]], [["dmgm", 0.05], ["acc", 0.04]], [["crit", 0.05], ["regen", 0.25]], [["dmgm", 0.1], ["taken", 0.1], ["drop", 0.1]]],
-    Gathering: [[["yld", 0.1]], [["xp", 0.05]], [["spd", 0.05]], [["yld", 0.1], ["sell", 0.1]]],
-    Production: [[["save", 0.1]], [["xp", 0.05]], [["spd", 0.05]], [["save", 0.1], ["burn", 0.25], ["sell", 0.1]]],
-    Cultivation: [[["yld", 0.1]], [["xp", 0.05]], [["spd", 0.05]], [["pot", 0.15], ["sell", 0.1]]]
-  };
-  GRP.Max = Object.keys(CE);
-  GE.Max = [[["xp", 0.05], ["xpm", 0.05]], [["yld", 0.05], ["save", 0.05], ["drop", 0.05]], [["spd", 0.05], ["crit", 0.05]], [["xp", 0.1], ["xpm", 0.1], ["sell", 0.1], ["mspd", 0.1]]];
-  var gw = (g) => g == "Max" ? "skill" : g.toLowerCase();
-  var CTX = ["yld", "xp", "spd", "save", "burn"];
-  var pc = (v) => Math.round(v * 100);
-  var FXT = { pot: (v) => "+" + pc(v) + "% potion duration", yld: (v) => pc(v) + "% chance of a double yield", xp: (v) => "+" + pc(v) + "% xp", spd: (v) => pc(v) + "% faster work", save: (v) => pc(v) + "% chance to save materials", burn: (v) => pc(v) + "% less burning", heal: (v) => "+" + pc(v) + "% food healing", sell: (v) => "+" + pc(v) + "% acorns from sales", drop: (v) => "+" + pc(v) + "% rare drops", regen: (v) => "+" + pc(v) + "% health regeneration", taken: (v) => "\u2212" + pc(v) + "% damage taken", acc: (v) => "+" + pc(v) + "% hit chance", dmgm: (v) => "+" + pc(v) + "% max hit", crit: (v) => pc(v) + "% chance to hit twice as hard", lsteal: (v) => "heal " + pc(v) + "% of damage dealt", ls: (v) => "survive one lethal hit per fight", hpm: (v) => "+" + pc(v) + "% max health", xpm: (v) => "+" + pc(v) + "% combat xp", ttaken: (v) => "\u2212" + pc(v) + "% damage taken on task", txp: (v) => "+" + pc(v) + "% Slayer xp", tdmg: (v) => "+" + pc(v) + "% damage on Slayer tasks", tdrop: (v) => "+" + pc(v) + "% rare drops on task", pts: (v) => "+" + pc(v) + "% slayer points", mspd: (v) => "+" + pc(v) + "% member work speed", pmult: (v) => "+" + pc(v) + "% member perks" };
-  var fxTxt = (arr) => {
-    const m = {}, o = [];
-    arr.forEach((e) => {
-      if (!(e[0] in m)) {
-        m[e[0]] = 0;
-        o.push(e[0]);
-      }
-      m[e[0]] += e[1];
-    });
-    return o.map((k) => FXT[k](m[k])).join(", ");
-  };
-  var cumFx = (k, t) => {
-    let a = [];
-    for (let i = 0; i < t; i++) a = a.concat(CE[k][i]);
-    return fxTxt(a);
-  };
-  var gcumFx = (g, t) => {
-    let a = [];
-    for (let i = 0; i < t; i++) a = a.concat(GE[g][i]);
-    return fxTxt(a);
-  };
-  var capeTier = (k) => {
-    const x = gameState.xp[k], l = lv(x);
-    return x >= 2e8 ? 4 : x >= 15e7 ? 3 : l >= 120 ? 2 : l >= 99 ? 1 : 0;
-  };
-  var grpTier = (g) => Math.min.apply(null, GRP[g].map(capeTier));
-  var capeName = (k, t) => CAPN[k] + "\u2019s " + TNAME[t];
-  var grpName = (g, t) => g + " " + (t == 1 ? "Cape" : TNAME[t]);
-  var capeLabel = (id) => id.indexOf("I:") == 0 ? IT[id.slice(2)].n : id.indexOf("G:") == 0 ? grpName(id.slice(2), grpTier(id.slice(2))) : capeName(id, capeTier(id));
-  var capeOk = (id) => id.indexOf("I:") == 0 ? !!IT[id.slice(2)] && !!gameState.own[id.slice(2)] : id.indexOf("G:") == 0 ? grpTier(id.slice(2)) >= 1 : capeTier(id) >= 1;
-  function capeFx() {
-    const id = gameState.cape, out = [];
-    if (!id) return out;
-    if (id.indexOf("I:") == 0) return itFx(IT[id.slice(2)]);
-    const add = (arr, sk) => arr.forEach((e) => out.push({ k: e[0], v: e[1], sk: CTX.includes(e[0]) ? sk : null }));
-    if (id.indexOf("G:") == 0) {
-      const g = id.slice(2), t = grpTier(g);
-      for (let i = 0; i < t; i++) {
-        GRP[g].forEach((sk) => add(CE[sk][i], sk));
-        add(GE[g][i], "*");
-        if (g == "Max") ["Combat", "Gathering", "Production", "Cultivation"].forEach((q) => add(GE[q][i], "*"));
-      }
-    } else {
-      const t = capeTier(id);
-      for (let i = 0; i < t; i++) add(CE[id][i], id);
-    }
-    return out;
   }
   function refreshFx() {
     if (gameState.cape && !capeOk(gameState.cape)) gameState.cape = null;
@@ -2705,7 +2705,7 @@ nav button.on i{opacity:1}
     const extra = k == "Leadership" ? " \xB7 " + nsl() + "/" + slots() + " slots" : "";
     return '<button class="row' + (w.length ? " on" : "") + '" data-skill="' + k + '"><span>' + k + "</span><small>Level " + lv(gameState.xp[k]) + (capeTier(k) ? " \xB7 " + TNAME[capeTier(k)] : "") + extra + (w.length ? " \xB7 " + w.join(", ") : "") + '</small><div class="bar xp" style="width:100%"><i style="width:' + pcx(k) + '%"></i></div></button>';
   }
-  Object.defineProperties(X, { refreshFx: { get: () => refreshFx, configurable: true }, fxTxt: { get: () => fxTxt, configurable: true }, CTX: { get: () => CTX, configurable: true }, capeFx: { get: () => capeFx, configurable: true }, GRP: { get: () => GRP, configurable: true }, CE: { get: () => CE, configurable: true }, capeOk: { get: () => capeOk, configurable: true }, capeLabel: { get: () => capeLabel, configurable: true }, pcx: { get: () => pcx, configurable: true }, capesView: { get: () => capesView, configurable: true }, skOf: { get: () => skOf, configurable: true }, grpTier: { get: () => grpTier, configurable: true }, capeTier: { get: () => capeTier, configurable: true }, capeName: { get: () => capeName, configurable: true }, grpName: { get: () => grpName, configurable: true } });
+  Object.defineProperties(X, { refreshFx: { get: () => refreshFx, configurable: true }, pcx: { get: () => pcx, configurable: true }, capesView: { get: () => capesView, configurable: true }, skOf: { get: () => skOf, configurable: true } });
 
   // src/12-farm-alchemy.ts
   var farm_alchemy_exports = {};
@@ -3061,7 +3061,7 @@ nav button.on i{opacity:1}
   var logTabs = () => '<div class="seg">' + [["log", "Collection"], ["guide", "Guide"]].map((t) => '<button data-logsub="' + t[0] + '" class="' + (logSub == t[0] ? "on" : "") + '">' + t[1] + "</button>").join("") + "</div>";
   var dens = (t, b) => '<details class="chip"><summary><span>' + t + '</span><em>open</em></summary><div class="mu">' + b + "</div></details>";
   function guideView() {
-    const capes = Object.keys(X.CE).map((k) => capeRow(k).replace('<div class="row"><span>', '<div class="row"><span><b>' + k + "</b> \xB7 ")).join("");
+    const capes = Object.keys(CE).map((k) => capeRow(k).replace('<div class="row"><span>', '<div class="row"><span><b>' + k + "</b> \xB7 ")).join("");
     const rates = "<b>Zone gear</b>: about 1 in 64 per kill, or 1 in 10 from a boss. A guaranteed drop arrives after 150 kills (40 for bosses).<br><b>Deep zones (8+)</b>: crafting materials about 1 in 40 per kill, 1 in 6 from a boss, guaranteed by 100 kills (18 for bosses). Bosses also have a 1 in 30 chance at gear, guaranteed by 70 kills.<br><b>Trinkets</b>: about 1 in 12 per boss kill, guaranteed by 60.<br>These are base chances. Rare-drop bonuses from gear, pets and blessings multiply them.";
     return '<h2>Guide</h2><p class="sub">Reference notes, kept out of the way.</p>' + dens(gameState.sp + " traits", "+15% xp in " + SP[gameState.sp] + ". " + spTxt(gameState.sp)) + dens("Capes", '<div style="margin-top:6px">' + capes + "</div>") + dens("Drop rates", rates);
   }

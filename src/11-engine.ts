@@ -1,7 +1,7 @@
 import { FXSRC, gameState, TASKS, TICKS, say } from './00-state';
 import { X } from './registry';
-import { MEMBERS, IT, GATHER_SKILLS, XT, asg, lv, maxhp, nsl, set_FXC, spFx } from './01-species-pets';
-import { ENEMIES, RFN, gearFx, gearSync, itFx, qrank } from './02-gear-data';
+import { MEMBERS, IT, XT, asg, lv, maxhp, nsl, set_FXC, spFx } from './01-species-pets';
+import { CAPN, CE, ENEMIES, GE, GRP, RFN, TNAME, capeFx, capeLabel, capeName, capeOk, capeTier, cumFx, fxTxt, gcumFx, gearFx, gearSync, grpName, grpTier, qrank, gw } from './02-gear-data';
 import { exFinish, exs, hrFx } from './03-world-expeditions';
 import { hits, hitsStr, set_hitsStr } from './04-loadout';
 import { canEq, istat, reqText } from './05-combat';
@@ -38,55 +38,6 @@ export function bars(){
   const o=document.getElementById('ac');if(o)o.textContent='🌰 '+Math.floor(gameState.a).toLocaleString();
 }
 export function curName(){return gameState.cur?taskName(gameState.cur):null}
-export const CAPN:Record<string,string>={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Farming:'Gardener',Alchemy:'Alchemist',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
-export const TNAME=['','Skill Cape','120 Cape','Sub-master Cape','Master Cape'];
-export const CE:Record<string,any[][][]>={
-Foraging:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['heal',.25]]],
-Woodcutting:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['sell',.15]]],
-Fishing:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['regen',.5]]],
-Mining:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['taken',.08]]],
-Hunting:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['drop',.15]]],
-Cooking:[[['burn',.5]],[['xp',.1]],[['spd',.1]],[['heal',.25]]],
-Smithing:[[['save',.15]],[['xp',.1]],[['spd',.1]],[['dmgm',.05]]],
-Fletching:[[['save',.15]],[['xp',.1]],[['spd',.1]],[['acc',.05]]],
-Enchanting:[[['save',.15]],[['xp',.1]],[['spd',.1]],[['xpm',.08]]],
-Tailoring:[[['save',.15]],[['xp',.1]],[['spd',.1]],[['taken',.06]]],
-Attack:[[['acc',.06]],[['xpm',.1]],[['crit',.08]],[['acc',.06]]],
-Strength:[[['dmgm',.08]],[['xpm',.1]],[['lsteal',.05]],[['dmgm',.1]]],
-Defense:[[['taken',.08]],[['xpm',.1]],[['ls',1]],[['taken',.08]]],
-Vitality:[[['hpm',.1]],[['xpm',.1]],[['regen',.5]],[['hpm',.1],['heal',.15]]],
-Slayer:[[['tdmg',.1]],[['pts',.25]],[['tdrop',.15]],[['tdmg',.15]]],
-Farming:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['sell',.15]]],
-Alchemy:[[['save',.15]],[['xp',.1]],[['spd',.1]],[['pot',.25]]],
-Leadership:[[['mspd',.15]],[['pmult',.15]],[['mspd',.15]],[['pmult',.15],['mspd',.15]]]};
-export const GRP:Record<string,string[]>={Combat:['Attack','Strength','Defense','Vitality'],Gathering:GATHER_SKILLS,Production:['Cooking','Smithing','Fletching','Enchanting','Tailoring'],Cultivation:['Farming','Alchemy']};
-export const GE:Record<string,any[][][]>={
-Combat:[[['xpm',.05],['taken',.04]],[['dmgm',.05],['acc',.04]],[['crit',.05],['regen',.25]],[['dmgm',.1],['taken',.1],['drop',.1]]],
-Gathering:[[['yld',.1]],[['xp',.05]],[['spd',.05]],[['yld',.1],['sell',.1]]],
-Production:[[['save',.1]],[['xp',.05]],[['spd',.05]],[['save',.1],['burn',.25],['sell',.1]]],
-Cultivation:[[['yld',.1]],[['xp',.05]],[['spd',.05]],[['pot',.15],['sell',.1]]]};
-GRP.Max=Object.keys(CE);GE.Max=[[['xp',.05],['xpm',.05]],[['yld',.05],['save',.05],['drop',.05]],[['spd',.05],['crit',.05]],[['xp',.1],['xpm',.1],['sell',.1],['mspd',.1]]];
-export const gw=(g:string)=>g=='Max'?'skill':g.toLowerCase();
-export const CTX=['yld','xp','spd','save','burn'];
-export const pc=(v:number)=>Math.round(v*100);
-export const FXT:Record<string,(v:number)=>string>={pot:(v:number)=>'+'+pc(v)+'% potion duration',yld:(v:number)=>pc(v)+'% chance of a double yield',xp:(v:number)=>'+'+pc(v)+'% xp',spd:(v:number)=>pc(v)+'% faster work',save:(v:number)=>pc(v)+'% chance to save materials',burn:(v:number)=>pc(v)+'% less burning',heal:(v:number)=>'+'+pc(v)+'% food healing',sell:(v:number)=>'+'+pc(v)+'% acorns from sales',drop:(v:number)=>'+'+pc(v)+'% rare drops',regen:(v:number)=>'+'+pc(v)+'% health regeneration',taken:(v:number)=>'−'+pc(v)+'% damage taken',acc:(v:number)=>'+'+pc(v)+'% hit chance',dmgm:(v:number)=>'+'+pc(v)+'% max hit',crit:(v:number)=>pc(v)+'% chance to hit twice as hard',lsteal:(v:number)=>'heal '+pc(v)+'% of damage dealt',ls:(v:number)=>'survive one lethal hit per fight',hpm:(v:number)=>'+'+pc(v)+'% max health',xpm:(v:number)=>'+'+pc(v)+'% combat xp',ttaken:(v:number)=>'−'+pc(v)+'% damage taken on task',txp:(v:number)=>'+'+pc(v)+'% Slayer xp',tdmg:(v:number)=>'+'+pc(v)+'% damage on Slayer tasks',tdrop:(v:number)=>'+'+pc(v)+'% rare drops on task',pts:(v:number)=>'+'+pc(v)+'% slayer points',mspd:(v:number)=>'+'+pc(v)+'% member work speed',pmult:(v:number)=>'+'+pc(v)+'% member perks'};
-export const fxTxt=(arr:any)=>{const m:Record<string,any>={},o:any=[];arr.forEach((e:FxDef)=>{if(!(e[0] in m)){m[e[0]]=0;o.push(e[0])}m[e[0]]+=e[1]});return o.map((k:string)=>FXT[k](m[k])).join(', ')};
-export const cumFx=(k:string,t:number)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(CE[k][i]);return fxTxt(a)};
-export const gcumFx=(g:string,t:number)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(GE[g][i]);return fxTxt(a)};
-export const capeTier=(k:string)=>{const x=gameState.xp[k],l=lv(x);return x>=2e8?4:x>=1.5e8?3:l>=120?2:l>=99?1:0};
-export const grpTier=(g:string)=>Math.min.apply(null,GRP[g].map(capeTier));
-export const capeName=(k:string,t:number)=>CAPN[k]+'’s '+TNAME[t];
-export const grpName=(g:string,t:number)=>g+' '+(t==1?'Cape':TNAME[t]);
-export const capeLabel=(id:string)=>id.indexOf('I:')==0?IT[id.slice(2)].n:id.indexOf('G:')==0?grpName(id.slice(2),grpTier(id.slice(2))):capeName(id,capeTier(id));
-export const capeOk=(id:string)=>id.indexOf('I:')==0?(!!IT[id.slice(2)]&&!!gameState.own[id.slice(2)]):id.indexOf('G:')==0?grpTier(id.slice(2))>=1:capeTier(id)>=1;
-export function capeFx(){
-  const id=gameState.cape,out:any=[];if(!id)return out;
-  if(id.indexOf('I:')==0)return itFx(IT[id.slice(2)]);
-  const add=(arr:any,sk:string)=>arr.forEach((e:FxDef)=>out.push({k:e[0],v:e[1],sk:CTX.includes(e[0])?sk:null}));
-  if(id.indexOf('G:')==0){const g=id.slice(2),t=grpTier(g);for(let i=0;i<t;i++){GRP[g].forEach((sk:string)=>add(CE[sk][i],sk));add(GE[g][i],'*');if(g=='Max')['Combat','Gathering','Production','Cultivation'].forEach(q=>add(GE[q][i],'*'))}}
-  else{const t=capeTier(id);for(let i=0;i<t;i++)add(CE[id][i],id)}
-  return out;
-}
 export function refreshFx(){if(gameState.cape&&!capeOk(gameState.cape))gameState.cape=null;set_FXC(capeFx().concat(hrFx(),buFx(),sgFx(),wxFx(),gearFx(),spFx(),...FXSRC.map(f=>f())))}
 export function clampXp(){for(const k in gameState.xp)if(gameState.xp[k]>2e8)gameState.xp[k]=2e8}
 export function checkCapes(){
@@ -135,4 +86,4 @@ export function tile(k:string){
   return '<button class="row'+(w.length?' on':'')+'" data-skill="'+k+'"><span>'+k+'</span><small>Level '+lv(gameState.xp[k])+(capeTier(k)?' · '+TNAME[capeTier(k)]:'')+extra+(w.length?' · '+w.join(', '):'')+'</small><div class="bar xp" style="width:100%"><i style="width:'+pcx(k)+'%"></i></div></button>';
 }
 
-Object.defineProperties(X,{refreshFx:{get:()=>refreshFx,configurable:true},fxTxt:{get:()=>fxTxt,configurable:true},CTX:{get:()=>CTX,configurable:true},capeFx:{get:()=>capeFx,configurable:true},GRP:{get:()=>GRP,configurable:true},CE:{get:()=>CE,configurable:true},capeOk:{get:()=>capeOk,configurable:true},capeLabel:{get:()=>capeLabel,configurable:true},pcx:{get:()=>pcx,configurable:true},capesView:{get:()=>capesView,configurable:true},skOf:{get:()=>skOf,configurable:true},grpTier:{get:()=>grpTier,configurable:true},capeTier:{get:()=>capeTier,configurable:true},capeName:{get:()=>capeName,configurable:true},grpName:{get:()=>grpName,configurable:true}});
+Object.defineProperties(X,{refreshFx:{get:()=>refreshFx,configurable:true},pcx:{get:()=>pcx,configurable:true},capesView:{get:()=>capesView,configurable:true},skOf:{get:()=>skOf,configurable:true}});

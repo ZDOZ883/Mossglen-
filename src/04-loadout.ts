@@ -1,17 +1,17 @@
 import { gameState, TASKS, say } from './00-state';
 import { X } from './registry';
 import { FM, MEMBERS, IT, SL, XS, adv, cb, cl, fighters, fw, lv, maxhp, onTask, pk, pm, spAff } from './01-species-pets';
-import { ENEMIES, GSK, PSK, RFN, accScore, elv, gearSync } from './02-gear-data';
+import { CE, ENEMIES, GRP, GSK, PSK, RFN, accScore, capeFx, capeLabel, capeOk, elv, gearSync } from './02-gear-data';
 import { enr } from './03-world-expeditions';
 // Smart loadout optimizer. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- loadouts
 export const CW:Record<string,Record<string,number>>={combat:{dmgm:3,acc:2,crit:1.5,taken:3,hpm:2,regen:.6,heal:.6,lsteal:2,ls:.4,xpm:.8,drop:.6,tdmg:1.5,tdrop:.5},gather:{yld:3,xp:2,spd:3,sell:.4,mspd:.8},craft:{save:3,xp:2,spd:3,burn:2,sell:.3,mspd:.8}};
 export function capeScore(id:string,kind:string,sk?:string){
-  const s0=gameState.cape;gameState.cape=id;const fx=X.capeFx();gameState.cape=s0;let v=0;
+  const s0=gameState.cape;gameState.cape=id;const fx=capeFx();gameState.cape=s0;let v=0;
   fx.forEach((e:Effect)=>{const w=CW[kind][e.k];if(!w)return;let m=1;if(e.sk&&e.sk!='*'){if(sk){if(e.sk!=sk)return}else m=.2}v+=w*e.v*m});
   return v}
 export function bestCape(kind:string,sk?:string){
-  const c=['G:Max'].concat(Object.keys(X.GRP).filter(g=>g!='Max').map(g=>'G:'+g),Object.keys(X.CE),Object.keys(gameState.own).filter(i=>IT[i]&&IT[i].slot=='cloak'&&X.canEq(IT[i])).map(i=>'I:'+i)).filter(X.capeOk);
+  const c=['G:Max'].concat(Object.keys(GRP).filter(g=>g!='Max').map(g=>'G:'+g),Object.keys(CE),Object.keys(gameState.own).filter(i=>IT[i]&&IT[i].slot=='cloak'&&X.canEq(IT[i])).map(i=>'I:'+i)).filter(capeOk);
   let b:any=null,bs=0;c.forEach(id=>{const v=capeScore(id,kind,sk);if(v>bs+1e-9){bs=v;b=id}});return b}
 export const bestOwned=(slot:string)=>Object.keys(gameState.own).filter(i=>IT[i].slot==slot&&X.canEq(IT[i])).sort((a,b)=>IT[b].stat-IT[a].stat)[0];
 export const trScore=(it:Item)=>{const e=it.eff||{};return (e.dmg||0)*100+(e.heal||0)*40+(e.drop||0)*30+(e.xp||0)*20+(e.gold||0)*10};
@@ -45,7 +45,7 @@ export function optimize(c:LoadCtx){
   ([['neck',['neck']],['ring',['ring1','ring2']]] as any[]).forEach(q=>{const pool=Object.keys(gameState.own).filter(i=>IT[i].slot==q[0]&&X.canEq(IT[i])).map((i):[string,number]=>[i,accScore(IT[i],c.kind,c.sk)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,q[1].length).map(x=>x[0]);q[1].forEach((k:string,j:any)=>{const w=pool[j]||null;if((gameState.eq[k]||null)!=w){gameState.eq[k]=w;if(w)out.push(IT[w].n)}})});
   gearSync();
   const cp=bestCape(c.kind,c.sk);
-  if(cp&&cp!=gameState.cape){gameState.cape=cp;X.refreshFx();out.push(X.capeLabel(cp))}
+  if(cp&&cp!=gameState.cape){gameState.cape=cp;X.refreshFx();out.push(capeLabel(cp))}
   say(out.length?'Loadout for '+c.label+': '+out.join(', ')+'.':'Your loadout for '+c.label+' is already the best you own.');
 }
 export function ctxNow(){
@@ -64,13 +64,13 @@ export function loadoutSl(v:string){
   const [a,n]=v.split(':');
   if(a=='save'){gameState.lo[n]={eq:Object.assign({},gameState.eq),cape:gameState.cape,style:gameState.style,form:gameState.form,stance:gameState.stance};say('Saved loadout '+n+'.')}
   else{const l=gameState.lo[n];if(!l)return;Object.keys(l.eq).forEach(k=>{const id=l.eq[k];if(!id)gameState.eq[k]=null;else if(gameState.own[id]&&X.canEq(IT[id]))gameState.eq[k]=id});
-    if(l.cape===null||X.capeOk(l.cape))gameState.cape=l.cape;gameState.style=l.style;if(FM[l.form]&&CL()>=FM[l.form].cl)gameState.form=l.form;if(XS[l.stance])gameState.stance=l.stance;X.refreshFx();gearSync();say('Loaded loadout '+n+'.')}
+    if(l.cape===null||capeOk(l.cape))gameState.cape=l.cape;gameState.style=l.style;if(FM[l.form]&&CL()>=FM[l.form].cl)gameState.form=l.form;if(XS[l.stance])gameState.stance=l.stance;X.refreshFx();gearSync();say('Loaded loadout '+n+'.')}
 }
 export function loadoutView(){
   let h='<h2>Loadout</h2><p class="sub">Smart loadout equips the best gear you own for a job: weapon and style against the current enemy, armor and trinket by stats, and the cape whose bonuses suit the work.</p>';
   h+='<div class="chips"><button class="'+(gameState.auto?'on':'')+'" data-auto="1">Auto-swap: '+(gameState.auto?'on':'off')+'</button></div><p class="mu">With auto-swap on, starting a fight, raid, harvest, gathering or crafting job re-equips for it.</p>';
   h+='<p class="mu" style="margin:6px 0 4px">Optimize now for:</p><div class="chips"><button data-opt="fight">Fight</button>'+GSK.concat(PSK).map(k=>'<button data-opt="'+k+'">'+k+'</button>').join('')+'</div>';
-  h+=[1,2,3].map(n=>{const l=gameState.lo[n];return '<div class="row"><span>Saved loadout '+n+'<small>'+(l?l.style+' · '+(l.cape?X.capeLabel(l.cape):'no cape')+' · '+FM[l.form].n:'Empty')+'</small></span><span><button class="btn" data-ls="save:'+n+'">Save</button>'+(l?' <button class="btn" data-ls="load:'+n+'">Load</button>':'')+'</span></div>'}).join('');
+  h+=[1,2,3].map(n=>{const l=gameState.lo[n];return '<div class="row"><span>Saved loadout '+n+'<small>'+(l?l.style+' · '+(l.cape?capeLabel(l.cape):'no cape')+' · '+FM[l.form].n:'Empty')+'</small></span><span><button class="btn" data-ls="save:'+n+'">Save</button>'+(l?' <button class="btn" data-ls="load:'+n+'">Load</button>':'')+'</span></div>'}).join('');
   return h;
 }
 

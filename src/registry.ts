@@ -30,18 +30,7 @@ export const X = {} as {
   sgView: typeof M9.sgView;
   famCut: typeof M10.famCut;
   tierChips: typeof M10.tierChips;
-  CE: typeof M11.CE;
-  CTX: typeof M11.CTX;
-  GRP: typeof M11.GRP;
-  capeFx: typeof M11.capeFx;
-  capeLabel: typeof M11.capeLabel;
-  capeName: typeof M11.capeName;
-  capeOk: typeof M11.capeOk;
-  capeTier: typeof M11.capeTier;
   capesView: typeof M11.capesView;
-  fxTxt: typeof M11.fxTxt;
-  grpName: typeof M11.grpName;
-  grpTier: typeof M11.grpTier;
   pcx: typeof M11.pcx;
   refreshFx: typeof M11.refreshFx;
   render: typeof M13.render;

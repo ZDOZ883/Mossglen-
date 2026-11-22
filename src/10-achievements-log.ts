@@ -1,7 +1,7 @@
 import { GATHERED, gameState, TASKS, say } from './00-state';
 import { X } from './registry';
 import { COMBAT_SKILLS, DISHES, IT, LD, PETS, GATHER_SKILLS, SL, SP, T, TR, asg, cb, lv, mxp, skPet } from './01-species-pets';
-import { ENEMIES, GSK, PSK, RFN, ZN, ctime, gateOk, refineDone } from './02-gear-data';
+import { CE, ENEMIES, GRP, GSK, PSK, RFN, ZN, capeName, capeTier, ctime, gateOk, grpName, grpTier, refineDone } from './02-gear-data';
 import { HR, RD, exs, hrCount } from './03-world-expeditions';
 import { RT } from './04-loadout';
 import { cround } from './05-combat';
@@ -32,7 +32,7 @@ export const AC:Ach[]=[
 ['s5','Warrior of the Hollow','Reach level 99 in every combat stat.',()=>COMBAT_SKILLS.slice(0,4).every(k=>lv(gameState.xp[k])>=99),150000],
 ['s6','Beyond the Limit','Reach level 120 in any skill.',()=>nSk(120)>=1,300000],
 ['s7','Maxed','Reach level 99 in every skill.',()=>nSk(99)>=GATHER_SKILLS.length+COMBAT_SKILLS.length,1000000],
-['s8','Master of Everything','Earn the Max Master Cape.',()=>X.grpTier('Max')>=4,20000000],
+['s8','Master of Everything','Earn the Max Master Cape.',()=>grpTier('Max')>=4,20000000],
 ['c1','Pest Control','Defeat 100 foes.',()=>kills()>=100,1000],
 ['c2','Exterminator','Defeat 1,000 foes.',()=>kills()>=1000,20000],
 ['c3','Scourge of the Valley','Defeat 10,000 foes.',()=>kills()>=10000,300000],
@@ -89,7 +89,7 @@ export function logView(){
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Expedition trophies · '+DISHES.filter(d=>gameState.seen[d.tr]||gameState.inv[d.tr]).length+'/'+DISHES.length+'<small>'+DISHES.map(d=>(gameState.seen[d.tr]||gameState.inv[d.tr])?'<b>'+d.tr+'</b> (best tier '+(gameState.best[d.id]||0)+')':'???').join(' · ')+'</small></span></div>';
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Zone bosses · '+bossDone()+'/'+ZN.length+'<small>'+ZN.map((z,i)=>(gameState.kc['z'+i+'m3']||0)>0?'<b>'+z[3][3]+'</b> ×'+gameState.kc['z'+i+'m3']:'???').join(' · ')+'</small></span></div>';
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Raids and harvests<small>'+RD.map(r=>gameState.rc[r.id]?'<b>'+r.n+'</b> ×'+gameState.rc[r.id]:'???').join(' · ')+'<br>'+HR.map(r=>gameState.hrc[r.id]?'<b>'+r.n+'</b> ×'+gameState.hrc[r.id]:'???').join(' · ')+'</small></span></div>';
-  h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Capes<small>'+Object.keys(X.CE).map(k=>X.capeTier(k)?'<b>'+X.capeName(k,X.capeTier(k))+'</b>':'???').join(' · ')+'<br>'+Object.keys(X.GRP).map(g=>X.grpTier(g)?'<b>'+X.grpName(g,X.grpTier(g))+'</b>':'???').join(' · ')+'</small></span></div>';
+  h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Capes<small>'+Object.keys(CE).map(k=>capeTier(k)?'<b>'+capeName(k,capeTier(k))+'</b>':'???').join(' · ')+'<br>'+Object.keys(GRP).map(g=>grpTier(g)?'<b>'+grpName(g,grpTier(g))+'</b>':'???').join(' · ')+'</small></span></div>';
   const done=AC.filter(a=>gameState.ach[a[0]]).length;
   h+='<h2>Achievements <span class="mu" style="display:inline">· '+done+'/'+AC.length+'</span></h2>';
   h+=AC.map(a=>'<div class="row"><span>'+(gameState.ach[a[0]]?'🏆 ':'')+a[1]+'<small>'+a[2]+(a[4]?' Reward: '+a[4].toLocaleString()+' acorns.':'')+'</small></span>'+(gameState.ach[a[0]]?'<span class="good">Done</span>':'')+'</div>').join('');

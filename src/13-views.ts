@@ -1,7 +1,7 @@
 import { gameState, TASKS } from './00-state';
 import { X } from './registry';
 import { COMBAT_SKILLS, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, nsl, pm, spTxt } from './01-species-pets';
-import { AF, KEEP, KP, RF, RFN, gateOk, refRecipe } from './02-gear-data';
+import { AF, CE, KEEP, KP, RF, RFN, gateOk, refRecipe } from './02-gear-data';
 import { GATE, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
 import { combatView, istat } from './05-combat';
@@ -94,7 +94,7 @@ export function set_logSub(v:string){logSub=v}
 export const logTabs=()=>'<div class="seg">'+[['log','Collection'],['guide','Guide']].map(t=>'<button data-logsub="'+t[0]+'" class="'+(logSub==t[0]?'on':'')+'">'+t[1]+'</button>').join('')+'</div>';
 const dens=(t:string,b:string)=>'<details class="chip"><summary><span>'+t+'</span><em>open</em></summary><div class="mu">'+b+'</div></details>';
 export function guideView(){
-  const capes=Object.keys(X.CE).map(k=>capeRow(k).replace('<div class="row"><span>','<div class="row"><span><b>'+k+'</b> · ')).join('');
+  const capes=Object.keys(CE).map(k=>capeRow(k).replace('<div class="row"><span>','<div class="row"><span><b>'+k+'</b> · ')).join('');
   const rates='<b>Zone gear</b>: about 1 in 64 per kill, or 1 in 10 from a boss. A guaranteed drop arrives after 150 kills (40 for bosses).<br><b>Deep zones (8+)</b>: crafting materials about 1 in 40 per kill, 1 in 6 from a boss, guaranteed by 100 kills (18 for bosses). Bosses also have a 1 in 30 chance at gear, guaranteed by 70 kills.<br><b>Trinkets</b>: about 1 in 12 per boss kill, guaranteed by 60.<br>These are base chances. Rare-drop bonuses from gear, pets and blessings multiply them.';
   return '<h2>Guide</h2><p class="sub">Reference notes, kept out of the way.</p>'+dens(gameState.sp+' traits','+15% xp in '+SP[gameState.sp!]+'. '+spTxt(gameState.sp))+dens('Capes','<div style="margin-top:6px">'+capes+'</div>')+dens('Drop rates',rates);
 }

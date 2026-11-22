@@ -1,7 +1,7 @@
 import { gameState, say } from './00-state';
 import { X } from './registry';
 import { DISHES, FM, GL, MEMBERS, IT, T, asg, cb, cl, fighters, ldx, lv, maxhp, mxp, petRoll, pm } from './01-species-pets';
-import { AK, D0, ENEMIES, GSK, H0, PSK, XK, ZN, gateOk } from './02-gear-data';
+import { AK, CTX, D0, ENEMIES, GSK, H0, PSK, XK, ZN, fxTxt, gateOk } from './02-gear-data';
 // Gates, raids, expeditions, harvest raids. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- ancient gates
 export const GATE=[
@@ -163,8 +163,8 @@ export const HR:Harvest[]=[
 {id:'h2',n:'The Wyrmwood Tithe',gate:2,tier:8,q:250,fx:[['yld',.1],['spd',.06],['xp',.06],['sell',.1]]},
 {id:'h3',n:'The Eclipse Reaping',gate:3,tier:9,q:300,fx:[['yld',.12],['spd',.1],['xp',.1],['sell',.15]]}];
 export const hrOk=(r:any)=>gateOk(r.gate)&&GSK.every(k=>lv(gameState.xp[k])>=GL[r.tier]);
-export const hrTxt=(r:any)=>X.fxTxt(r.fx)+' on every gathering skill';
-export function hrFx(){const o:any[]=[];HR.forEach(r=>{if(!(gameState.hrc&&gameState.hrc[r.id]))return;r.fx.forEach((e:FxDef)=>{if(X.CTX.includes(e[0]))GSK.forEach(sk=>o.push({k:e[0],v:e[1],sk}));else o.push({k:e[0],v:e[1],sk:null})})});return o}
+export const hrTxt=(r:any)=>fxTxt(r.fx)+' on every gathering skill';
+export function hrFx(){const o:any[]=[];HR.forEach(r=>{if(!(gameState.hrc&&gameState.hrc[r.id]))return;r.fx.forEach((e:FxDef)=>{if(CTX.includes(e[0]))GSK.forEach(sk=>o.push({k:e[0],v:e[1],sk}));else o.push({k:e[0],v:e[1],sk:null})})});return o}
 export function hrCount(a:any,n:number){
   const h=gameState.hr;if(!h)return;const r=HR.find(x=>x.id==h.id);if(!r||+a.id.slice(2)<r.tier)return;
   h.q[a.sk]=Math.min(r.q,(h.q[a.sk]||0)+n);
