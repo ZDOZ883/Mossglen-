@@ -25,6 +25,7 @@ function ensureDefaults() {
   S.tier=S.tier||{};S.best=S.best||{};S.cx=S.cx||{};S.lead=S.lead||null;S.style=S.style||'Melee';S.gear=S.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(S.xp.Attack==null&&(S.xp.Melee||S.xp.Ranged||S.xp.Magic)){const b0=Math.max(S.xp.Melee||0,S.xp.Ranged||0,S.xp.Magic||0);S.xp.Attack=S.xp.Strength=S.xp.Defense=b0}
   CS.forEach(k=>S.xp[k]=S.xp[k]||(k=='Vitality'?XT[10]:0));S.tool=S.tool||{Foraging:0,Woodcutting:0,Fishing:0,Mining:0};if(S.cur&&S.cur.k=='s'&&!A.find(a=>a.id==S.cur.id))S.cur=null;
   if(S.cur&&S.cur.k=='c'&&!E.find(e=>e.id==S.cur.id))S.cur=null;
+  if(S.cur&&S.cur.k=='d')S.cur=null; // live delves were replaced by timed expeditions
   if(!S.own){if(S.gear){const rf=(g:string,c:any)=>c.slice(0,g).reduce((a:number,b:number)=>a+b,0);S.a+=['Melee','Ranged','Magic'].reduce((s,k)=>s+rf(S.gear[k]||0,[80,300,900]),0)+rf(S.gear.arm||0,[100,400,1000]);delete S.gear}S.own={w00:1,w10:1,w20:1};S.eq={Melee:'w00',Ranged:'w10',Magic:'w20',body:null,head:null,trinket:null}}
   S.kc=S.kc||{};S.pity=S.pity||{};S.col=S.col||{};S.zone=S.zone||0;S.stance=S.stance||'bal';S.pt=S.pt||0;S.str=S.str||0;S.su=S.su||{};S.task=S.task||null;if(S.cur&&S.cur.k=='f'&&!IT[S.cur.id])S.cur=null;
   initDish();SK.forEach(k=>S.xp[k]=S.xp[k]||0);S.tool.Hunting=S.tool.Hunting||0;if(S.cur&&S.cur.k=='k'&&!DISH[S.cur.id])S.cur=null;if(S.hp==null)S.hp=30+lv(S.xp.Vitality)*10;

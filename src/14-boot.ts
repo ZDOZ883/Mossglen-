@@ -38,7 +38,7 @@ document.addEventListener('click',e=>{
   else if(d.slbuy)slBuy(d.slbuy);
   else if(d.sellone){const k=d.sellone;S.a+=Math.round(S.inv[k]*V[k]*(1+cb('sell')));delete S.inv[k]}
   else if(d.buy)buy(d.buy);
-  else if(d.tier){const [i,t]=d.tier.split(':');S.tier[i]=+t;if(S.cur&&S.cur.k=='d'&&S.cur.id==i)S.p=0}
+  else if(d.tier){const [i,t]=d.tier.split(':');S.tier[i]=+t}
   else if(d.lead)S.lead=d.lead;
   else if(d.exd)set_exSel({d:exSel.d==d.exd?null:d.exd,l:null,m:[],b:null});
   else if(d.exl){exSel.l=exSel.l==d.exl?null:d.exl;exSel.m=exSel.m.filter((k:string)=>k!=d.exl)}

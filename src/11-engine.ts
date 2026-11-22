@@ -117,7 +117,7 @@ export const working=()=>Object.keys(S.hired).filter(k=>asg(k).k!='war'&&asg(k).
 export const hasWork=()=>!!S.ex||working().length>0||(buL('bar')>0&&Object.keys(S.hired).some(k=>asg(k).k=='idle'));
 const ING:Record<string,string>=Object.fromEntries('Pick Picking,Dig Digging,Sniff Sniffing,Gather Gathering,Find Finding,Pluck Plucking,Reach Reaching,Cut Cutting,Harvest Harvesting,Gnaw Gnawing,Fell Felling,Hew Hewing,Claim Claiming,Catch Catching,Spear Spearing,Hook Hooking,Trap Trapping,Net Netting,Lure Luring,Land Landing,Collect Collecting,Chip Chipping,Pry Prying,Free Freeing,Mine Mining,Quarry Quarrying,Snare Snaring'.split(',').map(x=>x.split(' ')));
 export const ing=(n:string)=>{const w=n.split(' ');return (ING[w[0]]||w[0])+(w.length>1?' '+w.slice(1).join(' '):'')};
-export function taskName(c:any):string{return c.k=='bar'?'Training in the barracks':c.k=='s'?ing(A.find(a=>a.id==c.id)!.n):c.k=='k'?'Cooking '+DISH[c.id].n:c.k=='f'?'Crafting '+IT[c.id].n:c.k=='r'?'Refining '+RFN[c.id].n:c.k=='c'?'Fighting '+E.find(e=>e.id==c.id)!.n:'Delving into '+D.find(d=>d.id==c.id)!.n}
+export function taskName(c:any):string{return c.k=='bar'?'Training in the barracks':c.k=='s'?ing(A.find(a=>a.id==c.id)!.n):c.k=='k'?'Cooking '+DISH[c.id].n:c.k=='f'?'Crafting '+IT[c.id].n:c.k=='r'?'Refining '+RFN[c.id].n:'Fighting '+E.find(e=>e.id==c.id)!.n}
 export const workNames=()=>{
   const g:Record<string,string[]>={};working().forEach(k=>{const t=taskName(asg(k));(g[t]=g[t]||[]).push(H[k].n.split(' ')[0])});
   return Object.keys(g).map(t=>{const m=g[t],a=t.charAt(0).toLowerCase()+t.slice(1),who=m.length>1?m.slice(0,-1).join(', ')+' and '+m[m.length-1]:m[0];return who+(m.length==1?' is ':m.length==2?' are both ':' are all ')+a}).join('<br>')};

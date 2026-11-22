@@ -128,8 +128,7 @@ nav button.on i{opacity:1}
   __export(state_exports, {
     S: () => S,
     save: () => save,
-    say: () => say,
-    set_S: () => set_S
+    say: () => say
   });
   var S = null;
   try {
@@ -147,9 +146,6 @@ nav button.on i{opacity:1}
     S.log.unshift(m);
     S.log = S.log.slice(0, 12);
   };
-  function set_S(v) {
-    S = v;
-  }
 
   // src/01-species-pets.ts
   var species_pets_exports = {};
@@ -1171,12 +1167,12 @@ nav button.on i{opacity:1}
   var memDpr = (e) => X.fighters().reduce((q, k) => q + mdmg(k, e), 0) * X.pm() * 0.9;
   var emax = (e) => Math.max(1, Math.round(e.dps * 3 * enr(e)));
   var hitP = (e) => {
-    const A2 = (lv(S.xp.Attack) + 8) * (1 + wst() / 45), D2 = eDef(e);
-    return clampH(1.5 * A2 / (A2 + D2) + (dwf() > 0 ? 0.03 : 0) + X.cb("acc") + X.pk("acc"));
+    const A2 = (lv(S.xp.Attack) + 8) * (1 + wst() / 45), D3 = eDef(e);
+    return clampH(1.5 * A2 / (A2 + D3) + (dwf() > 0 ? 0.03 : 0) + X.cb("acc") + X.pk("acc"));
   };
   var eHitP = (e) => {
-    const A2 = eAtk(e), D2 = lv(S.xp.Defense) + 8;
-    return clampH(1.5 * A2 / (A2 + D2));
+    const A2 = eAtk(e), D3 = lv(S.xp.Defense) + 8;
+    return clampH(1.5 * A2 / (A2 + D3));
   };
   function armor() {
     const d = ["body", "head", "legs"].reduce((s, k) => s + (S.eq[k] ? IT[S.eq[k]].stat : 0), 0) + (shieldOn() ? offIt().stat : 0);
@@ -2616,7 +2612,7 @@ nav button.on i{opacity:1}
     return (ING[w[0]] || w[0]) + (w.length > 1 ? " " + w.slice(1).join(" ") : "");
   };
   function taskName(c) {
-    return c.k == "bar" ? "Training in the barracks" : c.k == "s" ? ing(A.find((a) => a.id == c.id).n) : c.k == "k" ? "Cooking " + DISH[c.id].n : c.k == "f" ? "Crafting " + IT[c.id].n : c.k == "r" ? "Refining " + RFN[c.id].n : c.k == "c" ? "Fighting " + E.find((e) => e.id == c.id).n : "Delving into " + D.find((d) => d.id == c.id).n;
+    return c.k == "bar" ? "Training in the barracks" : c.k == "s" ? ing(A.find((a) => a.id == c.id).n) : c.k == "k" ? "Cooking " + DISH[c.id].n : c.k == "f" ? "Crafting " + IT[c.id].n : c.k == "r" ? "Refining " + RFN[c.id].n : "Fighting " + E.find((e) => e.id == c.id).n;
   }
   var workNames = () => {
     const g = {};
@@ -2751,7 +2747,7 @@ nav button.on i{opacity:1}
       const m = H[k], t = asg(k), work = t.k != "war" && t.k != "idle" && t.k != "bar" && t.k != "exp";
       return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + m.n + " \xB7 level " + cl(k) + (k == S.lead ? " \xB7 lead" : "") + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + perkTxt(k) + "</small></span><small>" + memName(k) + (work ? " \xB7 " + Math.round(mspd(k) * 100) + "% speed \xB7 " + Math.round(famShare() * 100) + "% to your pack \xB7 family stash " + (S.fam[k] || 0) : "") + "</small>" + (work ? '<div class="bar"><i id="mp_' + k + '"></i></div>' : "") + (t.k == "exp" ? "" : '<div class="chips" style="margin:8px 0 0"><button class="' + (t.k == "war" ? "on" : "") + '" data-assign="' + k + ':war">Fight with me</button><button class="' + (t.k == "idle" ? "on" : "") + '" data-assign="' + k + ':idle">Rest</button>' + (buL("bar") ? '<button class="' + (t.k == "bar" ? "on" : "") + '" data-assign="' + k + ':bar">Barracks</button>' : "") + '<button class="' + (S.lead == k ? "on" : "") + '" data-lead="' + k + '">Lead</button><button data-dismiss="' + k + '">Dismiss</button></div>') + "</div>";
     }).join("");
-    if (hs.length) h += '<p class="mu">To put a member to work, open a skill and choose them under \u201CChoose who works\u201D. Members keep their level if dismissed. Perks apply only while fighting beside you.</p>';
+    if (hs.length) h += '<p class="mu">To put a member to work, open a skill and choose them under \u201CChoose who works\u201D. Members keep their level if dismissed. Combat perks apply only while fighting beside you. Speed, loot and odds perks apply on expeditions.</p>';
     const rec = HK.filter((k) => !S.hired[k]);
     h += "<h2>Recruit</h2>" + (rec.length ? rec.map((k) => {
       const m = H[k], unl = l >= m.lt, full = nsl() >= sl;
@@ -2819,6 +2815,7 @@ nav button.on i{opacity:1}
     S.tool = S.tool || { Foraging: 0, Woodcutting: 0, Fishing: 0, Mining: 0 };
     if (S.cur && S.cur.k == "s" && !A.find((a) => a.id == S.cur.id)) S.cur = null;
     if (S.cur && S.cur.k == "c" && !E.find((e) => e.id == S.cur.id)) S.cur = null;
+    if (S.cur && S.cur.k == "d") S.cur = null;
     if (!S.own) {
       if (S.gear) {
         const rf = (g, c) => c.slice(0, g).reduce((a, b) => a + b, 0);
@@ -2995,7 +2992,6 @@ nav button.on i{opacity:1}
     else if (d.tier) {
       const [i, t2] = d.tier.split(":");
       S.tier[i] = +t2;
-      if (S.cur && S.cur.k == "d" && S.cur.id == i) S.p = 0;
     } else if (d.lead) S.lead = d.lead;
     else if (d.exd) set_exSel({ d: exSel.d == d.exd ? null : d.exd, l: null, m: [], b: null });
     else if (d.exl) {

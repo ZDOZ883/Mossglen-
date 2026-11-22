@@ -77,7 +77,7 @@ export function partyView(){
     const m=H[k],t=asg(k),work=t.k!='war'&&t.k!='idle'&&t.k!='bar'&&t.k!='exp';
     return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+(k==S.lead?' · lead':'')+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small></span><small>'+memName(k)+(work?' · '+Math.round(mspd(k)*100)+'% speed · '+Math.round(famShare()*100)+'% to your pack · family stash '+(S.fam[k]||0):'')+'</small>'+(work?'<div class="bar"><i id="mp_'+k+'"></i></div>':'')+(t.k=='exp'?'':'<div class="chips" style="margin:8px 0 0"><button class="'+(t.k=='war'?'on':'')+'" data-assign="'+k+':war">Fight with me</button><button class="'+(t.k=='idle'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+'<button class="'+(S.lead==k?'on':'')+'" data-lead="'+k+'">Lead</button><button data-dismiss="'+k+'">Dismiss</button></div>')+'</div>';
   }).join('');
-  if(hs.length)h+='<p class="mu">To put a member to work, open a skill and choose them under “Choose who works”. Members keep their level if dismissed. Perks apply only while fighting beside you.</p>';
+  if(hs.length)h+='<p class="mu">To put a member to work, open a skill and choose them under “Choose who works”. Members keep their level if dismissed. Combat perks apply only while fighting beside you. Speed, loot and odds perks apply on expeditions.</p>';
   const rec=HK.filter(k=>!S.hired[k]);
   h+='<h2>Recruit</h2>'+(rec.length?rec.map(k=>{
     const m=H[k],unl=l>=m.lt,full=nsl()>=sl;
