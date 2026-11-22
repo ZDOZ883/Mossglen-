@@ -114,8 +114,8 @@ export const repCard=()=>{
   if(r.kills>0)bits.push(r.kills.toLocaleString()+' enemies defeated');
   if(r.gear>0)bits.push(r.gear+' new item'+(r.gear>1?'s':'')+' found');
   if(r.pets>0)bits.push(r.pets+' pet'+(r.pets>1?'s':'')+' found');
-  if(r.member)bits.push('your party trained');
-  return '<div class="stat sans"><div class="mu now">While you were away · '+exFmt(r.secs)+'</div><div>'+(bits.length?bits.join(' · '):'Nothing much happened.')+'</div><div style="margin-top:8px"><button class="btn" data-repx="1" style="font-size:14px">Dismiss</button></div></div>';
+  
+  return '<div class="stat sans" style="position:static"><div class="mu now">While you were away · '+exFmt(r.secs)+'</div><div>'+(bits.length?bits.join(' · ')+'.':'Nothing much happened.')+(r.member?' Your party members gained xp too.':'')+'</div><div style="margin-top:8px"><button class="btn" data-repx="1" style="font-size:14px">Dismiss</button></div></div>';
 };
 export let saveMsg='';export function set_saveMsg(v:string){saveMsg=v}
 export const dataView=()=>'<h2>Your save</h2><p class="mu">Mossglen saves in this browser automatically, and keeps a backup before any upgrade or import. To move your character to another device or browser, export a save code here and import it there.</p><div class="chips"><button data-savex="export">Show save code</button><button data-savex="copy">Copy</button><button data-savex="download">Download file</button></div><textarea id="savebox" rows="4" style="width:100%;box-sizing:border-box;margin-top:8px" placeholder="Paste a save code here to import it"></textarea><div class="chips"><button data-savex="import">Import this code</button></div><p class="mu" id="savemsg">'+saveMsg+'</p><p class="mu">Importing replaces your current character. Your current save is kept as a backup in this browser first.</p><h2>Danger zone</h2><p class="mu">Erases your character, party, gear and every skill. You will be asked to type ERASE to confirm.</p><p><button class="btn" data-reset="1" style="font-size:14px">Erase all progress</button></p>';
