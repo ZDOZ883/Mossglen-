@@ -156,7 +156,7 @@ describe('data integrity', () => {
   });
 
   it('pets are unique and complete', () => {
-    const r = g.ev(`(function(){const ids=new Set(),o=[];PETS.forEach(p=>{if(ids.has(p[0]))o.push('dup '+p[0]);ids.add(p[0]);if(!MEMBERS[p[0]])o.push('no member '+p[0])});if(PETS.length!=33)o.push('count '+PETS.length);return o})()`);
+    const r = g.ev(`(function(){const ids=new Set(),o=[];PETS.forEach(p=>{if(ids.has(p[0]))o.push('dup '+p[0]);ids.add(p[0]);if(!MEMBERS[p[0]])o.push('no member '+p[0])});if(PETS.length!=35)o.push('count '+PETS.length);return o})()`);
     assert.equal(JSON.stringify(r), "[]");
   });
 
@@ -183,7 +183,7 @@ describe('combat grips', () => {
   function rig(sp) {
     const g = load({ seed: 5 });
     g.ev(`gameState.sp=${JSON.stringify(sp || 'Hedgehog')};gameState.cape=null;gameState.hired={};gameState.mt={};gameState.pets={};gameState.form='steady';gameState.bn=[];
-      ['Attack','Strength','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[70]);
+      ['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[70]);
       ['w05','x05','o05','o15','y5','b5','h5','g5'].forEach(i=>gameState.own[i]=1);
       gameState.eq={Melee:'w05',body:'b5',head:'h5',legs:'g5'};gameState.style='Melee';refreshFx();gameState.hp=maxhp();`);
     return g;
@@ -257,7 +257,7 @@ describe('combat grips', () => {
 describe('gear slots', () => {
   it('rings fill both slots, necklaces fill one, and nothing double-equips', () => {
     const g = load({ seed: 2 });
-    g.ev(`['Attack','Strength','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[60]);GSK.concat(PSK).forEach(k=>gameState.xp[k]=XT[60]);
+    g.ev(`['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[60]);GSK.concat(PSK).forEach(k=>gameState.xp[k]=XT[60]);
       gameState.own={r0_3:1,r1_3:1,r2_3:1,n0_3:1,n2_3:1};gameState.eq={};`);
     g.ev(`autoEq('r0_3');autoEq('r1_3');autoEq('r2_3')`);
     const eq = JSON.parse(g.ev('JSON.stringify(gameState.eq)'));
@@ -270,7 +270,7 @@ describe('gear slots', () => {
 
   it('equipping updates active bonuses immediately', () => {
     const g = load({ seed: 2 });
-    g.ev(`['Attack','Strength','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[60]);gameState.own={r0_3:1};gameState.eq={};gameState.cape=null;refreshFx();`);
+    g.ev(`['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[60]);gameState.own={r0_3:1};gameState.eq={};gameState.cape=null;refreshFx();`);
     const before = g.ev(`cb('dmgm')`);
     g.ev(`equipSlot('ring1','r0_3')`);
     assert.ok(g.ev(`cb('dmgm')`) > before);
@@ -280,7 +280,7 @@ describe('gear slots', () => {
 
   it('smart loadout never strips rings or necklaces, and keeps the best weapon in unused styles', () => {
     const g = load({ seed: 4 });
-    g.ev(`['Attack','Strength','Defense','Vitality','Foraging','Cooking'].forEach(k=>gameState.xp[k]=XT[40]);
+    g.ev(`['Attack','Strength','Ranged','Magic','Defense','Vitality','Foraging','Cooking'].forEach(k=>gameState.xp[k]=XT[40]);
       gameState.own={};Object.keys(IT).forEach(i=>{if(!/d$/.test(i)&&IT[i].tier<=3&&canEq(IT[i]))gameState.own[i]=1});
       gameState.eq={};const rings=Object.keys(gameState.own).filter(i=>IT[i].slot=='ring');
       gameState.eq.ring1=rings.find(i=>accScore(IT[i],'gather','Foraging')<=0)||rings[0];gameState.eq.ring2=rings[1];
@@ -292,6 +292,33 @@ describe('gear slots', () => {
     // Unused styles keep their strongest one-hander, never a leftover search candidate.
     const bad = g.ev(`(function(){optimize({kind:'combat',enemy:ENEMIES[3],label:'c'});const o=[];SL.forEach(sl=>{if(sl==gameState.style)return;const best=Object.keys(gameState.own).filter(i=>IT[i].slot==sl&&!IT[i].kind).sort((a,b)=>IT[b].stat-IT[a].stat)[0];const two=Object.keys(gameState.own).filter(i=>IT[i].slot==sl&&IT[i].kind=='2h').sort((a,b)=>IT[b].stat-IT[a].stat)[0];const want=best&&two?(IT[two].stat*1.3>IT[best].stat?two:best):best||two;if(want&&gameState.eq[sl]!=want)o.push(sl+':'+gameState.eq[sl]+' vs '+want)});return o})()`);
     assert.equal(bad.length, 0, String(bad));
+  });
+
+  it('ranged and magic are their own skills: they gate weapons, drive hits and take their own xp', () => {
+    const g = load({ seed: 6 });
+    g.ev(`['Attack','Strength','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[60]);gameState.xp.Ranged=XT[1];gameState.xp.Magic=XT[1];gameState.own={w14:1,w24:1,w04:1};`);
+    assert.ok(g.ev('canEq(IT.w04)'), 'melee weapon follows Attack');
+    assert.ok(!g.ev('canEq(IT.w14)'), 'bow is locked by the Ranged skill, not Attack');
+    assert.ok(!g.ev('canEq(IT.w24)'), 'staff is locked by the Magic skill');
+    const e = 'ENEMIES.find(q=>q.zone==2&&!q.boss)';
+    g.ev(`gameState.style='Ranged'`);
+    const low = g.ev(`maxHit(${e})`);
+    g.ev(`gameState.xp.Ranged=XT[60]`);
+    assert.ok(g.ev(`maxHit(${e})`) > low, 'ranged damage grows with the Ranged skill');
+    // A kill in a style trains that style's skill, and Defense and Vitality are shared by every style.
+    g.ev(`gameState.xp.Ranged=XT[10];gameState.xp.Attack=XT[10];gameState.xp.Strength=XT[10];gameState.xp.Defense=XT[10];gameState.xp.Magic=XT[10];gameState.stance='bal';gameState.style='Ranged'`);
+    const b = JSON.parse(g.ev('JSON.stringify(gameState.xp)'));
+    g.ev(`onKill(${e},true)`);
+    const a = JSON.parse(g.ev('JSON.stringify(gameState.xp)'));
+    assert.ok(a.Ranged > b.Ranged && a.Defense > b.Defense, 'ranged kill trains Ranged and Defense');
+    assert.equal(a.Attack, b.Attack); assert.equal(a.Magic, b.Magic);
+  });
+
+  it('old saves start Ranged and Magic at their Attack xp', () => {
+    const g = load({ seed: 6 });
+    g.ev(`gameState.xp.Attack=XT[50];delete gameState.xp.Ranged;delete gameState.xp.Magic;gameState.v=2;migrate()`);
+    assert.equal(g.ev('gameState.xp.Ranged'), g.ev('XT[50]'));
+    assert.equal(g.ev('gameState.xp.Magic'), g.ev('XT[50]'));
   });
 
   it('level-locked gear cannot be equipped', () => {
@@ -307,7 +334,7 @@ describe('expeditions', () => {
   function party() {
     const g = load({ seed: 9 });
     g.ev(`gameState.sp='Badger';gameState.hired={mole:1,hare:1,owl:1,otter:1};gameState.mt={};Object.keys(gameState.hired).forEach(k=>{gameState.mt[k]={k:'war'};gameState.cx[k]=XT[60]});
-      ['Attack','Strength','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[80]);gameState.gates={1:1,2:1,3:1};refreshFx();`);
+      ['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[80]);gameState.gates={1:1,2:1,3:1};refreshFx();`);
     return g;
   }
   const D = (g, id) => `DISHES.find(d=>d.id=='${id}')`;
@@ -470,7 +497,7 @@ describe('save and load', () => {
 
   it('a character in a live expedition survives a reload', () => {
     const g = load({ seed: 6 });
-    g.ev(`gameState.sp='Badger';gameState.hired={mole:1,hare:1};gameState.mt={mole:{k:'war'},hare:{k:'war'}};['Attack','Strength','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[60])`);
+    g.ev(`gameState.sp='Badger';gameState.hired={mole:1,hare:1};gameState.mt={mole:{k:'war'},hare:{k:'war'}};['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[60])`);
     g.ev(`exSel={d:'hollow',l:'mole',m:['hare'],b:null}`);
     g.click({ exgo: '1' });
     g.ev('save()');
@@ -500,7 +527,7 @@ describe('long-run invariants', () => {
   it('random play for many steps keeps the state valid', () => {
     const g = load({ seed: 77, save: OLD_SAVE, awaySec: 0 });
     const rnd = mulberry32(1234);
-    g.ev(`gameState.a=5e6;gameState.inv.berries=500;['Attack','Strength','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[90]);gameState.gates={1:1,2:1,3:1}`);
+    g.ev(`gameState.a=5e6;gameState.inv.berries=500;['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[90]);gameState.gates={1:1,2:1,3:1}`);
     const acts = [
       () => g.ev(`gameState.cur={k:'s',id:ACHIEVEMENTS[Math.floor(Math.random()*ACHIEVEMENTS.length)].id}`),
       () => g.ev(`gameState.cur={k:'c',id:ZN[Math.floor(Math.random()*8)].length?'z'+Math.floor(Math.random()*6)+'m'+Math.floor(Math.random()*3):null}`),
@@ -781,7 +808,7 @@ describe('leadership past 70', () => {
     g.ev('gameState.xp.Leadership=XT[105]');
     assert.equal(g.ev('exSlots()'), 3);
     g.ev(`gameState.sp='Badger';gameState.hired={mole:1,hare:1};gameState.mt={mole:{k:'war'},hare:{k:'war'}};gameState.cx.mole=XT[60];gameState.cx.hare=XT[60];
-      ['Attack','Strength','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[80]);gameState.xp.Leadership=XT[85];refreshFx()`);
+      ['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[80]);gameState.xp.Leadership=XT[85];refreshFx()`);
     g.ev("exSel={d:'hollow',l:'mole',m:[],b:null}");g.click({ exgo: '1' });
     g.ev("exSel={d:'hollow',l:'hare',m:[],b:null}");g.click({ exgo: '1' });
     assert.equal(g.ev('exs().length'), 2);

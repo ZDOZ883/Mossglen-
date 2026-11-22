@@ -29,7 +29,7 @@ export const AC:Ach[]=[
 ['s2','Jack of Many Trades','Reach level 99 in five skills.',()=>nSk(99)>=5,100000],
 ['s3','Provider','Reach level 99 in every gathering skill.',()=>GSK.every(k=>lv(gameState.xp[k])>=99),150000],
 ['s4','Artisan','Reach level 99 in every production skill.',()=>PSK.every(k=>lv(gameState.xp[k])>=99),150000],
-['s5','Warrior of the Hollow','Reach level 99 in every combat stat.',()=>COMBAT_SKILLS.slice(0,4).every(k=>lv(gameState.xp[k])>=99),150000],
+['s5','Warrior of the Hollow','Reach level 99 in every combat stat.',()=>COMBAT_SKILLS.slice(0,6).every(k=>lv(gameState.xp[k])>=99),150000],
 ['s6','Beyond the Limit','Reach level 120 in any skill.',()=>nSk(120)>=1,300000],
 ['s7','Maxed','Reach level 99 in every skill.',()=>nSk(99)>=GATHER_SKILLS.length+COMBAT_SKILLS.length,1000000],
 ['s8','Master of Everything','Earn the Max Master Cape.',()=>grpTier('Max')>=4,20000000],

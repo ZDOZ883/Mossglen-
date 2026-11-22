@@ -95,7 +95,7 @@ function expectedSetup(g, zoneIdx, opts = {}) {
     const i=${zoneIdx},gt=${tier},nm=${members};
     const L=Math.min(120,ZN[i][1]+5),ml=Math.round(L*.75);
     gameState.cape=null;gameState.form='steady';gameState.bn=[];gameState.cur=null;gameState.ehid=null;gameState.own={};
-    ['Attack','Strength','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[Math.max(1,L)]);
+    ['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[Math.max(1,L)]);
     gameState.eq={Melee:'w0'+gt,Ranged:'w1'+gt,Magic:'w2'+gt,body:gt>0?'b'+gt:null,head:gt>0?'h'+gt:null,legs:gt>0?'g'+gt:null,off:gt>0?'y'+gt:null,trinket:null};
     if(gt>1){const a=gt-1;gameState.eq.ring1='r0_'+a;gameState.eq.ring2='r1_'+a;gameState.eq.neck='n0_'+a;gameState.cape='I:c1_'+a;gameState.own['c1_'+a]=1}
     gameState.hired={};gameState.mt={};gameState.pets={};

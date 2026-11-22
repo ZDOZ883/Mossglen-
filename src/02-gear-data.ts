@@ -1,6 +1,6 @@
 import { gameState, say } from './00-state';
 import { X } from './registry';
-import { BD, CRS, DISHES, GATHER_SKILLS, FOOD, GN, MEMBERS, IT, REQ, SL, SELL_VALUE, WA, cb, ldx, lv, mxp, skPet, useMats } from './01-species-pets';
+import { BD, CRS, DISHES, GATHER_SKILLS, FOOD, GN, MEMBERS, IT, REQ, SL, SELL_VALUE, WA, cb, ldx, lv, mxp, skPet, useMats, OFF } from './01-species-pets';
 // Gear: slots, grips, grades, items. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- expanded gear: legs, necklaces, rings, cloaks
 export const PRE=['Twig','Hide','Moss','Moonsteel','Amber','Frostglass','Sunforged','Starbound','Deepwood','Wyrmscale','Eclipse'];
@@ -21,7 +21,7 @@ export const N2=['Greataxe','Warbow','Great Staff'],NO=['Dirk','Hand Crossbow','
 for(let t=0;t<11;t++){
   SL.forEach((sl,i)=>{
     IT['x'+i+t]={n:PRE[t]+' '+N2[i],slot:sl,tier:t,stat:WA[t],req:REQ[t],kind:'2h'};
-    IT['o'+i+t]={n:PRE[t]+' '+NO[i],slot:'off',tier:t,stat:Math.round(WA[t]*.7),req:REQ[t],kind:'off',st:sl,rs:'Attack'};
+    IT['o'+i+t]={n:PRE[t]+' '+NO[i],slot:'off',tier:t,stat:Math.round(WA[t]*.7),req:REQ[t],kind:'off',st:sl,rs:OFF[sl][0]};
   });
   IT['y'+t]={n:PRE[t]+' Shield',slot:'off',tier:t,stat:Math.round(BD[t]*.45),req:REQ[t],kind:'shield',rs:'Defense'};
 }
@@ -86,7 +86,7 @@ export const KEEPX:Record<string,string>={};// seeds and potions: kept out of Se
 export const KEEP=(k:string)=>!!FOOD[k]||!!KP[k]||!!KEEPX[k];
 
 // ---- Capes: data and tier logic (used by every later module) ----
-export const CAPN:Record<string,string>={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Farming:'Gardener',Alchemy:'Alchemist',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
+export const CAPN:Record<string,string>={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Farming:'Gardener',Alchemy:'Alchemist',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Ranged:'Sharpshooter',Magic:'Mystic',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
 export const TNAME=['','Skill Cape','120 Cape','Sub-master Cape','Master Cape'];
 export const CE:Record<string,any[][][]>={
 Foraging:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['heal',.25]]],
@@ -101,13 +101,15 @@ Enchanting:[[['save',.15]],[['xp',.1]],[['spd',.1]],[['xpm',.08]]],
 Tailoring:[[['save',.15]],[['xp',.1]],[['spd',.1]],[['taken',.06]]],
 Attack:[[['acc',.06]],[['xpm',.1]],[['crit',.08]],[['acc',.06]]],
 Strength:[[['dmgm',.08]],[['xpm',.1]],[['lsteal',.05]],[['dmgm',.1]]],
+Ranged:[[['acc',.05]],[['xpm',.1]],[['crit',.06]],[['dmgm',.06]]],
+Magic:[[['dmgm',.05]],[['xpm',.1]],[['regen',.4]],[['acc',.05],['dmgm',.06]]],
 Defense:[[['taken',.08]],[['xpm',.1]],[['ls',1]],[['taken',.08]]],
 Vitality:[[['hpm',.1]],[['xpm',.1]],[['regen',.5]],[['hpm',.1],['heal',.15]]],
 Slayer:[[['tdmg',.1]],[['pts',.25]],[['tdrop',.15]],[['tdmg',.15]]],
 Farming:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['sell',.15]]],
 Alchemy:[[['save',.15]],[['xp',.1]],[['spd',.1]],[['pot',.25]]],
 Leadership:[[['mspd',.15]],[['pmult',.15]],[['mspd',.15]],[['pmult',.15],['mspd',.15]]]};
-export const GRP:Record<string,string[]>={Combat:['Attack','Strength','Defense','Vitality'],Gathering:GATHER_SKILLS,Production:['Cooking','Smithing','Fletching','Enchanting','Tailoring'],Cultivation:['Farming','Alchemy']};
+export const GRP:Record<string,string[]>={Combat:['Attack','Strength','Ranged','Magic','Defense','Vitality'],Gathering:GATHER_SKILLS,Production:['Cooking','Smithing','Fletching','Enchanting','Tailoring'],Cultivation:['Farming','Alchemy']};
 export const GE:Record<string,any[][][]>={
 Combat:[[['xpm',.05],['taken',.04]],[['dmgm',.05],['acc',.04]],[['crit',.05],['regen',.25]],[['dmgm',.1],['taken',.1],['drop',.1]]],
 Gathering:[[['yld',.1]],[['xp',.05]],[['spd',.05]],[['yld',.1],['sell',.1]]],

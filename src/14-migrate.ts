@@ -19,7 +19,7 @@ import { validTask } from './08-party-state';
 // Save upgrades. ensureDefaults() is idempotent: it fills any field an older save lacks.
 // For changes that are not idempotent (renames, rebalances of stored values), add an entry to MIGRATIONS
 // with the next version number; each runs once, in order, and S.v records the latest applied version.
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 function ensureDefaults() {
   gameState.tier=gameState.tier||{};gameState.best=gameState.best||{};gameState.cx=gameState.cx||{};gameState.lead=gameState.lead||null;gameState.style=gameState.style||'Melee';gameState.gear=gameState.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(gameState.xp.Attack==null&&(gameState.xp.Melee||gameState.xp.Ranged||gameState.xp.Magic)){const b0=Math.max(gameState.xp.Melee||0,gameState.xp.Ranged||0,gameState.xp.Magic||0);gameState.xp.Attack=gameState.xp.Strength=gameState.xp.Defense=b0}
@@ -42,6 +42,8 @@ function ensureDefaults() {
 export const MIGRATIONS: { v: number; run: () => void }[] = [
   // v2: Farming and Alchemy arrive. Everyone gets a few turnip seeds to start the first plot.
   { v: 2, run: () => { gameState.farm = gameState.farm || []; gameState.buffs = gameState.buffs || {}; if (!(gameState.inv['turnip seeds'] > 0)) gameState.inv['turnip seeds'] = 4; } },
+  // v3: Ranged and Magic become their own skills. Existing characters start both at their Attack xp, so no gear locks and nothing is lost.
+  { v: 3, run: () => { gameState.xp.Ranged = Math.max(gameState.xp.Ranged || 0, gameState.xp.Attack || 0); gameState.xp.Magic = Math.max(gameState.xp.Magic || 0, gameState.xp.Attack || 0); } },
 ];
 
 export function migrate() {

@@ -180,6 +180,7 @@ nav button.on i{opacity:1}
     LD: () => LD,
     LT: () => LT,
     MEMBERS: () => MEMBERS,
+    OFF: () => OFF,
     PB: () => PB,
     PETS: () => PETS,
     REQ: () => REQ,
@@ -272,13 +273,13 @@ nav button.on i{opacity:1}
   };
   var HK = Object.keys(MEMBERS);
   HK.forEach((k, i) => MEMBERS[k].lt = LT[i]);
-  var SPN = { Foraging: ["Truffle Pup", "Melee", { dmg: 0.05, taken: 0.05 }], Woodcutting: ["Splinter the Beaver", "Melee", { dmg: 0.06, taken: 0.05 }], Fishing: ["Tiny Heron", "Ranged", { dmg: 0.06, speed: 0.1 }], Mining: ["Pebble Mole", "Melee", { dmg: 0.04, taken: 0.07 }], Hunting: ["Snare Weasel", "Ranged", { dmg: 0.07, loot: 0.15 }], Cooking: ["Soup Sprite", "Magic", { heal: 0.03, taken: 0.05 }], Smithing: ["Ember Hedgehog", "Melee", { dmg: 0.06, taken: 0.06 }], Fletching: ["Feather Wren", "Ranged", { dmg: 0.08, speed: 0.1 }], Enchanting: ["Glimmer Moth", "Magic", { dmg: 0.07, loot: 0.2 }], Tailoring: ["Thread Spider", "Magic", { taken: 0.08, heal: 0.01 }], Farming: ["Sprout the Vole", "Melee", { taken: 0.06, heal: 0.01 }], Alchemy: ["Cauldron Newt", "Magic", { dmg: 0.07, heal: 0.02 }], Attack: ["Quillpoint the Duelist", "Melee", { dmg: 0.06, acc: 0.05 }], Strength: ["Brawny Vole", "Melee", { dmg: 0.12 }], Defense: ["Shieldback Beetle", "Melee", { taken: 0.12 }], Vitality: ["Hardy Dormouse", "Magic", { heal: 0.03, hp: 0.08 }], Slayer: ["Thistle Cub", "Melee", { dmg: 0.09, taken: 0.04 }], Leadership: ["Little Warden", "Melee", { dmg: 0.04, succ: 6, speed: 0.1 }] };
+  var SPN = { Foraging: ["Truffle Pup", "Melee", { dmg: 0.05, taken: 0.05 }], Woodcutting: ["Splinter the Beaver", "Melee", { dmg: 0.06, taken: 0.05 }], Fishing: ["Tiny Heron", "Ranged", { dmg: 0.06, speed: 0.1 }], Mining: ["Pebble Mole", "Melee", { dmg: 0.04, taken: 0.07 }], Hunting: ["Snare Weasel", "Ranged", { dmg: 0.07, loot: 0.15 }], Cooking: ["Soup Sprite", "Magic", { heal: 0.03, taken: 0.05 }], Smithing: ["Ember Hedgehog", "Melee", { dmg: 0.06, taken: 0.06 }], Fletching: ["Feather Wren", "Ranged", { dmg: 0.08, speed: 0.1 }], Enchanting: ["Glimmer Moth", "Magic", { dmg: 0.07, loot: 0.2 }], Tailoring: ["Thread Spider", "Magic", { taken: 0.08, heal: 0.01 }], Farming: ["Sprout the Vole", "Melee", { taken: 0.06, heal: 0.01 }], Alchemy: ["Cauldron Newt", "Magic", { dmg: 0.07, heal: 0.02 }], Attack: ["Quillpoint the Duelist", "Melee", { dmg: 0.06, acc: 0.05 }], Strength: ["Brawny Vole", "Melee", { dmg: 0.12 }], Ranged: ["Quickfeather Sharpshot", "Ranged", { dmg: 0.08, acc: 0.05 }], Magic: ["Mistwick Apprentice", "Magic", { dmg: 0.08, heal: 0.02 }], Defense: ["Shieldback Beetle", "Melee", { taken: 0.12 }], Vitality: ["Hardy Dormouse", "Magic", { heal: 0.03, hp: 0.08 }], Slayer: ["Thistle Cub", "Melee", { dmg: 0.09, taken: 0.04 }], Leadership: ["Little Warden", "Melee", { dmg: 0.04, succ: 6, speed: 0.1 }] };
   var ZPN = ["Gnawtooth Kit", "Thornjaw Pup", "Bog Matron Tadpole", "Stormwing Chick", "Wyrmling Hatchling", "Winter Warden Cub", "Sandwyrm Pup", "Raven Queen Fledgling", "Rotting Sprout", "Ashmaw Whelp", "Hollow Sun Wisp"], ZPT = ["Melee", "Melee", "Magic", "Ranged", "Melee", "Magic", "Melee", "Ranged", "Ranged", "Melee", "Magic"];
   var RPN = ["Brindlemaw Cub", "Bramblethorn Seedling", "Vaerath Hatchling", "Eclipse Sovereign Mote"];
   var PETS = [];
   Object.keys(SPN).forEach((sk) => {
     const q = SPN[sk];
-    PETS.push(["p_" + sk, q[0], q[1], q[2], ["Attack", "Strength", "Defense", "Vitality"].includes(sk) ? "A tiny champion of " + sk + ". Its specialty is boosted while it fights beside you." : "A miniature of " + sk + " itself. Works its own skill 30% faster with a better yield, and fights a little harder than most.", sk, 6]);
+    PETS.push(["p_" + sk, q[0], q[1], q[2], ["Attack", "Strength", "Ranged", "Magic", "Defense", "Vitality"].includes(sk) ? "A tiny champion of " + sk + ". Its specialty is boosted while it fights beside you." : "A miniature of " + sk + " itself. Works its own skill 30% faster with a better yield, and fights a little harder than most.", sk, 6]);
   });
   ZPN.forEach((n, i) => {
     const t = ZPT[i];
@@ -301,7 +302,7 @@ nav button.on i{opacity:1}
       say("\u2605 Extremely rare! " + MEMBERS[id].n + " has joined your party.");
     } else say("\u2605 Extremely rare! You found " + MEMBERS[id].n + ". Your party is full, so it waits at home. Swap it in from the Party tab.");
   }
-  var PB = { Attack: 4e4, Strength: 4e4, Defense: 4e4, Vitality: 4e4, Foraging: 15e4, Woodcutting: 16e4, Fishing: 13e4, Mining: 25e4, Hunting: 1e5, Cooking: 11e4, Smithing: 9e4, Fletching: 8e4, Enchanting: 9e4, Tailoring: 85e3, Farming: 95e3, Alchemy: 9e4 };
+  var PB = { Attack: 4e4, Strength: 4e4, Ranged: 4e4, Magic: 4e4, Defense: 4e4, Vitality: 4e4, Foraging: 15e4, Woodcutting: 16e4, Fishing: 13e4, Mining: 25e4, Hunting: 1e5, Cooking: 11e4, Smithing: 9e4, Fletching: 8e4, Enchanting: 9e4, Tailoring: 85e3, Farming: 95e3, Alchemy: 9e4 };
   function skPet(sk) {
     if (typeof sk != "string") return;
     let r = PB[sk] - 25 * lv(gameState.xp[sk]);
@@ -337,7 +338,8 @@ nav button.on i{opacity:1}
     }
     return a;
   };
-  var COMBAT_SKILLS = ["Attack", "Strength", "Defense", "Vitality"];
+  var COMBAT_SKILLS = ["Attack", "Strength", "Ranged", "Magic", "Defense", "Vitality"];
+  var OFF = { Melee: ["Attack", "Strength"], Ranged: ["Ranged", "Ranged"], Magic: ["Magic", "Magic"] };
   var BEATS = { Melee: "Ranged", Ranged: "Magic", Magic: "Melee" };
   var adv = (a, b) => BEATS[a] == b ? 1 : BEATS[b] == a ? -1 : 0;
   var weak = (t) => Object.keys(BEATS).find((k) => BEATS[k] == t);
@@ -345,7 +347,7 @@ nav button.on i{opacity:1}
   var AR = ["Bark Vest", "Mossweave Coat", "Amber Mail"];
   var maxhp = () => Math.round((30 + lv(gameState.xp.Vitality) * 10) * (1 + cb("hpm") + pk("hp")));
   var SL = ["Melee", "Ranged", "Magic"];
-  var XS = { bal: ["Balanced", 2, 2, 2, 2, 0.3, "Shares xp evenly between Attack, Strength and Defense, with a little for Leadership when members fight beside you."], acc: ["Accurate", 6, 0, 0, 2, 0, "Trains Attack: you land more of your hits."], agg: ["Aggressive", 0, 6, 0, 2, 0, "Trains Strength: your hits land harder."], def: ["Defensive", 0, 0, 6, 2, 0, "Trains Defense: enemies land fewer hits on you."] };
+  var XS = { bal: ["Balanced", 2, 2, 2, 2, 0.3, "Shares xp evenly between your weapon skill and Defense, with a little for Leadership when members fight beside you."], acc: ["Accurate", 6, 0, 0, 2, 0, "Trains Attack with melee, or Ranged or Magic with those styles: you land more of your hits."], agg: ["Aggressive", 0, 6, 0, 2, 0, "Trains Strength with melee, or Ranged or Magic with those styles: your hits land harder."], def: ["Defensive", 0, 0, 6, 2, 0, "Trains Defense: enemies land fewer hits on you."] };
   var FM = { steady: { n: "Steady", cl: 1, d: "No bonuses or penalties." }, fury: { n: "Fury", cl: 10, dmg: 0.2, taken: 0.25, d: "+20% damage, +25% damage taken." }, bulwark: { n: "Bulwark", cl: 20, dmg: -0.1, taken: -0.2, d: "\u221210% damage, \u221220% damage taken." }, mender: { n: "Mender", cl: 35, dmg: -0.05, regen: 1, d: "\u22125% damage, double regeneration between fights." }, fortune: { n: "Fortune", cl: 50, dmg: -0.1, drop: 0.15, gold: 0.1, d: "\u221210% damage, +15% rare drops, +10% acorns." }, warband: { n: "Warband", cl: 65, dmg: -0.1, party: 1.5, d: "\u221210% damage. Perks of members fighting beside you are 1.5\xD7 stronger." } };
   Object.keys(FM).forEach((k) => FM[k] = Object.assign({ dmg: 0, taken: 0, regen: 0, drop: 0, gold: 0, party: 1 }, FM[k]));
   var FOOD = { berries: 8, mushrooms: 12, trout: 25, pike: 40, eels: 65, "silver carp": 100, moonfish: 150, glassfin: 220 };
@@ -486,7 +488,7 @@ nav button.on i{opacity:1}
   for (let t = 0; t < 11; t++) {
     SL.forEach((sl, i) => {
       IT["x" + i + t] = { n: PRE[t] + " " + N2[i], slot: sl, tier: t, stat: WA[t], req: REQ[t], kind: "2h" };
-      IT["o" + i + t] = { n: PRE[t] + " " + NO[i], slot: "off", tier: t, stat: Math.round(WA[t] * 0.7), req: REQ[t], kind: "off", st: sl, rs: "Attack" };
+      IT["o" + i + t] = { n: PRE[t] + " " + NO[i], slot: "off", tier: t, stat: Math.round(WA[t] * 0.7), req: REQ[t], kind: "off", st: sl, rs: OFF[sl][0] };
     });
     IT["y" + t] = { n: PRE[t] + " Shield", slot: "off", tier: t, stat: Math.round(BD[t] * 0.45), req: REQ[t], kind: "shield", rs: "Defense" };
   }
@@ -655,7 +657,7 @@ nav button.on i{opacity:1}
   DISHES.forEach((d) => KP[d.tr] = 1);
   var KEEPX = {};
   var KEEP = (k) => !!FOOD[k] || !!KP[k] || !!KEEPX[k];
-  var CAPN = { Foraging: "Forager", Woodcutting: "Woodsman", Fishing: "Angler", Mining: "Delver", Hunting: "Trapper", Farming: "Gardener", Alchemy: "Alchemist", Cooking: "Cook", Smithing: "Smith", Fletching: "Fletcher", Enchanting: "Enchanter", Tailoring: "Tailor", Attack: "Duelist", Strength: "Brawler", Defense: "Warden", Vitality: "Survivor", Slayer: "Slayer", Leadership: "Commander" };
+  var CAPN = { Foraging: "Forager", Woodcutting: "Woodsman", Fishing: "Angler", Mining: "Delver", Hunting: "Trapper", Farming: "Gardener", Alchemy: "Alchemist", Cooking: "Cook", Smithing: "Smith", Fletching: "Fletcher", Enchanting: "Enchanter", Tailoring: "Tailor", Attack: "Duelist", Strength: "Brawler", Ranged: "Sharpshooter", Magic: "Mystic", Defense: "Warden", Vitality: "Survivor", Slayer: "Slayer", Leadership: "Commander" };
   var TNAME = ["", "Skill Cape", "120 Cape", "Sub-master Cape", "Master Cape"];
   var CE = {
     Foraging: [[["yld", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["heal", 0.25]]],
@@ -670,6 +672,8 @@ nav button.on i{opacity:1}
     Tailoring: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["taken", 0.06]]],
     Attack: [[["acc", 0.06]], [["xpm", 0.1]], [["crit", 0.08]], [["acc", 0.06]]],
     Strength: [[["dmgm", 0.08]], [["xpm", 0.1]], [["lsteal", 0.05]], [["dmgm", 0.1]]],
+    Ranged: [[["acc", 0.05]], [["xpm", 0.1]], [["crit", 0.06]], [["dmgm", 0.06]]],
+    Magic: [[["dmgm", 0.05]], [["xpm", 0.1]], [["regen", 0.4]], [["acc", 0.05], ["dmgm", 0.06]]],
     Defense: [[["taken", 0.08]], [["xpm", 0.1]], [["ls", 1]], [["taken", 0.08]]],
     Vitality: [[["hpm", 0.1]], [["xpm", 0.1]], [["regen", 0.5]], [["hpm", 0.1], ["heal", 0.15]]],
     Slayer: [[["tdmg", 0.1]], [["pts", 0.25]], [["tdrop", 0.15]], [["tdmg", 0.15]]],
@@ -677,7 +681,7 @@ nav button.on i{opacity:1}
     Alchemy: [[["save", 0.15]], [["xp", 0.1]], [["spd", 0.1]], [["pot", 0.25]]],
     Leadership: [[["mspd", 0.15]], [["pmult", 0.15]], [["mspd", 0.15]], [["pmult", 0.15], ["mspd", 0.15]]]
   };
-  var GRP = { Combat: ["Attack", "Strength", "Defense", "Vitality"], Gathering: GATHER_SKILLS, Production: ["Cooking", "Smithing", "Fletching", "Enchanting", "Tailoring"], Cultivation: ["Farming", "Alchemy"] };
+  var GRP = { Combat: ["Attack", "Strength", "Ranged", "Magic", "Defense", "Vitality"], Gathering: GATHER_SKILLS, Production: ["Cooking", "Smithing", "Fletching", "Enchanting", "Tailoring"], Cultivation: ["Farming", "Alchemy"] };
   var GE = {
     Combat: [[["xpm", 0.05], ["taken", 0.04]], [["dmgm", 0.05], ["acc", 0.04]], [["crit", 0.05], ["regen", 0.25]], [["dmgm", 0.1], ["taken", 0.1], ["drop", 0.1]]],
     Gathering: [[["yld", 0.1]], [["xp", 0.05]], [["spd", 0.05]], [["yld", 0.1], ["sell", 0.1]]],
@@ -1134,6 +1138,7 @@ nav button.on i{opacity:1}
     mdmg: () => mdmg,
     memDpr: () => memDpr,
     offIt: () => offIt,
+    offLv: () => offLv,
     optNow: () => optNow,
     optimize: () => optimize,
     set_hits: () => set_hits,
@@ -1325,7 +1330,14 @@ nav button.on i{opacity:1}
     }).join("");
     return h;
   }
-  var CL = () => Math.floor((lv(gameState.xp.Attack) + lv(gameState.xp.Strength) + lv(gameState.xp.Defense) + lv(gameState.xp.Vitality)) / 4);
+  var offLv = (style = gameState.style) => {
+    const o = OFF[style] || OFF.Melee;
+    return [lv(gameState.xp[o[0]]), lv(gameState.xp[o[1]])];
+  };
+  var CL = () => {
+    const m = (lv(gameState.xp.Attack) + lv(gameState.xp.Strength)) / 2, b = Math.max(m, lv(gameState.xp.Ranged), lv(gameState.xp.Magic));
+    return Math.floor((2 * b + lv(gameState.xp.Defense) + lv(gameState.xp.Vitality)) / 4);
+  };
   var ef = (k) => {
     const t = gameState.eq.trinket;
     return t && IT[t].eff[k] || 0;
@@ -1361,7 +1373,7 @@ nav button.on i{opacity:1}
     return o && o.kind == "off" && w ? Math.min(0.46, 0.46 * o.stat / w) : 0;
   };
   var shT = () => shieldOn() ? 0.08 : 0;
-  var maxHit = (e) => Math.max(1, Math.floor((1 + lv(gameState.xp.Strength) * 1 + wst() * 3.2) * 3 * (1 + FM[gameState.form].dmg) * (is2h() ? 1.3 : 1) * (1 + spAff()) * (1 + 0.25 * adv(gameState.style, e.type)) * (1 + pk("dmg")) * (1 + ef("dmg")) * (1 + cb("dmgm")) * (onTask(e) ? 1.1 + (gameState.su.keen ? 0.15 : 0) + cb("tdmg") : 1)));
+  var maxHit = (e) => Math.max(1, Math.floor((1 + offLv()[1] * 1 + wst() * 3.2) * 3 * (1 + FM[gameState.form].dmg) * (is2h() ? 1.3 : 1) * (1 + spAff()) * (1 + 0.25 * adv(gameState.style, e.type)) * (1 + pk("dmg")) * (1 + ef("dmg")) * (1 + cb("dmgm")) * (onTask(e) ? 1.1 + (gameState.su.keen ? 0.15 : 0) + cb("tdmg") : 1)));
   var eDef = (e) => elv(e) * 0.9 + 5 + (e.boss ? 10 : 0);
   var eAtk = (e) => elv(e) * 0.8 + 5 + (e.boss ? 10 : 0);
   var mdmg = (k, e) => {
@@ -1371,7 +1383,7 @@ nav button.on i{opacity:1}
   var memDpr = (e) => fighters().reduce((q, k) => q + mdmg(k, e), 0) * pm() * 0.9;
   var emax = (e) => Math.max(1, Math.round(e.dps * 3 * enr(e)));
   var hitP = (e) => {
-    const A = (lv(gameState.xp.Attack) + 8) * (1 + wst() / 45), D = eDef(e);
+    const A = (offLv()[0] + 8) * (1 + wst() / 45), D = eDef(e);
     return clampH(1.5 * A / (A + D) + (dwf() > 0 ? 0.03 : 0) + cb("acc") + pk("acc"));
   };
   var eHitP = (e) => {
@@ -1419,7 +1431,7 @@ nav button.on i{opacity:1}
   }
   function canEq(it) {
     if (it.rs) return rsLv(it.rs) >= it.req;
-    return lv(gameState.xp[SL.includes(it.slot) ? "Attack" : it.slot == "trinket" ? "Vitality" : "Defense"]) >= it.req;
+    return lv(gameState.xp[SL.includes(it.slot) ? OFF[it.slot][0] : it.slot == "trinket" ? "Vitality" : "Defense"]) >= it.req;
   }
   function autoEq(id) {
     const it = IT[id];
@@ -1507,10 +1519,16 @@ nav button.on i{opacity:1}
   }
   function onKill(e, quiet) {
     gameState.lsu = false;
-    const m = maxhp(), xs = XS[gameState.stance], xm = 1 + ef("xp") + cb("xpm"), c0 = CL(), ks = ["Attack", "Strength", "Defense", "Vitality"], b = ks.map((k) => lv(gameState.xp[k]));
+    const m = maxhp(), xs = XS[gameState.stance], xm = 1 + ef("xp") + cb("xpm"), c0 = CL(), ks = ["Attack", "Strength", "Ranged", "Magic", "Defense", "Vitality"], b = ks.map((k) => lv(gameState.xp[k]));
     const ox = Math.min(1, Math.pow((elv(e) + 15) / Math.max(1, c0), 2));
     const fg = fighters(), cm = gameState.cmd && fg.length > 0, sp = cm ? 0.6 : 1;
-    ks.forEach((k, i) => gameState.xp[k] += e.xp * xs[i + 1] * xm * ox * sp);
+    {
+      const gx = e.xp * xm * ox * sp, o = OFF[gameState.style] || OFF.Melee;
+      gameState.xp[o[0]] += gx * xs[1];
+      gameState.xp[o[1]] += gx * xs[2];
+      gameState.xp.Defense += gx * xs[3];
+      gameState.xp.Vitality += gx * xs[4];
+    }
     const g = Math.round(e.a * (1 + ef("gold") + FM[gameState.form].gold));
     gameState.a += g;
     gameState.kc[e.id] = (gameState.kc[e.id] || 0) + 1;
@@ -1525,7 +1543,7 @@ nav button.on i{opacity:1}
     });
     const c1 = CL();
     if (c1 > c0) say("Combat level " + c1 + "." + ZN.filter((z) => z[1] > c0 && z[1] <= c1 && !z[5]).map((z) => " New zone: " + z[0] + ".").join(""));
-    ["Attack", "Strength", "Defense", "Vitality"].forEach(skPet);
+    ["Attack", "Strength", "Ranged", "Magic", "Defense", "Vitality"].forEach(skPet);
     if (e.boss && !e.inst) petRoll("p_z" + e.zone, 1e3 + 400 * e.zone);
     if (!quiet) hit("<b>You defeat " + e.n + ". +" + g + " acorns.</b>");
     if (e.raid) raidKill(e, quiet);
@@ -1641,8 +1659,12 @@ nav button.on i{opacity:1}
     return h + '<div id="hits" class="hits"></div></div>';
   }
   function statTiles() {
-    const xs = XS[gameState.stance], note = { Attack: "Hit chance", Strength: "Max hit", Defense: "Enemy hit chance", Vitality: "Health " + maxhp() };
-    return '<div class="pick">' + ["Attack", "Strength", "Defense", "Vitality"].map((k, i) => '<div class="row' + (xs[i + 1] > 0 ? " on" : "") + '" style="flex-direction:column;align-items:flex-start;gap:2px"><span>' + k + " \xB7 " + lv(gameState.xp[k]) + "</span><small>" + note[k] + '</small><div class="bar xp" style="width:100%"><i style="width:' + X.pcx(k) + '%"></i></div></div>').join("") + "</div>";
+    const xs = XS[gameState.stance], note = { Attack: "Melee hit chance", Strength: "Melee max hit", Ranged: "Ranged hit chance and max hit", Magic: "Magic hit chance and max hit", Defense: "Enemy hit chance (all styles)", Vitality: "Health " + maxhp() + " (all styles)" };
+    const sh = (k) => {
+      const o = OFF[gameState.style] || OFF.Melee;
+      return k == "Defense" ? xs[3] : k == "Vitality" ? xs[4] : (o[0] == k ? xs[1] : 0) + (o[1] == k ? xs[2] : 0);
+    };
+    return '<div class="pick">' + ["Attack", "Strength", "Ranged", "Magic", "Defense", "Vitality"].map((k) => '<div class="row' + (sh(k) > 0 ? " on" : "") + '" style="flex-direction:column;align-items:flex-start;gap:2px"><span>' + k + " \xB7 " + lv(gameState.xp[k]) + "</span><small>" + note[k] + '</small><div class="bar xp" style="width:100%"><i style="width:' + X.pcx(k) + '%"></i></div></div>').join("") + "</div>";
   }
   function combatView() {
     const m = maxhp(), st = gameState.style, z = gameState.zone, zz = ZN[z], cl2 = CL(), fgn = fighters();
@@ -2339,7 +2361,7 @@ nav button.on i{opacity:1}
     ["s2", "Jack of Many Trades", "Reach level 99 in five skills.", () => nSk(99) >= 5, 1e5],
     ["s3", "Provider", "Reach level 99 in every gathering skill.", () => GSK.every((k) => lv(gameState.xp[k]) >= 99), 15e4],
     ["s4", "Artisan", "Reach level 99 in every production skill.", () => PSK.every((k) => lv(gameState.xp[k]) >= 99), 15e4],
-    ["s5", "Warrior of the Hollow", "Reach level 99 in every combat stat.", () => COMBAT_SKILLS.slice(0, 4).every((k) => lv(gameState.xp[k]) >= 99), 15e4],
+    ["s5", "Warrior of the Hollow", "Reach level 99 in every combat stat.", () => COMBAT_SKILLS.slice(0, 6).every((k) => lv(gameState.xp[k]) >= 99), 15e4],
     ["s6", "Beyond the Limit", "Reach level 120 in any skill.", () => nSk(120) >= 1, 3e5],
     ["s7", "Maxed", "Reach level 99 in every skill.", () => nSk(99) >= GATHER_SKILLS.length + COMBAT_SKILLS.length, 1e6],
     ["s8", "Master of Everything", "Earn the Max Master Cape.", () => grpTier("Max") >= 4, 2e7],
@@ -3109,7 +3131,7 @@ nav button.on i{opacity:1}
     SAVE_VERSION: () => SAVE_VERSION,
     migrate: () => migrate
   });
-  var SAVE_VERSION = 2;
+  var SAVE_VERSION = 3;
   function ensureDefaults() {
     gameState.tier = gameState.tier || {};
     gameState.best = gameState.best || {};
@@ -3222,6 +3244,11 @@ nav button.on i{opacity:1}
       gameState.farm = gameState.farm || [];
       gameState.buffs = gameState.buffs || {};
       if (!(gameState.inv["turnip seeds"] > 0)) gameState.inv["turnip seeds"] = 4;
+    } },
+    // v3: Ranged and Magic become their own skills. Existing characters start both at their Attack xp, so no gear locks and nothing is lost.
+    { v: 3, run: () => {
+      gameState.xp.Ranged = Math.max(gameState.xp.Ranged || 0, gameState.xp.Attack || 0);
+      gameState.xp.Magic = Math.max(gameState.xp.Magic || 0, gameState.xp.Attack || 0);
     } }
   ];
   function migrate() {

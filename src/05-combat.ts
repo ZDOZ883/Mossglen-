@@ -1,6 +1,6 @@
 import { gameState, say } from './00-state';
 import { X } from './registry';
-import { FM, FOOD, GP, MEMBERS, IT, SL, XS, adv, cb, fighters, ldx, lv, maxhp, mxp, onTask, petRoll, pk, skPet, weak } from './01-species-pets';
+import { FM, FOOD, GP, MEMBERS, IT, SL, XS, adv, cb, fighters, ldx, lv, maxhp, mxp, onTask, petRoll, pk, skPet, weak , OFF } from './01-species-pets';
 import { ACCL, ENEMIES, ZN, dropTier, elv, fxTxt, gearSync, qrank, rsLv, scopeTxt, skey, zoneOpen } from './02-gear-data';
 import { RD, raidKill, raidOk } from './03-world-expeditions';
 import { CL, RT, armor, dwf, eHitP, ef, emax, hit, hitP, maxHit, memDpr, set_hits, shT } from './04-loadout';
@@ -10,7 +10,7 @@ export function fight(e:Enemy){
   const Ee=eHitP(e)*(emax(e)+1)/2*(1-armor())*(1+FM![gameState.form].taken)*(1-Math.min(.6,pk('taken')+cb('taken')+shT()+(onTask(e)?cb('ttaken'):0))),reg=maxhp()*.01*RT*(1+FM![gameState.form].regen+cb('regen'));
   return{ttk:rounds*RT,dmg:Math.max(0,(Ee-reg)*rounds-maxhp()*pk('heal'))};
 }
-export function canEq(it:Item){if(it.rs)return rsLv(it.rs)>=it.req;return lv(gameState.xp[SL.includes(it.slot)?'Attack':it.slot=='trinket'?'Vitality':'Defense'])>=it.req}
+export function canEq(it:Item){if(it.rs)return rsLv(it.rs)>=it.req;return lv(gameState.xp[SL.includes(it.slot)?OFF[it.slot][0]:it.slot=='trinket'?'Vitality':'Defense'])>=it.req}
 export function autoEq(id:string){const it=IT[id];if(it.slot=='ring'){if(!canEq(it))return;const k=!gameState.eq.ring1?'ring1':!gameState.eq.ring2?'ring2':null;if(k){gameState.eq[k]=id;say('Equipped '+it.n+'.');gearSync()}return}if(it.slot=='cloak'){if(!gameState.cape&&canEq(it)){gameState.cape='I:'+id;X.refreshFx();say('Wearing '+it.n+'.')}return}const cur=gameState.eq[it.slot];if(!cur&&canEq(it)){gameState.eq[it.slot]=id;say('Equipped '+it.n+'.');gearSync()}}
 export function gainItem(id:string){const it=IT[id];if(gameState.own[id]){const v=Math.round((GP[it.tier]||50)*.4);gameState.a+=v;say('Duplicate '+it.n+' sold for '+v+' acorns.');return}gameState.own[id]=1;gameState.col[id]=1;say('Rare drop: '+it.n+'!');autoEq(id)}
 export function rndGear(t:number){const ac=()=>{const sl=['ring','neck','cloak'][Math.floor(Math.random()*3)];return ACCL[sl]+Math.floor(Math.random()*4)+'_'+t};const pool=[0,1,2].map(i=>'w'+i+t).concat([0,1,2].map(i=>'x'+i+t),[0,1,2].map(i=>'o'+i+t),['y'+t,'b'+t,'h'+t,'g'+t,ac(),ac()]);return pool[Math.floor(Math.random()*pool.length)]+'d'}
@@ -25,16 +25,16 @@ export function loot(e:Enemy,quiet?:boolean){
 }
 export function onKill(e:Enemy,quiet?:boolean){
   gameState.lsu=false;
-  const m=maxhp(),xs=XS[gameState.stance],xm=1+ef('xp')+cb('xpm'),c0=CL(),ks=['Attack','Strength','Defense','Vitality'],b=ks.map(k=>lv(gameState.xp[k]));
+  const m=maxhp(),xs=XS[gameState.stance],xm=1+ef('xp')+cb('xpm'),c0=CL(),ks=['Attack','Strength','Ranged','Magic','Defense','Vitality'],b=ks.map(k=>lv(gameState.xp[k]));
   const ox=Math.min(1,Math.pow((elv(e)+15)/Math.max(1,c0),2));
   const fg=fighters(),cm=gameState.cmd&&fg.length>0,sp=cm?.6:1;
-  ks.forEach((k,i)=>gameState.xp[k]+=e.xp*xs[i+1]*xm*ox*sp);
+  {const gx=e.xp*xm*ox*sp,o=OFF[gameState.style]||OFF.Melee;gameState.xp[o[0]]+=gx*xs[1];gameState.xp[o[1]]+=gx*xs[2];gameState.xp.Defense+=gx*xs[3];gameState.xp.Vitality+=gx*xs[4]}
   const g=Math.round(e.a*(1+ef('gold')+FM[gameState.form].gold));gameState.a+=g;gameState.kc[e.id]=(gameState.kc[e.id]||0)+1;if(!e.inst)X.slayKill(e);
   if(fg.length){ldx(e.xp*(xs[5]+(cm?2.4:0))*xm*ox);fg.forEach(k=>mxp(k,e.xp*1.6*ox))}
   gameState.hp=Math.min(m,gameState.hp+m*pk('heal'));
   ks.forEach((k,i)=>{if(lv(gameState.xp[k])>b[i])say(k+' reaches level '+lv(gameState.xp[k])+'.')});
   const c1=CL();if(c1>c0)say('Combat level '+c1+'.'+ZN.filter(z=>z[1]>c0&&z[1]<=c1&&!z[5]).map(z=>' New zone: '+z[0]+'.').join(''));
-  ['Attack','Strength','Defense','Vitality'].forEach(skPet);
+  ['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(skPet);
   if(e.boss&&!e.inst)petRoll('p_z'+e.zone,1000+400*e.zone);
   if(!quiet)hit('<b>You defeat '+e.n+'. +'+g+' acorns.</b>');
   if(e.raid)raidKill(e,quiet);else loot(e);
@@ -68,8 +68,9 @@ export function arenaView(){
   return h+'<div id="hits" class="hits"></div></div>';
 }
 export function statTiles(){
-  const xs=XS[gameState.stance],note={Attack:'Hit chance',Strength:'Max hit',Defense:'Enemy hit chance',Vitality:'Health '+maxhp()};
-  return '<div class="pick">'+['Attack','Strength','Defense','Vitality'].map((k,i)=>'<div class="row'+(xs[i+1]>0?' on':'')+'" style="flex-direction:column;align-items:flex-start;gap:2px"><span>'+k+' · '+lv(gameState.xp[k])+'</span><small>'+(note as any)[k]+'</small><div class="bar xp" style="width:100%"><i style="width:'+X.pcx(k)+'%"></i></div></div>').join('')+'</div>';
+  const xs=XS[gameState.stance],note={Attack:'Melee hit chance',Strength:'Melee max hit',Ranged:'Ranged hit chance and max hit',Magic:'Magic hit chance and max hit',Defense:'Enemy hit chance (all styles)',Vitality:'Health '+maxhp()+' (all styles)'};
+  const sh=(k:string)=>{const o=OFF[gameState.style]||OFF.Melee;return k=='Defense'?xs[3]:k=='Vitality'?xs[4]:(o[0]==k?xs[1]:0)+(o[1]==k?xs[2]:0)};
+  return '<div class="pick">'+['Attack','Strength','Ranged','Magic','Defense','Vitality'].map((k)=>'<div class="row'+(sh(k)>0?' on':'')+'" style="flex-direction:column;align-items:flex-start;gap:2px"><span>'+k+' · '+lv(gameState.xp[k])+'</span><small>'+(note as any)[k]+'</small><div class="bar xp" style="width:100%"><i style="width:'+X.pcx(k)+'%"></i></div></div>').join('')+'</div>';
 }
 export function combatView(){
   const m=maxhp(),st=gameState.style,z=gameState.zone,zz=ZN[z],cl=CL(),fgn=fighters();
