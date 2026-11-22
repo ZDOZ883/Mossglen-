@@ -710,3 +710,18 @@ describe('farming and alchemy', () => {
     assert.ok(g.ev('S.inv["turnip seeds"]') > 0);
   });
 });
+
+describe('farmhands', () => {
+  it('party members tending the farm speed up growth and are named as tending', () => {
+    const g = load({ seed: 8 });
+    g.ev("S.hired={mole:1,hare:1};S.mt={mole:{k:'idle'},hare:{k:'idle'}};S.inv['turnip seeds']=2;farmAct('plant:0')");
+    const t0 = g.ev('plots()[0].ready');
+    g.ev("farmAct('tend:mole');farmAct('tend:hare')");
+    assert.equal(g.ev("farmhands().length"), 2);
+    assert.equal(g.ev("workNames()"), 'Mole and Hare are both tending the farm');
+    g.ev('tick(60,true)');
+    assert.ok(g.ev('plots()[0].ready') < t0, 'the plot ripens sooner');
+    g.ev("farmAct('tend:mole')");
+    assert.equal(g.ev('farmhands().length'), 1, 'tapping again sends them back to rest');
+  });
+});

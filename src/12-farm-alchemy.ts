@@ -2,7 +2,9 @@ import { FXSRC, GATHERED, S, TASKS, TICKS, say } from './00-state';
 import { X } from './registry';
 import { CS, SK, V, lv, skPet } from './01-species-pets';
 import { KEEPX, gateOk } from './02-gear-data';
-import { CROPS, CROPSECS, GL, GV, GX, useMats } from './07-gear-ui';
+import { H } from './01-species-pets';
+import { assign } from './08-party-state';
+import { CROPS, CROPSECS, GL, GV, GX, mspd, useMats } from './07-gear-ui';
 import { cb, isOn, refreshFx } from './11-engine';
 // Farming and Alchemy. Both plug into the engine through the hook tables in 00-state, so no other system needed a special case.
 // Farming: timed plots. Seeds come from Foraging, mulch from Woodcutting, crops go to Cooking and Alchemy.
@@ -19,6 +21,10 @@ export const cropGate = (i: number) => (i > 6 ? i - 6 : 0);
 export const cropOk = (i: number) => lv(S.xp.Farming) >= GL[i] && gateOk(cropGate(i));
 export const cropXp = (i: number) => Math.round(CROPSECS[i] * (1 + i * 1.6));
 export const growMs = (i: number, mulch: boolean) => Math.round(CROPSECS[i] * 1000 * Math.max(.3, 1 - cb('spd', 'Farming')) * (mulch ? .75 : 1));
+// Party members can tend the farm: each one adds a share of your speed to every growing plot, up to double speed.
+export const farmhands = () => Object.keys(S.hired).filter(k => S.mt[k] && S.mt[k].k == 'm');
+export const tendRate = () => Math.min(1, farmhands().reduce((s, k) => s + mspd(k) * .4, 0));
+TASKS.m = { sk: 'Farming', dur: () => 30, done: () => {}, name: () => 'Tending the farm', valid: () => true, mname: () => 'Tending the farm', mdur: (k: string) => 30 / mspd(k), mact: (k: string) => { X.mxp(k, 8); X.ldx(4); } };
 export const plots = () => { const a: any[] = S.farm = S.farm || []; while (a.length < PLOT_LV.length) a.push(null); return a; };
 
 function plant(i: number): boolean {
@@ -46,6 +52,7 @@ export function farmAct(arg: string) {
   else if (k == 'all') { let n = 0; while (plant(+v)) n++; if (!n) say('No free plot or no seeds for that.'); }
   else if (k == 'harvest') harvest(+v);
   else if (k == 'harvestall') a.forEach((p, j) => { if (p) harvest(j); });
+  else if (k == 'tend') assign(v, 'm', 'f');
   else if (k == 'mulch') { const p = a[+v]; if (p && !p.mulch && (S.inv.twigs || 0) >= 3 && Date.now() < p.ready) { S.inv.twigs -= 3; p.mulch = true; p.ready = Date.now() + Math.round((p.ready - Date.now()) * .75); } }
 }
 // Foraging turns up seeds: the higher your level, the better the seeds you can find.
@@ -68,6 +75,8 @@ export function farmPage() {
       (done ? '<button class="btn" data-farm="harvest:' + j + '">Harvest</button>' : (!p.mulch && (S.inv.twigs || 0) >= 3 ? '<button class="btn" data-farm="mulch:' + j + '">Mulch · 3 twigs</button>' : '')) + '</div>';
   }).join('');
   if (ready) h += '<p><button class="btn" data-farm="harvestall:0">Harvest everything that is ready</button></p>';
+  const hs = Object.keys(S.hired);
+  if (hs.length) h += '<h2>Farmhands' + (tendRate() ? ' · crops grow ' + Math.round(tendRate() * 100) + '% faster' : '') + '</h2>' + hs.map(k => { const on = S.mt[k] && S.mt[k].k == 'm'; return '<div class="row"><span>' + H[k].n + '<small>' + (on ? 'Tending the farm · adds ' + Math.round(mspd(k) * 40) + '% growth speed' : 'Busy elsewhere or resting') + '</small></span><button class="btn" data-farm="tend:' + k + '">' + (on ? 'Stop' : 'Tend') + '</button></div>'; }).join('');
   h += '<h2>Seeds</h2>' + CROPS.map((c, i) => {
     if (l < GL[Math.max(0, i - 1)]) return '';
     const sd = S.inv[c[1]] || 0, ok = cropOk(i), free = a.some((p, j) => j < np && !p);
@@ -112,10 +121,12 @@ FXSRC.push(() => {
   Object.keys(b).forEach(id => { if (b[id] > now && POT[id]) POT[id].fx.forEach((e: any) => (e[2] == null ? [null] : e[2]).forEach((sk: string | null) => o.push({ k: e[0], v: e[1], sk }))); });
   return o;
 });
-TICKS.push((_dt, quiet) => {
+TICKS.push((dt, quiet) => {
   const now = Date.now(), b = buffs(); let changed = false;
   Object.keys(b).forEach(id => { if (b[id] <= now) { delete b[id]; changed = true; if (!quiet && POT[id]) say('The ' + POT[id].n + ' wears off.'); } });
   if (changed) refreshFx();
+  const r = tendRate(), dtm = dt * 1000 * r;
+  if (r > 0) plots().forEach(p => { if (p && p.ready > now) p.ready -= dtm; });
   if (typeof document == 'undefined' || !document.querySelectorAll) return;
   let rerender = false;
   document.querySelectorAll('[data-fr]').forEach(el => { const left = (+(el as HTMLElement).dataset.fr! - now) / 1000; if (left <= 0) { if ((el as HTMLElement).dataset.pend) rerender = true; } else el.textContent = fmt(left); });

@@ -1,4 +1,4 @@
-import { S } from './00-state';
+import { S, TASKS } from './00-state';
 import { X } from './registry';
 import { CS, FOOD, H, HK, IT, LT, PETS, REQ, SK, SP, SPX, V, lv, nsl, spTxt } from './01-species-pets';
 import { AF, KEEP, KP, RF, RFN, gateOk, refRecipe } from './02-gear-data';
@@ -68,7 +68,7 @@ export function leadView(){
 }
 export const PKN:Record<string,string[]>={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['expeditions ','% faster'],loot:['+','% expedition loot'],succ:['+','% expedition odds']};
 export function perkTxt(k:string){return Object.keys(H[k].pk).map(n=>{const v=H[k].pk[n]*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),x=n=='succ'?Math.round(v):Math.round(v*100);return PKN[n][0]+x+PKN[n][1]}).join(', ')}
-export function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(S.ex?S.ex.dur-S.ex.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+BRATE(buL('bar')).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id!].n:t.k=='f'?'Crafting: '+IT[t.id!].n:t.k=='r'?'Refining: '+RFN[t.id!].n:'Resting. Send them to work from a skill page.'}
+export function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(S.ex?S.ex.dur-S.ex.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+BRATE(buL('bar')).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id!].n:t.k=='f'?'Crafting: '+IT[t.id!].n:t.k=='r'?'Refining: '+RFN[t.id!].n:TASKS[t.k]&&TASKS[t.k].mname?TASKS[t.k].mname!(t):'Resting. Send them to work from a skill page.'}
 export function partyView(){
   const hs=Object.keys(S.hired),l=LD(),sl=slots();
   let h='<h2>Your party</h2><p class="sub">Leadership '+l+' · '+nsl()+' of '+sl+' slots · members work at '+Math.round(bspd()*100)+'% of your speed. Raise Leadership for more slots and faster work.</p>';

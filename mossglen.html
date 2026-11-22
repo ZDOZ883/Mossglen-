@@ -1942,7 +1942,7 @@ nav button.on i{opacity:1}
     }
     S.mt[k] = { k: kind, id, p: 0 };
   }
-  var mdur = (k, t) => (t.k == "s" ? tt(A.find((a) => a.id == t.id)) : t.k == "k" ? 3.5 * Math.max(0.3, 1 - X.cb("spd", "Cooking")) : t.k == "r" ? 6 * Math.max(0.3, 1 - X.cb("spd", RFN[t.id].sk)) : ctime(t.id) * Math.max(0.3, 1 - X.cb("spd", CSK(t.id)))) / (mspd(k) * pbs(k, X.skOf(t)));
+  var mdur = (k, t) => TASKS[t.k] && TASKS[t.k].mdur ? TASKS[t.k].mdur(k, t) : (t.k == "s" ? tt(A.find((a) => a.id == t.id)) : t.k == "k" ? 3.5 * Math.max(0.3, 1 - X.cb("spd", "Cooking")) : t.k == "r" ? 6 * Math.max(0.3, 1 - X.cb("spd", RFN[t.id].sk)) : ctime(t.id) * Math.max(0.3, 1 - X.cb("spd", CSK(t.id)))) / (mspd(k) * pbs(k, X.skOf(t)));
   function memAct(k, t) {
     const bail = () => {
       S.mt[k] = { k: "idle" };
@@ -1957,7 +1957,8 @@ nav button.on i{opacity:1}
       hrCount(a, pn);
       mxp(k, a.xp * 0.6);
       ldx(a.xp * 0.5);
-    } else if (t.k == "k") cookDone(t.id, k);
+    } else if (TASKS[t.k] && TASKS[t.k].mact) TASKS[t.k].mact(k, t);
+    else if (t.k == "k") cookDone(t.id, k);
     else if (t.k == "f") {
       if (lv(S.xp[CSK(t.id)]) < IT[t.id].req) return bail();
       craftDone(t.id, k);
@@ -2683,10 +2684,12 @@ nav button.on i{opacity:1}
     cropXp: () => cropXp,
     farmAct: () => farmAct,
     farmPage: () => farmPage,
+    farmhands: () => farmhands,
     growMs: () => growMs,
     plots: () => plots,
     plotsOpen: () => plotsOpen,
-    potStatus: () => potStatus
+    potStatus: () => potStatus,
+    tendRate: () => tendRate
   });
   CS.push("Farming", "Alchemy");
   var fmt = (s) => {
@@ -2705,6 +2708,13 @@ nav button.on i{opacity:1}
   var cropOk = (i) => lv(S.xp.Farming) >= GL[i] && gateOk(cropGate(i));
   var cropXp = (i) => Math.round(CROPSECS[i] * (1 + i * 1.6));
   var growMs = (i, mulch) => Math.round(CROPSECS[i] * 1e3 * Math.max(0.3, 1 - cb("spd", "Farming")) * (mulch ? 0.75 : 1));
+  var farmhands = () => Object.keys(S.hired).filter((k) => S.mt[k] && S.mt[k].k == "m");
+  var tendRate = () => Math.min(1, farmhands().reduce((s, k) => s + mspd(k) * 0.4, 0));
+  TASKS.m = { sk: "Farming", dur: () => 30, done: () => {
+  }, name: () => "Tending the farm", valid: () => true, mname: () => "Tending the farm", mdur: (k) => 30 / mspd(k), mact: (k) => {
+    X.mxp(k, 8);
+    X.ldx(4);
+  } };
   var plots = () => {
     const a = S.farm = S.farm || [];
     while (a.length < PLOT_LV.length) a.push(null);
@@ -2744,6 +2754,7 @@ nav button.on i{opacity:1}
     else if (k == "harvestall") a.forEach((p, j) => {
       if (p) harvest(j);
     });
+    else if (k == "tend") assign(v, "m", "f");
     else if (k == "mulch") {
       const p = a[+v];
       if (p && !p.mulch && (S.inv.twigs || 0) >= 3 && Date.now() < p.ready) {
@@ -2771,6 +2782,11 @@ nav button.on i{opacity:1}
       return '<div class="row"><span>Plot ' + (j + 1) + " \xB7 " + c[0] + (p.mulch ? " \xB7 mulched" : "") + "<small>" + (done ? '<b class="good">Ready to harvest</b>' : 'Ready in <b data-fr="' + p.ready + '" data-pend="1">' + fmt((p.ready - now) / 1e3) + "</b>") + "</small></span>" + (done ? '<button class="btn" data-farm="harvest:' + j + '">Harvest</button>' : !p.mulch && (S.inv.twigs || 0) >= 3 ? '<button class="btn" data-farm="mulch:' + j + '">Mulch \xB7 3 twigs</button>' : "") + "</div>";
     }).join("");
     if (ready) h += '<p><button class="btn" data-farm="harvestall:0">Harvest everything that is ready</button></p>';
+    const hs = Object.keys(S.hired);
+    if (hs.length) h += "<h2>Farmhands" + (tendRate() ? " \xB7 crops grow " + Math.round(tendRate() * 100) + "% faster" : "") + "</h2>" + hs.map((k) => {
+      const on = S.mt[k] && S.mt[k].k == "m";
+      return '<div class="row"><span>' + H[k].n + "<small>" + (on ? "Tending the farm \xB7 adds " + Math.round(mspd(k) * 40) + "% growth speed" : "Busy elsewhere or resting") + '</small></span><button class="btn" data-farm="tend:' + k + '">' + (on ? "Stop" : "Tend") + "</button></div>";
+    }).join("");
     h += "<h2>Seeds</h2>" + CROPS.map((c, i) => {
       if (l < GL[Math.max(0, i - 1)]) return "";
       const sd = S.inv[c[1]] || 0, ok = cropOk(i), free = a.some((p, j) => j < np && !p);
@@ -2824,7 +2840,7 @@ nav button.on i{opacity:1}
     });
     return o;
   });
-  TICKS.push((_dt, quiet) => {
+  TICKS.push((dt, quiet) => {
     const now = Date.now(), b = buffs();
     let changed = false;
     Object.keys(b).forEach((id) => {
@@ -2835,6 +2851,10 @@ nav button.on i{opacity:1}
       }
     });
     if (changed) refreshFx();
+    const r = tendRate(), dtm = dt * 1e3 * r;
+    if (r > 0) plots().forEach((p) => {
+      if (p && p.ready > now) p.ready -= dtm;
+    });
     if (typeof document == "undefined" || !document.querySelectorAll) return;
     let rerender = false;
     document.querySelectorAll("[data-fr]").forEach((el) => {
@@ -2972,7 +2992,7 @@ nav button.on i{opacity:1}
   }
   function memName(k) {
     const t = asg(k);
-    return t.k == "exp" ? "On expedition \xB7 back in " + exFmt(S.ex ? S.ex.dur - S.ex.p : 0) : t.k == "war" ? "Fighting beside you" : t.k == "bar" ? "Training in the barracks \xB7 " + BRATE(buL("bar")).toLocaleString() + " xp/h" : t.k == "s" ? "Gathering: " + A.find((a) => a.id == t.id).n : t.k == "k" ? "Cooking: " + DISH[t.id].n : t.k == "f" ? "Crafting: " + IT[t.id].n : t.k == "r" ? "Refining: " + RFN[t.id].n : "Resting. Send them to work from a skill page.";
+    return t.k == "exp" ? "On expedition \xB7 back in " + exFmt(S.ex ? S.ex.dur - S.ex.p : 0) : t.k == "war" ? "Fighting beside you" : t.k == "bar" ? "Training in the barracks \xB7 " + BRATE(buL("bar")).toLocaleString() + " xp/h" : t.k == "s" ? "Gathering: " + A.find((a) => a.id == t.id).n : t.k == "k" ? "Cooking: " + DISH[t.id].n : t.k == "f" ? "Crafting: " + IT[t.id].n : t.k == "r" ? "Refining: " + RFN[t.id].n : TASKS[t.k] && TASKS[t.k].mname ? TASKS[t.k].mname(t) : "Resting. Send them to work from a skill page.";
   }
   function partyView() {
     const hs = Object.keys(S.hired), l = LD(), sl = slots();
