@@ -278,6 +278,22 @@ describe('gear slots', () => {
     assert.equal(g.ev(`cb('dmgm')`), before);
   });
 
+  it('smart loadout never strips rings or necklaces, and keeps the best weapon in unused styles', () => {
+    const g = load({ seed: 4 });
+    g.ev(`['Attack','Strength','Defense','Vitality','Foraging','Cooking'].forEach(k=>gameState.xp[k]=XT[40]);
+      gameState.own={};Object.keys(IT).forEach(i=>{if(!/d$/.test(i)&&IT[i].tier<=3&&canEq(IT[i]))gameState.own[i]=1});
+      gameState.eq={};const rings=Object.keys(gameState.own).filter(i=>IT[i].slot=='ring');
+      gameState.eq.ring1=rings.find(i=>accScore(IT[i],'gather','Foraging')<=0)||rings[0];gameState.eq.ring2=rings[1];
+      gameState.eq.neck=Object.keys(gameState.own).find(i=>IT[i].slot=='neck')`);
+    for (const ctx of [`{kind:'gather',sk:'Foraging',label:'f'}`, `{kind:'craft',sk:'Cooking',label:'k'}`, `{kind:'combat',enemy:ENEMIES[3],label:'c'}`]) {
+      g.ev(`optimize(${ctx})`);
+      assert.ok(g.ev('!!(gameState.eq.ring1&&gameState.eq.ring2&&gameState.eq.neck)'), 'accessories stay equipped for ' + ctx);
+    }
+    // Unused styles keep their strongest one-hander, never a leftover search candidate.
+    const bad = g.ev(`(function(){optimize({kind:'combat',enemy:ENEMIES[3],label:'c'});const o=[];SL.forEach(sl=>{if(sl==gameState.style)return;const best=Object.keys(gameState.own).filter(i=>IT[i].slot==sl&&!IT[i].kind).sort((a,b)=>IT[b].stat-IT[a].stat)[0];const two=Object.keys(gameState.own).filter(i=>IT[i].slot==sl&&IT[i].kind=='2h').sort((a,b)=>IT[b].stat-IT[a].stat)[0];const want=best&&two?(IT[two].stat*1.3>IT[best].stat?two:best):best||two;if(want&&gameState.eq[sl]!=want)o.push(sl+':'+gameState.eq[sl]+' vs '+want)});return o})()`);
+    assert.equal(bad.length, 0, String(bad));
+  });
+
   it('level-locked gear cannot be equipped', () => {
     const g = load({ seed: 2 });
     g.ev(`gameState.own={b9:1};gameState.eq={};gameState.xp.Defense=XT[5]`);

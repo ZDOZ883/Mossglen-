@@ -1,7 +1,7 @@
 import { gameState, TASKS, say } from './00-state';
 import { X } from './registry';
 import { FM, MEMBERS, IT, SL, XS, adv, cb, cl, fighters, fw, lv, maxhp, onTask, pk, pm, spAff } from './01-species-pets';
-import { CE, ENEMIES, GRP, GSK, PSK, RFN, accScore, capeFx, capeLabel, capeOk, elv, gearSync } from './02-gear-data';
+import { CE, ENEMIES, GRP, GSK, PSK, RFN, accScore, capeFx, capeLabel, capeOk, elv, gearSync, itFx } from './02-gear-data';
 import { enr } from './03-world-expeditions';
 // Smart loadout optimizer. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- loadouts
@@ -21,7 +21,8 @@ export function optimize(c:LoadCtx){
     const e=c.enemy,s0=gameState.style,e0=Object.assign({},gameState.eq);
     const own=Object.keys(gameState.own).filter(i=>IT[i]&&X.canEq(IT[i])),by=(f:(i:string)=>boolean)=>own.filter(f).sort((a,b)=>IT[b].stat-IT[a].stat)[0]||null;
     const shield=by((i:string)=>IT[i].kind=='shield'),m0=maxhp();
-    SL.forEach(sl=>{const w=by((i:string)=>IT[i].slot==sl&&!IT[i].kind)||by((i:string)=>IT[i].slot==sl&&IT[i].kind=='2h');if(w)gameState.eq[sl]=w});
+    const base:Record<string,string>={};
+    SL.forEach(sl=>{const a=by((i:string)=>IT[i].slot==sl&&!IT[i].kind),b=by((i:string)=>IT[i].slot==sl&&IT[i].kind=='2h');const w=a&&b?(IT[b].stat*1.3>IT[a].stat?b:a):a||b;if(w){gameState.eq[sl]=w;base[sl]=w}});
     let bk:any=null,bc=null;
     SL.forEach(sl=>{
       const h1=by((i:string)=>IT[i].slot==sl&&!IT[i].kind),h2=by((i:string)=>IT[i].slot==sl&&IT[i].kind=='2h'),of=by((i:string)=>IT[i].kind=='off'&&IT[i].st==sl),cd=[];
@@ -35,6 +36,7 @@ export function optimize(c:LoadCtx){
         if(!bk||key[0]<bk[0]||(key[0]==bk[0]&&key[1]<bk[1]-1e-9)){bk=key;bc=[sl,q[0],q[1]]}
       });
     });
+    SL.forEach(sl=>{if(base[sl])gameState.eq[sl]=base[sl]});
     if(bc){gameState.style=bc[0];gameState.eq[bc[0]]=bc[1];gameState.eq.off=bc[2]}else{gameState.style=s0;gameState.eq.off=e0.off||null}
     ['Melee','Ranged','Magic','off'].forEach(k=>{if(gameState.eq[k]&&gameState.eq[k]!=e0[k])out.push(IT[gameState.eq[k]].n)});
     if(gameState.style!=s0)out.push(gameState.style+' style');
@@ -42,7 +44,16 @@ export function optimize(c:LoadCtx){
     const tr=Object.keys(gameState.own).filter(i=>IT[i].slot=='trinket'&&X.canEq(IT[i])).sort((a,b)=>trScore(IT[b])-trScore(IT[a]))[0];
     if(tr&&gameState.eq.trinket!=tr){gameState.eq.trinket=tr;out.push(IT[tr].n)}
   }
-  ([['neck',['neck']],['ring',['ring1','ring2']]] as any[]).forEach(q=>{const pool=Object.keys(gameState.own).filter(i=>IT[i].slot==q[0]&&X.canEq(IT[i])).map((i):[string,number]=>[i,accScore(IT[i],c.kind,c.sk)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,q[1].length).map(x=>x[0]);q[1].forEach((k:string,j:any)=>{const w=pool[j]||null;if((gameState.eq[k]||null)!=w){gameState.eq[k]=w;if(w)out.push(IT[w].n)}})});
+  // Neck and rings: best scored for the job first, then keep what is already worn, then any other owned piece. Never leave a slot empty while a usable piece exists.
+  ([['neck',['neck']],['ring',['ring1','ring2']]] as any[]).forEach(q=>{
+    const owned=Object.keys(gameState.own).filter(i=>IT[i]&&IT[i].slot==q[0]&&X.canEq(IT[i]));
+    const scored=owned.map((i):[string,number]=>[i,accScore(IT[i],c.kind,c.sk)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+    const worn=(q[1] as string[]).map(k=>gameState.eq[k]).filter((i:any)=>i&&owned.includes(i));
+    const raw=(i:string)=>itFx(IT[i]).reduce((t:number,e:any)=>t+Math.abs(e.v),0);
+    const rest=owned.filter(i=>!scored.includes(i)&&!worn.includes(i)).sort((a,b)=>raw(b)-raw(a));
+    const pool=Array.from(new Set(scored.concat(worn,rest))).slice(0,q[1].length);
+    q[1].forEach((k:string,j:number)=>{const w=pool[j]||null;if((gameState.eq[k]||null)!=w){gameState.eq[k]=w;if(w)out.push(IT[w].n)}});
+  });
   gearSync();
   const cp=bestCape(c.kind,c.sk);
   if(cp&&cp!=gameState.cape){gameState.cape=cp;X.refreshFx();out.push(capeLabel(cp))}
