@@ -5,7 +5,7 @@ import { exRecall, exSel, exStart, openGate, set_exSel, startHR, startRaid } fro
 import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadout';
 import { cycle, shopBuy } from './05-combat';
 import { equipSlot, gsel, set_gsel, set_gtab } from './06-icons';
-import { buy, buyTool, offlineCap, set_skill, set_tab, set_who, skill, slBuy, slots, tab, taskAct, who } from './07-gear-ui';
+import { ACHIEVEMENTS, buy, buyTool, offlineCap, set_skill, set_tab, set_who, skill, slBuy, slots, tab, taskAct, who } from './07-gear-ui';
 import { assign } from './08-party-state';
 import { buUp, sgBuy } from './09-seasons-burrow';
 import { bars, hasWork, refreshFx, tick } from './11-engine';
@@ -73,9 +73,11 @@ export const away=Math.min(Date.now()-gameState.t,offlineCap());
 if(gameState.sp&&(gameState.cur||hasWork())&&away>20000){tick(away/1000,true);say('You were away '+Math.round(away/60000)+' min. Your work carried on.')}
 gameState.t=Date.now();
 export let last=Date.now(),sv=0;
+// Re-render when the player's own gathering changes xp or the pack, so the skill page counters stay current.
+const ownSig=()=>{const c=gameState.cur;if(!c||c.k!='s')return '';const a=ACHIEVEMENTS.find((x:any)=>x.id==c.id);return a?Math.floor(gameState.xp[a.sk])+':'+(gameState.inv[a.item]||0):''};
 setInterval(()=>{
   const n=Date.now(),dt=(n-last)/1000;last=n;gameState.t=n;
-  if(gameState.sp&&(gameState.cur||hasWork())){const lg=gameState.log[0],a=gameState.a;tick(dt,false);if(gameState.log[0]!==lg||gameState.a!==a)render();}
+  if(gameState.sp&&(gameState.cur||hasWork())){const lg=gameState.log[0],a=gameState.a,sg=ownSig();tick(dt,false);if(gameState.log[0]!==lg||gameState.a!==a||ownSig()!==sg)render();}
   bars();
   if(++sv%25==0)save();
 },200);

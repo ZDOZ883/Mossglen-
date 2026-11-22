@@ -3373,14 +3373,20 @@ nav button.on i{opacity:1}
   }
   gameState.t = Date.now();
   var last = Date.now(), sv = 0;
+  var ownSig = () => {
+    const c = gameState.cur;
+    if (!c || c.k != "s") return "";
+    const a = ACHIEVEMENTS.find((x) => x.id == c.id);
+    return a ? Math.floor(gameState.xp[a.sk]) + ":" + (gameState.inv[a.item] || 0) : "";
+  };
   setInterval(() => {
     const n = Date.now(), dt = (n - last) / 1e3;
     last = n;
     gameState.t = n;
     if (gameState.sp && (gameState.cur || hasWork())) {
-      const lg = gameState.log[0], a = gameState.a;
+      const lg = gameState.log[0], a = gameState.a, sg = ownSig();
       tick(dt, false);
-      if (gameState.log[0] !== lg || gameState.a !== a) render();
+      if (gameState.log[0] !== lg || gameState.a !== a || ownSig() !== sg) render();
     }
     bars();
     if (++sv % 25 == 0) save();
