@@ -10,7 +10,7 @@ import { bonusSummary, gsel, gtab, icon, iconOf, pickerHtml, tileHtml } from './
 // ---------- skilling outfits (worn automatically for the skill you train; combat gear is never touched)
 export function outfitsView():string{
   const act=gameState.cur?X.skOf(gameState.cur):null,fav=gameState.ofocus||'';
-  let h='<h2>Skilling outfits</h2><p class="sub">Each skill has a five-piece outfit (Cap, Vest, Gloves, Boots, Legs) in three tiers. Every piece adds a little xp. Wear all five and you get a set bonus at the tier of your weakest piece. The best outfit for the skill you train is worn automatically, and your combat gear stays as it was. Novice pieces turn up while you train the skill itself (about 1 in 8,000 actions). Better pieces drop from zone bosses, expeditions and raids.</p>';
+  let h='<h2>Skilling outfits</h2><p class="sub">Each skill has a five-piece outfit (Cap, Vest, Gloves, Boots, Legs) in three tiers. Every piece adds a little xp. Wear all five and you get a set bonus at the tier of your weakest piece. The best outfit for the skill you train is worn automatically, and your combat gear stays as it was. Novice pieces turn up while you train the skill itself (about 1 in 25,000 actions). Better pieces drop from zone bosses, expeditions and raids.</p>';
   h+='<p class="mu" style="margin:0 0 4px">Drops lean toward (60%):</p><div class="chips"><button class="'+(fav?'':'on')+'" data-ofocus="">Any skill</button>'+OUTFIT_SK.map(s=>'<button class="'+(fav==s?'on':'')+'" data-ofocus="'+s+'">'+s+'</button>').join('')+'</div>';
   h+='<p class="mu">Pieces found: '+outFound()+' of '+OUTFIT_SK.length*OUT_SLOTS.length+'. Dropping an outfit upgrades a piece you are missing first.</p>';
   h+=OUTFIT_SK.map(sk=>{

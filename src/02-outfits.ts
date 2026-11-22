@@ -70,12 +70,12 @@ export function outfitGive(tier: number, only?: string): string | null {
   X.refreshFx();
   return outKey(sk, i);
 }
-// Training a skill can turn up its own Novice pieces (about 1 in 8,000 actions), like RuneScape's activity-based outfits.
-export const OUT_ACT_RATE = 8000;
+// Training a skill can turn up its own Novice pieces (about 1 in 25,000 actions), like RuneScape's activity-based outfits.
+export const OUT_ACT_RATE = 25000;
 // Other sources: [chance, guaranteed after this many tries]. Boss kills, expedition wins (chance = base + step per tier), raid clears.
 // Boss kills: 1 in 400 for Novice, 600 for Adept, 800 for Master; guaranteed after four times that.
 export const OUT_BOSS_N = (tier: number) => 400 + 200 * (tier - 1), OUT_BOSS_PITY = 4;
-export const OUT_EXP = [.015, .005, 60], OUT_RAID = [.05, 30];
+export const OUT_EXP = [.015, .005, 60], OUT_RAID = [.01, 400];
 SKACT.push(sk => {
   if (!OUTFIT_SK.includes(sk) || Math.random() * OUT_ACT_RATE >= 1) return;
   if (OUT_SLOTS.some((_, i) => outTier(sk, i) < 1)) outfitGive(1, sk);
