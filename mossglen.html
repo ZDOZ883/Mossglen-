@@ -2608,15 +2608,21 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   }
   Object.defineProperties(X, { validTask: { get: () => validTask, configurable: true } });
   var SIC = {
-    Tank: { n: "Hold the line", fx: [["taken", 0.04]], d: "\u22124% damage taken" },
-    Striker: { n: "Rally the charge", fx: [["pmult", 0.06]], d: "+6% party damage" },
-    Healer: { n: "Tend the wounded", fx: [["regen", 0.25]], d: "+25% recovery" },
-    Scout: { n: "Read the field", fx: [["drop", 0.04], ["xpm", 0.03]], d: "+4% rare drops, +3% combat xp" },
-    Specialist: { n: "Keep the camp", fx: [["xpm", 0.05]], d: "+5% combat xp" }
+    mole: { n: "Dig in", fx: [["taken", 0.03], ["hpm", 0.04]] },
+    hare: { n: "Swift orders", fx: [["pmult", 0.04], ["mspd", 0.06]] },
+    owl: { n: "Eagle eye", fx: [["drop", 0.05], ["acc", 0.03]] },
+    otter: { n: "Field hospital", fx: [["regen", 0.3], ["heal", 0.06]] },
+    badger: { n: "Stand firm", fx: [["ttaken", 0.07], ["hpm", 0.05]] },
+    fox: { n: "Opening strike", fx: [["crit", 0.04], ["dmgm", 0.04]] },
+    dormouse: { n: "Well fed", fx: [["heal", 0.1], ["regen", 0.12]] },
+    shrew: { n: "Brewer\u2019s boon", fx: [["pot", 0.15], ["xpm", 0.04]] },
+    magpie: { n: "Spoils of war", fx: [["sell", 0.05], ["drop", 0.03]] }
   };
   var sicBuff = (k) => {
-    const b = SIC[MEMBERS[k].role];
-    return b ? { ...b, s: 1 + Math.min(1, cl(k) / 100) * 0.5 } : null;
+    const b = SIC[k];
+    if (!b) return null;
+    const s = 1 + Math.min(1, cl(k) / 100) * 0.5;
+    return { n: b.n, fx: b.fx, s, d: fxTxt(b.fx.map(([q, v]) => [q, v * s])) };
   };
   FXSRC.push(() => {
     const k = gameState.sic;

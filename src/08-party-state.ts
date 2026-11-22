@@ -1,7 +1,7 @@
 import { gameState, TASKS, FXSRC } from './00-state';
 import { X } from './registry';
-import { IT, asg, cb, cl, MEMBERS, ldx, lv, mxp, pbs, sicOn, skPet } from './01-species-pets';
-import { RFN, ctime, gateOk, refineDone } from './02-gear-data';
+import { IT, asg, cb, cl, ldx, lv, mxp, pbs, sicOn, skPet } from './01-species-pets';
+import { RFN, ctime, fxTxt, gateOk, refineDone } from './02-gear-data';
 
 import { hrCount } from './03-world-expeditions';
 import { ACHIEVEMENTS, CSK, DISH, cookDone, craftDone, mspd, tt } from './07-gear-ui';
@@ -26,11 +26,16 @@ export function memAct(k:string,t:any){
 }
 
 Object.defineProperties(X,{validTask:{get:()=>validTask,configurable:true}});
-export const SIC:Record<string,{n:string;fx:[string,number][];d:string}>={
-  Tank:{n:'Hold the line',fx:[['taken',.04]],d:'−4% damage taken'},
-  Striker:{n:'Rally the charge',fx:[['pmult',.06]],d:'+6% party damage'},
-  Healer:{n:'Tend the wounded',fx:[['regen',.25]],d:'+25% recovery'},
-  Scout:{n:'Read the field',fx:[['drop',.04],['xpm',.03]],d:'+4% rare drops, +3% combat xp'},
-  Specialist:{n:'Keep the camp',fx:[['xpm',.05]],d:'+5% combat xp'}};
-export const sicBuff=(k:string)=>{const b=SIC[MEMBERS[k].role];return b?{...b,s:1+Math.min(1,cl(k)/100)*.5}:null};
+// Every recruit commands differently, so each has a buff of their own. Level scales it, up to +50% at level 100.
+export const SIC:Record<string,{n:string;fx:[string,number][]}>={
+  mole:{n:'Dig in',fx:[['taken',.03],['hpm',.04]]},
+  hare:{n:'Swift orders',fx:[['pmult',.04],['mspd',.06]]},
+  owl:{n:'Eagle eye',fx:[['drop',.05],['acc',.03]]},
+  otter:{n:'Field hospital',fx:[['regen',.3],['heal',.06]]},
+  badger:{n:'Stand firm',fx:[['ttaken',.07],['hpm',.05]]},
+  fox:{n:'Opening strike',fx:[['crit',.04],['dmgm',.04]]},
+  dormouse:{n:'Well fed',fx:[['heal',.1],['regen',.12]]},
+  shrew:{n:'Brewer’s boon',fx:[['pot',.15],['xpm',.04]]},
+  magpie:{n:'Spoils of war',fx:[['sell',.05],['drop',.03]]}};
+export const sicBuff=(k:string)=>{const b=SIC[k];if(!b)return null;const s=1+Math.min(1,cl(k)/100)*.5;return{n:b.n,fx:b.fx,s,d:fxTxt(b.fx.map(([q,v])=>[q,v*s]))}};
 FXSRC.push(()=>{const k=gameState.sic;if(!k||!sicOn())return[];const b=sicBuff(k);return b?b.fx.map(([q,v])=>({k:q,v:v*b.s,sk:null as any})):[]});
