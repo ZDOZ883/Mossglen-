@@ -25,13 +25,12 @@ export function loot(e:Enemy,quiet?:boolean){
 }
 export function onKill(e:Enemy,quiet?:boolean){
   gameState.lsu=false;
-  const m=maxhp(),xs=XS[gameState.stance],xm=1+ef('xp')+cb('xpm'),c0=CL(),ks=['Attack','Strength','Ranged','Magic','Defense','Vitality'],b=ks.map(k=>lv(gameState.xp[k]));
+  const xs=XS[gameState.stance],xm=1+ef('xp')+cb('xpm'),c0=CL(),ks=['Attack','Strength','Ranged','Magic','Defense','Vitality'],b=ks.map(k=>lv(gameState.xp[k]));
   const ox=Math.min(1,Math.pow((elv(e)+15)/Math.max(1,c0),2));
   const fg=fighters(),cm=gameState.cmd&&fg.length>0,sp=cm?.6:1;
   {const gx=e.xp*xm*ox*sp,o=OFF[gameState.style]||OFF.Melee;gameState.xp[o[0]]+=gx*xs[1];gameState.xp[o[1]]+=gx*xs[2];gameState.xp.Defense+=gx*xs[3];gameState.xp.Vitality+=gx*xs[4]}
   const g=Math.round(e.a*(1+ef('gold')+FM[gameState.form].gold));gameState.a+=g;gameState.kc[e.id]=(gameState.kc[e.id]||0)+1;if(!e.inst)X.slayKill(e);
   if(fg.length){ldx(e.xp*(xs[5]+(cm?2.4:0))*xm*ox);fg.forEach(k=>mxp(k,e.xp*1.6*ox))}
-  gameState.hp=Math.min(m,gameState.hp+m*pk('heal'));
   ks.forEach((k,i)=>{if(lv(gameState.xp[k])>b[i])say(k+' reaches level '+lv(gameState.xp[k])+'.')});
   const c1=CL();if(c1>c0)say('Combat level '+c1+'.'+ZN.filter(z=>z[1]>c0&&z[1]<=c1&&!z[5]).map(z=>' New zone: '+z[0]+'.').join(''));
   ['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(skPet);
@@ -39,10 +38,11 @@ export function onKill(e:Enemy,quiet?:boolean){
   if(!quiet)hit('<b>You defeat '+e.n+'. +'+g+' acorns.</b>');
   if(e.raid)raidKill(e,quiet);else loot(e);
 }
+export const healers=()=>{const n=fighters().filter(k=>(MEMBERS[k].pk.heal||0)>0).map(k=>MEMBERS[k].n.split(' ')[0]);return n.length>1?n.slice(0,-1).join(', ')+' and '+n[n.length-1]:n[0]||'Your party'};
 export function cround(e:Enemy,quiet?:boolean){
   const m=maxhp();
   if(e.raid){const r=RD.find(x=>x.id==e.raid)!;if(!raidOk(r)){gameState.cur=null;gameState.ehp=null;say('The raid party broke up. You pull out of '+r.n+'.');return}gameState.rr=(gameState.rr||0)+1}
-  if(gameState.ehid!==e.id||gameState.ehp==null){gameState.ehid=e.id;gameState.ehp=e.hp;gameState.rr=0;if(!quiet)set_hits([])}
+  if(gameState.ehid!==e.id||gameState.ehp==null){gameState.ehid=e.id;gameState.ehp=e.hp;gameState.rr=0;gameState.hrr=Math.max(1,e.hp/Math.max(.01,hitP(e)*(maxHit(e)+1)/2*(1+dwf())+memDpr(e)));if(!quiet)set_hits([])}
   if(gameState.hp<m*.55){
     const hl=1+ef('heal')+cb('heal')+lv(gameState.xp.Cooking)*.004,fk=Object.keys(FOOD).filter(k=>gameState.inv[k]>0).sort((a,b)=>FOOD[a]-FOOD[b]),k=fk.find(q=>FOOD[q]*hl>=m*.15)||fk[fk.length-1];
     if(k){gameState.inv[k]--;const h=Math.round(FOOD[k]*hl);gameState.hp=Math.min(m,gameState.hp+h);if(!quiet)hit('You eat '+k+' (+'+h+').')}
@@ -53,6 +53,8 @@ export function cround(e:Enemy,quiet?:boolean){
   if(Math.random()<eHitP(e)){const d=Math.max(1,Math.round((1+Math.floor(Math.random()*emax(e)))*(1-armor())*(1+FM![gameState.form].taken)*(1-Math.min(.6,pk('taken')+cb('taken')+shT()+(onTask(e)?cb('ttaken'):0)))));gameState.hp-=d;if(!quiet)hit(e.n+' hits you for '+d+'.')}else if(!quiet)hit(e.n+' misses.');
   if(gameState.hp<=0&&cb('ls')>0&&!gameState.lsu){gameState.lsu=true;gameState.hp=1;if(!quiet)hit('Last stand! You hold on with 1 hp.')}
   if(gameState.hp<=0){gameState.lsu=false;gameState.hp=m/2;gameState.p=-15;gameState.ehp=null;say(e.n+' overpowers you. You limp off to rest a while.');if(e.raid){gameState.cur=null;say('The raid is lost. Resupply, then try again.')}if(!quiet)hit('You are knocked out.');return}
+  // Healers mend you every round of the fight. Over a typical fight it adds up to the same total they used to give after each kill.
+  const hr=pk('heal');if(hr>0&&gameState.hp>0&&gameState.hp<m){const h=Math.max(.5,m*hr/Math.max(1,gameState.hrr||8));gameState.hp=Math.min(m,gameState.hp+h);if(!quiet&&h>=1)hit(healers()+' mends you (+'+Math.round(h)+').')}
   gameState.hp=Math.min(m,gameState.hp+m*.01*RT*(1+FM![gameState.form].regen+cb('regen')));
 }
 export function cycle(k:string){const ot=k=='ring1'?gameState.eq.ring2:k=='ring2'?gameState.eq.ring1:null;const o=Object.keys(gameState.own).filter(i=>IT[i].slot==skey(k)&&canEq(IT[i])&&i!=ot).sort((a,b)=>IT[a].tier-IT[b].tier||qrank(IT[a])-qrank(IT[b])||(IT[a].fam||0)-(IT[b].fam||0));if(!o.length)return;gameState.eq[k]=o[(o.indexOf(gameState.eq[k])+1)%o.length];gearSync()}

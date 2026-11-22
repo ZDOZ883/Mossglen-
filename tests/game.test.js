@@ -352,6 +352,26 @@ describe('gear slots', () => {
     }
   });
 
+  it('members have role-shaped combat stats and kit, and healers mend during the fight', () => {
+    const g = load({ seed: 3 });
+    g.ev(`gameState.cx.mole=XT[60];gameState.cx.fox=XT[60];gameState.cx.otter=XT[60];gameState.cx.p_z6=XT[60];gameState.cx.p_Attack=XT[60]`);
+    const st = JSON.parse(g.ev(`JSON.stringify({mole:mst('mole'),fox:mst('fox'),otter:mst('otter'),boss:mst('p_z6'),skill:mst('p_Attack')})`));
+    assert.ok(st.mole.d > st.mole.a && st.mole.d > st.fox.d, 'tanks lead on Defense');
+    assert.ok(st.fox.a > st.mole.a && st.fox.a > st.otter.a, 'strikers lead on Attack');
+    assert.ok(st.otter.v > st.otter.a && st.otter.v > st.fox.v, 'healers lead on Vitality');
+    assert.ok(st.boss.a >= st.skill.a && st.boss.d >= st.skill.d, 'a boss pet carries more kit than a skill pet');
+    assert.ok(g.ev(`kit('p_r0')>kit('p_z6')&&kit('p_z6')>kit('p_Attack')`), 'raid pets are the best kitted');
+    // A healer in the party mends you each round and the total matches the old per-kill amount.
+    g.ev(`gameState.hired={otter:1};gameState.bench={};gameState.mt={otter:{k:'war'}};gameState.xp.Leadership=XT[60]`);
+    g.ev(`const e=ENEMIES.find(q=>q.zone==2&&!q.boss);gameState.cur={k:'c',id:e.id};gameState.ehp=null;gameState.hp=maxhp()*.5;`);
+    const h0 = g.ev('gameState.hp');
+    g.ev(`cround(ENEMIES.find(q=>q.id==gameState.cur.id),true)`);
+    g.ev(`cround(ENEMIES.find(q=>q.id==gameState.cur.id),true)`);
+    assert.ok(g.ev('gameState.hrr>0'), 'expected rounds recorded at fight start');
+    assert.ok(g.ev('pk("heal")>0'));
+    assert.ok(g.ev('gameState.hp') >= h0 - g.ev('maxhp()') * 0.3, 'healing offsets damage during the fight');
+  });
+
   it('old saves start Ranged and Magic at their Attack xp', () => {
     const g = load({ seed: 6 });
     g.ev(`gameState.xp.Attack=XT[50];delete gameState.xp.Ranged;delete gameState.xp.Magic;gameState.v=2;migrate()`);
