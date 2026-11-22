@@ -1,8 +1,9 @@
+import { S, say } from './00-state';
 import { X } from './registry';
 import { FM, H, HK, IT, LT, lv, pbs, skPet } from './01-species-pets';
 import { RFN, ctime, gateOk, refineDone } from './02-gear-data';
 import { hrCount } from './03-world-expeditions';
-import { A, CSK, DISH, LD, S, asg, cl, cookDone, craftDone, mspd, say, tt } from './07-gear-ui';
+import { A, CSK, DISH, LD, asg, cl, cookDone, craftDone, mspd, tt } from './07-gear-ui';
 // Party helpers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 export const fighters=()=>Object.keys(S.hired).filter(k=>asg(k).k=='war');
 export const pm=()=>(FM[S.form]||FM.steady).party+X.cb('pmult');

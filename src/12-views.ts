@@ -1,10 +1,11 @@
+import { S } from './00-state';
 import { CS, FOOD, H, HK, IT, LT, PETS, REQ, SK, SP, SPX, V, lv, nsl, spTxt } from './01-species-pets';
 import { AF, KEEP, KP, RF, RFN, gateOk, refRecipe } from './02-gear-data';
 import { GATE, exFmt, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
 import { combatView, istat } from './05-combat';
 import { icon } from './06-icons';
-import { A, CR, CSK, DISH, GL, LD, S, asg, bspd, burn, cl, gearView, mspd, power, recipe, skill, slayerView, slots, tab, toolRow, tt, who } from './07-gear-ui';
+import { A, CR, CSK, DISH, GL, LD, asg, bspd, burn, cl, gearView, mspd, power, recipe, skill, slayerView, slots, tab, toolRow, tt, who } from './07-gear-ui';
 import { pm } from './08-party-state';
 import { BRATE, buL, burrowView, wxView } from './09-seasons-burrow';
 import { famShare, logView } from './10-achievements-log';

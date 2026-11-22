@@ -24,11 +24,9 @@ export const X = {} as {
   CSK: typeof M7.CSK;
   GL: typeof M7.GL;
   GN: typeof M7.GN;
-  S: typeof M7.S;
   asg: typeof M7.asg;
   cl: typeof M7.cl;
   onTask: typeof M7.onTask;
-  say: typeof M7.say;
   slayKill: typeof M7.slayKill;
   slots: typeof M7.slots;
   useMats: typeof M7.useMats;

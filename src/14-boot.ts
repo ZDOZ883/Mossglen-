@@ -1,10 +1,11 @@
+import { S, save, say } from './00-state';
 import { FM, H, IT, LT, V, XS, XT, nsl } from './01-species-pets';
 import { KEEP } from './02-gear-data';
 import { exRecall, exSel, exStart, openGate, set_exSel, startHR, startRaid } from './03-world-expeditions';
 import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadout';
 import { cycle, shopBuy } from './05-combat';
 import { equipSlot, gsel, set_gsel, set_gtab } from './06-icons';
-import { LD, S, asg, buy, buyTool, save, say, set_skill, set_tab, set_who, skill, slBuy, slots, tab, taskAct, who } from './07-gear-ui';
+import { LD, asg, buy, buyTool, set_skill, set_tab, set_who, skill, slBuy, slots, tab, taskAct, who } from './07-gear-ui';
 import { assign, validTask } from './08-party-state';
 import { buUp, sgBuy } from './09-seasons-burrow';
 import { bars, cb, clampXp, hasWork, refreshFx, tick } from './11-engine';

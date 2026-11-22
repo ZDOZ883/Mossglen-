@@ -1,3 +1,4 @@
+import { S, say } from './00-state';
 import { X } from './registry';
 import { AR, CS, FOOD, GP, H, IT, LT, SK, SP, V, W, XT, lv, petRoll, skPet, weak } from './01-species-pets';
 import { E, RF, ZN, gateOk, zoneOpen } from './02-gear-data';
@@ -95,11 +96,7 @@ export const tt=(a:any)=>a.t*TM[S.tool[a.sk]]*Math.max(.3,1-X.cb('spd',a.sk));
 export function unlockText(sk:string,n:number){const u=A.filter(a=>a.sk==sk&&a.lv==n&&!a.gate).map(a=>a.item);TL.forEach((l,i)=>{if(l==n&&i>0)u.push(TN[i]+' '+(TK as any)[sk])});return u.length?' Unlocked: '+u.join(', ')+'.':''}
 export function buyTool(sk:string){const t=S.tool[sk]+1;if(t<5&&lv(S.xp[sk])>=TL[t]&&S.a>=TC[t]){S.a-=TC[t];S.tool[sk]=t;say('Equipped '+TN[t]+' '+(TK as any)[sk]+'.')}}
 export function toolRow(k:string){const t=S.tool[k],n=t+1;return '<div class="row"><span>'+TN[t]+' '+(TK as any)[k]+'<small>Bonus yield '+Math.round(lv(S.xp[k])*.4)+'% · '+(t<4?'Next: '+TN[n]+' (level '+TL[n]+', '+TM[n]+'× time)':'Best tool')+'</small></span>'+(t<4?'<button class="btn" data-tool="'+k+'"'+(lv(S.xp[k])<TL[n]||S.a<TC[n]?' disabled':'')+'>'+TC[n]+'</button>':'')+'</div>'}
-export let S:SaveState=null as any,tab='skills',who='you',skill:any=null;
-try{S=JSON.parse(localStorage.getItem('hollowbrook1')!)}catch(e){}
-if(!S)S={sp:null,xp:{Foraging:0,Woodcutting:0,Fishing:0,Mining:0},inv:{},a:0,cur:null,p:0,hired:{},t:Date.now(),log:[]} as unknown as SaveState;
-export const save=()=>{try{localStorage.setItem('hollowbrook1',JSON.stringify(S))}catch(e){}};
-export const say=(m:any)=>{S.log.unshift(m);S.log=S.log.slice(0,12)};
+export let tab='skills',who='you',skill:any=null;
 export const power=()=>Math.floor(SK.concat(CS).reduce((s,k)=>s+lv(S.xp[k]),0)/2)+X.fighters().reduce((s,k)=>s+hp(k),0);
 export const cl=(k:string)=>lv(S.cx[k]||0);
 export const hp=(k:string)=>H[k].p+(cl(k)-1)*(k==S.lead?2:1);
@@ -112,4 +109,4 @@ export const asg=(k:string)=>S.mt[k]||{k:'war'};
 export function set_who(v:any){who=v}
 export function set_skill(v:any){skill=v}
 export function set_tab(v:any){tab=v}
-Object.defineProperties(X,{S:{get:()=>S,set:(v:any)=>{S=v},configurable:true},slots:{get:()=>slots,configurable:true},say:{get:()=>say,configurable:true},GN:{get:()=>GN,configurable:true},useMats:{get:()=>useMats,configurable:true},cl:{get:()=>cl,configurable:true},asg:{get:()=>asg,configurable:true},GL:{get:()=>GL,configurable:true},A:{get:()=>A,configurable:true},CSK:{get:()=>CSK,configurable:true},onTask:{get:()=>onTask,configurable:true},slayKill:{get:()=>slayKill,configurable:true}});
+Object.defineProperties(X,{slots:{get:()=>slots,configurable:true},GN:{get:()=>GN,configurable:true},useMats:{get:()=>useMats,configurable:true},cl:{get:()=>cl,configurable:true},asg:{get:()=>asg,configurable:true},GL:{get:()=>GL,configurable:true},A:{get:()=>A,configurable:true},CSK:{get:()=>CSK,configurable:true},onTask:{get:()=>onTask,configurable:true},slayKill:{get:()=>slayKill,configurable:true}});

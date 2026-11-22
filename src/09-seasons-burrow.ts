@@ -1,7 +1,8 @@
+import { S, save, say } from './00-state';
 import { X } from './registry';
 import { lv } from './01-species-pets';
 import { GSK, ZN } from './02-gear-data';
-import { GN, S, say } from './07-gear-ui';
+import { GN } from './07-gear-ui';
 // Slayer gear, seasons, burrow. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- slayer gear and seasons
 export const SG=[

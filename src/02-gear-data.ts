@@ -1,3 +1,4 @@
+import { S, say } from './00-state';
 import { X } from './registry';
 import { BD, D, FOOD, H, IT, REQ, SL, V, WA, lv, skPet } from './01-species-pets';
 // Gear: slots, grips, grades, items. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
@@ -29,12 +30,12 @@ for(let t=0;t<11;t++){
   const mk=(sfx:any,pre:string,m:number)=>{const o=Object.assign({},b);o.n=pre+' '+b.n;o.q=sfx;o.base=id;o.stat=Math.round(b.stat*m);if(b.fx)o.fx=b.fx.map(e=>[e[0],Math.round(e[1]*m*10000)/10000,e[2]]);IT[id+sfx]=o};
   if(b.tier<=1)mk('s','Plain',.75);mk('d','Heirloom',1.25)})})();
 export const qrank=(it:Item)=>it.q=='s'?0:it.q=='d'?2:1;
-export const rsLv=(rs:string)=>rs=='gath'?Math.max(...GSK.map(k=>lv(X.S.xp[k]))):rs=='prod'?Math.max(...PSK.map(k=>lv(X.S.xp[k]))):lv(X.S.xp[rs]);
+export const rsLv=(rs:string)=>rs=='gath'?Math.max(...GSK.map(k=>lv(S.xp[k]))):rs=='prod'?Math.max(...PSK.map(k=>lv(S.xp[k]))):lv(S.xp[rs]);
 export const skey=(k:string)=>k.replace(/\d$/,'');
 export function itFx(it:Item){const o:any[]=[];(it.fx||[]).forEach((e:any)=>{const sc=e[2];if(sc==null)o.push({k:e[0],v:e[1],sk:null});else{const L=sc=='G'?GSK:sc=='P'?X.CRS.concat('Cooking'):sc=='A'?GSK.concat(X.CRS,'Cooking'):[sc];L.forEach(sk=>o.push({k:e[0],v:e[1],sk}))}});return o}
-export function gearFx(){const o:any[]=[];['neck','ring1','ring2'].forEach(k=>{const id=X.S.eq&&X.S.eq[k];if(id&&IT[id])o.push(...itFx(IT[id]))});return o}
+export function gearFx(){const o:any[]=[];['neck','ring1','ring2'].forEach(k=>{const id=S.eq&&S.eq[k];if(id&&IT[id])o.push(...itFx(IT[id]))});return o}
 export let GSIG='';
-export function gearSync(){if(!X.S||!X.S.eq)return;const g=[X.S.eq.neck,X.S.eq.ring1,X.S.eq.ring2,X.S.cape].join('|');if(g!==GSIG){GSIG=g;X.refreshFx()}}
+export function gearSync(){if(!S||!S.eq)return;const g=[S.eq.neck,S.eq.ring1,S.eq.ring2,S.cape].join('|');if(g!==GSIG){GSIG=g;X.refreshFx()}}
 export const scopeTxt=(it:Item)=>{const e=(it.fx||[])[0];if(!e||e[2]==null)return '';return ({G:' (gathering)',P:' (crafting and cooking)',A:''} as any)[e[2]]||''};
 export const accScore=(it:Item,kind:string,sk?:string)=>{let v=0;itFx(it).forEach(e=>{const w=X.CW[kind][e.k];if(!w)return;let m=1;if(e.sk){if(sk){if(e.sk!=sk)return}else m=.2}v+=w*e.v*m});return v};
 
@@ -54,7 +55,7 @@ export const H0=[200,696,2111,4259,9500,16382,31542,47988,74866,109780,160075],D
 export const XK=[0.04444,0.02682,0.01895,0.01722,0.01368,0.01323,0.01078,0.01056,0.00997,0.00978,0.00937],AK=[0.00333,0.00134,0.00227,0.00459,0.0076,0.01628,0.02994,0.05279,0.1122,0.23279,0.17353];
 export const E:Enemy[]=[];ZN.forEach((z,i)=>{[0,1,2,3].forEach(j=>{const hp=Math.round(H0[i]*[.8,1,1.25,6][j]);E.push({id:'z'+i+'m'+j,zone:i,n:z[3][j],type:z[2][j],hp,dps:D0[i]*[1.2,1,.8,1.5][j],xp:Math.round(hp*XK[i]),a:Math.round(hp*AK[i]),boss:j==3})})});
 ZN.forEach((z,i)=>V[z[4]]=MV[i]);
-export const gateOk=(n:any)=>!n||!!(X.S&&X.S.gates&&X.S.gates[n]);
+export const gateOk=(n:any)=>!n||!!(S&&S.gates&&S.gates[n]);
 export const zoneOpen=(i:number)=>X.CL()>=ZN[i][1]&&gateOk(ZN[i][5]);
 export const dropTier=(z:any)=>z<=7?Math.min(7,z+1):z;
 export const elv=(e:Enemy)=>e.lvl||ZN[e.zone][1];
@@ -73,11 +74,11 @@ export function refRecipe(id:string){const f=RFN[id],q=6+2*(f.t-8),i=f.t-1,g=(k:
   return m}
 export function refineDone(id:string,mk?:any){
   const f=RFN[id];
-  if(!gateOk(f.t-7)||lv(X.S.xp[f.sk])<f.req){if(mk)X.S.mt[mk]={k:'idle'};else X.S.cur=null;return}
-  if(!X.useMats(refRecipe(id),f.sk)){if(mk){X.S.mt[mk]={k:'idle'};X.say(H[mk].n+' ran out of materials for '+f.n+'.')}else{X.S.cur=null;X.say('Out of materials for '+f.n+'.')}return}
-  X.S.inv[f.n]=(X.S.inv[f.n]||0)+(mk?X.famCut(mk,1):1);skPet(f.sk);
+  if(!gateOk(f.t-7)||lv(S.xp[f.sk])<f.req){if(mk)S.mt[mk]={k:'idle'};else S.cur=null;return}
+  if(!X.useMats(refRecipe(id),f.sk)){if(mk){S.mt[mk]={k:'idle'};say(H[mk].n+' ran out of materials for '+f.n+'.')}else{S.cur=null;say('Out of materials for '+f.n+'.')}return}
+  S.inv[f.n]=(S.inv[f.n]||0)+(mk?X.famCut(mk,1):1);skPet(f.sk);
   const x=[1800,3200,5600][f.t-8];
-  if(mk){X.mxp(mk,x*.6);X.ldx(x*.5)}else{const b=lv(X.S.xp[f.sk]);X.S.xp[f.sk]+=x*(1+X.cb('xp',f.sk));if(lv(X.S.xp[f.sk])>b)X.say(f.sk+' reaches level '+lv(X.S.xp[f.sk])+'.')}
+  if(mk){X.mxp(mk,x*.6);X.ldx(x*.5)}else{const b=lv(S.xp[f.sk]);S.xp[f.sk]+=x*(1+X.cb('xp',f.sk));if(lv(S.xp[f.sk])>b)say(f.sk+' reaches level '+lv(S.xp[f.sk])+'.')}
 }
 // protected items
 export const KP:Record<string,number>={};ZN.forEach(z=>{if(z[6])KP[z[6]]=1});Object.keys(RFN).forEach(id=>KP[RFN[id].n]=1);D.forEach(d=>KP[d.tr]=1);

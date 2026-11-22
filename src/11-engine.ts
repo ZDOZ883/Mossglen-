@@ -1,10 +1,11 @@
+import { S, save, say } from './00-state';
 import { X } from './registry';
 import { D, FXC, H, IT, SK, XT, lv, maxhp, nsl, set_FXC, spFx } from './01-species-pets';
 import { E, RFN, gearFx, gearSync, itFx, qrank } from './02-gear-data';
 import { exFinish, hrFx } from './03-world-expeditions';
 import { hits, hitsStr, set_hitsStr } from './04-loadout';
 import { canEq, istat, reqText } from './05-combat';
-import { A, CSK, DISH, S, asg, mspd, say, set_who, slots, who } from './07-gear-ui';
+import { A, CSK, DISH, asg, mspd, set_who, slots, who } from './07-gear-ui';
 import { mdur } from './08-party-state';
 import { buFx, buL, sgFx, wxCheck, wxFx } from './09-seasons-burrow';
 import { checkAch, dur, famShare, finish, memTick } from './10-achievements-log';

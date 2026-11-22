@@ -1,10 +1,11 @@
+import { S, say } from './00-state';
 import { X } from './registry';
 import { CS, D, IT, PETS, SK, SL, SP, TR, lv, skPet } from './01-species-pets';
 import { E, GSK, PSK, RFN, ZN, ctime, gateOk, refineDone } from './02-gear-data';
 import { HR, RD, hrCount } from './03-world-expeditions';
 import { RT } from './04-loadout';
 import { cround } from './05-combat';
-import { A, CSK, LD, S, asg, cookDone, craftDone, say, tt, unlockText } from './07-gear-ui';
+import { A, CSK, LD, asg, cookDone, craftDone, tt, unlockText } from './07-gear-ui';
 import { mdur, memAct, mxp } from './08-party-state';
 import { BRATE, BU, buL } from './09-seasons-burrow';
 // Achievements and collection log. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
