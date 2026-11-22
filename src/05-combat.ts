@@ -9,7 +9,7 @@ import { CL, RT, armor, dwf, eHitP, ef, emax, hit, hitP, maxHit, memDpr, set_hit
 export function fight(e:Enemy){
   const Ep=hitP(e)*(maxHit(e)+1)/2*(1+dwf())+memDpr(e),rounds=Math.max(1,e.hp/Math.max(.01,Ep));
   const Ee=eHitP(e)*(emax(e)+1)/2*(1-armor())*(1+FM![gameState.form].taken)*(1-Math.min(.6,pk('taken')+cb('taken')+shT()+(onTask(e)?cb('ttaken'):0))),reg=maxhp()*.01*RT*(1+FM![gameState.form].regen+cb('regen'));
-  return{ttk:rounds*RT,dmg:Math.max(0,(Ee-reg)*rounds-maxhp()*pk('heal'))};
+  return{ttk:rounds*RT,dmg:Math.max(0,(Ee-reg)*rounds-maxhp()*pk('heal')*HEAL_IN)};
 }
 export function canEq(it:Item){if(it.rs)return rsLv(it.rs)>=it.req;return lv(gameState.xp[SL.includes(it.slot)?OFF[it.slot][0]:it.slot=='trinket'?'Vitality':'Defense'])>=it.req}
 export function autoEq(id:string){const it=IT[id];if(it.slot=='ring'){if(!canEq(it))return;const k=!gameState.eq.ring1?'ring1':!gameState.eq.ring2?'ring2':null;if(k){gameState.eq[k]=id;say('Equipped '+it.n+'.');gearSync()}return}if(it.slot=='cloak'){if(!gameState.cape&&canEq(it)){gameState.cape='I:'+id;X.refreshFx();say('Wearing '+it.n+'.')}return}const cur=gameState.eq[it.slot];if(!cur&&canEq(it)){gameState.eq[it.slot]=id;say('Equipped '+it.n+'.');gearSync()}}
@@ -70,6 +70,7 @@ export function onKill(e:Enemy,quiet?:boolean){
   if(!quiet)hit('<b>You defeat '+e.n+'. +'+g+' acorns.</b>');
   if(e.raid)raidKill(e,quiet);else loot(e);
 }
+export const HEAL_IN=.55;
 export const healers=()=>{const n=fighters().filter(k=>(MEMBERS[k].pk.heal||0)>0).map(k=>MEMBERS[k].n.split(' ')[0]);return n.length>1?n.slice(0,-1).join(', ')+' and '+n[n.length-1]:n[0]||'Your party'};
 export function cround(e:Enemy,quiet?:boolean){
   const m=maxhp();
@@ -86,7 +87,7 @@ export function cround(e:Enemy,quiet?:boolean){
   if(gameState.hp<=0&&cb('ls')>0&&!gameState.lsu){gameState.lsu=true;gameState.hp=1;if(!quiet)hit('Last stand! You hold on with 1 hp.')}
   if(gameState.hp<=0){gameState.lsu=false;gameState.hp=m/2;gameState.p=-15;gameState.ehp=null;say(e.n+' overpowers you. You limp off to rest a while.');if(e.raid){gameState.cur=null;say('The raid is lost. Resupply, then try again.')}if(!quiet)hit('You are knocked out.');return}
   // Healers mend you every round of the fight. Over a typical fight it adds up to the same total they used to give after each kill.
-  const hr=pk('heal');if(hr>0&&gameState.hp>0&&gameState.hp<m){const h=Math.max(.5,m*hr/Math.max(1,gameState.hrr||8));gameState.hp=Math.min(m,gameState.hp+h);if(!quiet&&h>=1)hit(healers()+' mends you (+'+Math.round(h)+').')}
+  const hr=pk('heal')*HEAL_IN;if(hr>0&&gameState.hp>0&&gameState.hp<m){const h=Math.max(.5,m*hr/Math.max(1,gameState.hrr||8));gameState.hp=Math.min(m,gameState.hp+h);if(!quiet&&h>=1)hit(healers()+' mends you (+'+Math.round(h)+').')}
   gameState.hp=Math.min(m,gameState.hp+m*.01*RT*(1+FM![gameState.form].regen+cb('regen')));
 }
 export function cycle(k:string){const ot=k=='ring1'?gameState.eq.ring2:k=='ring2'?gameState.eq.ring1:null;const o=Object.keys(gameState.own).filter(i=>IT[i].slot==skey(k)&&canEq(IT[i])&&i!=ot).sort((a,b)=>IT[a].tier-IT[b].tier||qrank(IT[a])-qrank(IT[b])||(IT[a].fam||0)-(IT[b].fam||0));if(!o.length)return;gameState.eq[k]=o[(o.indexOf(gameState.eq[k])+1)%o.length];gearSync()}

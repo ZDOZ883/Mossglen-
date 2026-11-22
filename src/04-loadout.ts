@@ -104,7 +104,9 @@ export const maxHit=(e:Enemy)=>Math.max(1,Math.floor((1+offLv()[1]*1+wst()*3.2)*
 export const eDef=(e:Enemy)=>elv(e)*.9+5+(e.boss?10:0);
 export const eAtk=(e:Enemy)=>elv(e)*.8+5+(e.boss?10:0);
 export const mdmg=(k:string,e:Enemy)=>{const c=mst(k).a;return fw(k)*c*(1.5+c/60)*(1+kit(k))*(MEMBERS[k].pet?1.25:1)*(1+.25*adv(MEMBERS[k].st,e.type))};
-export const memDpr=(e:Enemy)=>fighters().reduce((q,k)=>q+mdmg(k,e),0)*pm()*.9;
+// Each extra fighter adds a little less than the one before (best damage dealer first), so a big party is wider, not unbeatable.
+export const PARTY_DIM=.75;
+export const memDpr=(e:Enemy)=>fighters().map(k=>mdmg(k,e)).sort((a,b)=>b-a).reduce((q,d,i)=>q+d*Math.pow(PARTY_DIM,i),0)*pm()*.9;
 export const emax=(e:Enemy)=>Math.max(1,Math.round(e.dps*3*enr(e)));
 export const hitP=(e:Enemy)=>{const A=(offLv()[0]+8)*(1+wst()/45),D=eDef(e);return clampH(1.5*A/(A+D)+(dwf()>0?.03:0)+cb('acc')+pk('acc'))};
 export const eHitP=(e:Enemy)=>{const A=eAtk(e),D=lv(gameState.xp.Defense)+8;return clampH(1.5*A/(A+D))};

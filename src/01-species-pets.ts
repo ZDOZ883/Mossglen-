@@ -112,7 +112,7 @@ export const mst=(k:string)=>{const c=cl(k),m=STAT_MULT[MEMBERS[k].role]||[1,1,1
 // Each perk grows with the stat that fits it: damage and accuracy with Attack, damage taken with Defense, healing and health with Vitality.
 const PSTAT:Record<string,'a'|'d'|'v'>={dmg:'a',acc:'a',taken:'d',heal:'v',hp:'v'};
 export const plv=(k:string,n:string)=>{const s=PSTAT[n];return s?mst(k)[s]:cl(k)};
-export const pk=(n:string)=>Math.min(({taken:.45,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+((MEMBERS[k].pk[n]||0)+sigPk(k,n))*fw(k)*(1+(plv(k,n)-1)*.02)*(1+kit(k))*pm()*(MEMBERS[k].pet?1.25:1),0));
+export const pk=(n:string)=>Math.min(({taken:.22,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+((MEMBERS[k].pk[n]||0)+sigPk(k,n))*fw(k)*(1+(plv(k,n)-1)*.02)*(1+kit(k))*pm()*(MEMBERS[k].pet?1.25:1),0));
 export function mxp(k:string,x:number){const b=cl(k);gameState.cx[k]=(gameState.cx[k]||0)+x*(MEMBERS[k].pet?1.5:1);if(cl(k)>b)say(MEMBERS[k].n+' reaches level '+cl(k)+'.')}
 export function ldx(x:number){const b=LD();gameState.xp.Leadership+=x;const a=LD();if(a>b){const u=HK.filter(k=>MEMBERS[k].lt>b&&MEMBERS[k].lt<=a).map(k=>MEMBERS[k].n);say('Leadership reaches level '+a+'.'+(LT.some(l=>l>b&&l<=a)?' New party slot.':'')+(u.length?' Now available: '+u.join(', ')+'.':''))}}
 export const onTask=(e:Enemy)=>!!gameState.task&&gameState.task.id==e.id;
