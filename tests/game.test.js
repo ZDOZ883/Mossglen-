@@ -553,6 +553,24 @@ describe('expeditions', () => {
     assert.equal(g.ev('gameState.mt.hare.k'), 'idle', 'previous task is restored');
   });
 
+  it('members resting at home can go on expeditions and return to their rest', () => {
+    const g = party();
+    g.ev(`delete gameState.hired.hare;gameState.bench.hare=1;gameState.mt.hare={k:'bar'};gameState.cx.hare=XT[60]`);
+    assert.ok(g.ev(`exEligible(${D(g, 'hollow')},'hare')`), 'a benched member is eligible');
+    g.ev(`exSel={d:'hollow',l:'mole',m:['hare'],b:null}`);
+    g.click({ exgo: '1' });
+    assert.ok(g.ev('exs()[0].mem.includes("hare")'), 'the benched member went');
+    assert.equal(g.ev('gameState.mt.hare.k'), 'exp');
+    g.click({ call: 'hare' });
+    assert.ok(g.ev('!!gameState.bench.hare&&!gameState.hired.hare'), 'cannot be called into the party while away');
+    assert.equal(g.ev('gameState.mt.hare.k'), 'exp');
+    g.ev('tick(gameState.exs[0].dur+1,true)');
+    assert.equal(g.ev('gameState.exs.length'), 0);
+    assert.ok(g.ev('!!gameState.bench.hare&&!gameState.hired.hare'), 'still on the bench');
+    assert.equal(g.ev('gameState.mt.hare.k'), 'bar', 'back to the barracks');
+    g.view('party');
+  });
+
   it('one expedition at low Leadership, and recall returns everyone with no reward', () => {
     const g = party();
     g.ev(`exSel={d:'hollow',l:'mole',m:[],b:null}`);

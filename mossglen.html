@@ -963,7 +963,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   var mhpx = (k) => (30 + cl(k) * 10) * (MEMBERS[k].pet ? 1.25 : 1);
   var exLead = (k) => k ? Math.min(0.35, 0.08 + cl(k) / 500) : 0;
   function exEligible(d, k) {
-    return !!gameState.hired[k] && asg(k).k != "exp" && cl(k) >= d.mlv;
+    return !!known(k) && asg(k).k != "exp" && cl(k) >= d.mlv;
   }
   var exPk = (mem, n) => mem.reduce((s, k) => s + ((MEMBERS[k].pk[n] || 0) + sigPk(k, n)) * (1 + (cl(k) - 1) * 0.02) * pm() * (MEMBERS[k].pet ? 1.25 : 1), 0);
   function exOdds(d, t, lead, mem, boon) {
@@ -1011,9 +1011,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   var exOf = (k) => exs().find((e) => e.mem.includes(k));
   function exRestore(e) {
     e.mem.forEach((k) => {
-      if (!gameState.hired[k]) return;
+      const home = !!gameState.bench[k];
+      if (!gameState.hired[k] && !home) return;
       const pv = e.prev && e.prev[k];
-      gameState.mt[k] = pv && X.validTask(pv) && pv.k != "exp" ? pv : { k: "war" };
+      gameState.mt[k] = pv && X.validTask(pv) && pv.k != "exp" && (!home || pv.k == "idle" || pv.k == "bar") ? pv : { k: home ? "idle" : "war" };
     });
   }
   function exRecall(i) {
@@ -1054,7 +1055,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       if (t > prev && t < 5) say("Tier " + (t + 1) + " of " + d.n + " unlocked.");
     }
     e.mem.forEach((k) => {
-      if (gameState.hired[k]) mxp(k, 12 * t * scale * (win ? 1 : 0.4) * (k == lead ? 1.5 : 1));
+      if (known(k)) mxp(k, 12 * t * scale * (win ? 1 : 0.4) * (k == lead ? 1.5 : 1));
     });
     ldx(30 * t * e.mem.length * (scale / 2) * (win ? 1 : 0.4));
     say(s);
@@ -1068,8 +1069,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       run += '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + d.n + " \xB7 tier " + e.tier + "<small>Led by " + MEMBERS[e.leader].n + " with " + e.mem.filter((k) => k != e.leader).map((k) => MEMBERS[k].n.split(" ")[0]).join(", ") + (e.mem.length == 1 ? " (alone)" : "") + (e.boon ? " \xB7 " + EXB[e.boon][0] : "") + ((e.par || 1) < 1 ? " \xB7 pays " + Math.round((e.par || 1) * 100) + "%" : "") + "</small></span><small>Odds when they set out: " + Math.round(e.odds * 100) + "%. They return in " + exFmt(left) + ', and these members are away until then.</small><div class="bar"><i id="exb_' + i + '"></i></div><div style="margin-top:8px"><button class="btn" data-exrecall="' + i + '">Recall party</button></div></div>';
     });
     if (exs().length >= exSlots()) return run + (exSlots() < 3 ? '<p class="mu">Leadership ' + (exSlots() < 2 ? 85 : 105) + " lets you run another expedition at the same time.</p>" : "");
-    const hs = Object.keys(gameState.hired);
-    let h = run + '<p class="sub">Send your party on an expedition without you' + (exSlots() > 1 ? " (up to " + exSlots() + " at once, extra ones pay less)" : "") + ". A leader gives the group a bonus. Everyone who goes is away until they return, so they cannot fight, work or train meanwhile. You stay free to do anything else, even while you are offline.</p>";
+    const hs = roster();
+    let h = run + '<p class="sub">Send your party, or anyone resting at home, on an expedition without you' + (exSlots() > 1 ? " (up to " + exSlots() + " at once, extra ones pay less)" : "") + ". A leader gives the group a bonus. Everyone who goes is away until they return, so they cannot fight, work or train meanwhile. You stay free to do anything else, even while you are offline.</p>";
     if (!hs.length) return h + '<p class="mu">Recruit a party member in the Party tab first.</p>';
     const sel = exSel.d ? DISHES.find((x) => x.id == exSel.d) : null;
     h += DISHES.map((d) => {
@@ -2584,7 +2585,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     return g;
   }
   function memTick(dt) {
-    exs().forEach((e) => Object.keys(gameState.hired).forEach((k) => {
+    exs().forEach((e) => roster().forEach((k) => {
       if (asg(k).k != "exp" && e.mem.includes(k)) gameState.mt[k] = { k: "exp" };
     }));
     Object.keys(gameState.bench).forEach((k) => {
@@ -3233,7 +3234,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       h += '<h2>Resting at home <span class="mu" style="display:inline">\xB7 ' + bs.length + ' on your roster, not in the party</span></h2><p class="mu">Benched members do no work and fight nothing, but they keep their level and can train in the barracks. Open a slot or swap one of your party to bring them back.</p>';
       h += bs.map((k) => {
         const m = MEMBERS[k], t = asg(k), free = nsl() < sl, sw = Object.keys(gameState.hired).filter((a) => asg(a).k != "exp");
-        return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + m.n + " \xB7 level " + cl(k) + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + perkTxt(k) + "</small></span><small>" + memName(k) + "</small>" + kitRow(k) + '<div class="chips" style="margin:8px 0 0"><button class="' + (t.k != "bar" ? "on" : "") + '" data-assign="' + k + ':idle">Rest</button>' + (buL("bar") ? '<button class="' + (t.k == "bar" ? "on" : "") + '" data-assign="' + k + ':bar">Barracks</button>' : "") + (free ? '<button data-call="' + k + '">Join party</button>' : "") + "</div>" + (free ? "" : '<small style="margin-top:8px">Swap in for:</small><div class="chips" style="margin:4px 0 0">' + sw.map((a) => '<button data-call="' + k + ":" + a + '">' + MEMBERS[a].n.split(" ")[0] + "</button>").join("") + "</div>") + "</div>";
+        return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + m.n + " \xB7 level " + cl(k) + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + perkTxt(k) + "</small></span><small>" + memName(k) + "</small>" + kitRow(k) + (t.k == "exp" ? "" : '<div class="chips" style="margin:8px 0 0"><button class="' + (t.k != "bar" ? "on" : "") + '" data-assign="' + k + ':idle">Rest</button>' + (buL("bar") ? '<button class="' + (t.k == "bar" ? "on" : "") + '" data-assign="' + k + ':bar">Barracks</button>' : "") + (free ? '<button data-call="' + k + '">Join party</button>' : "") + "</div>" + (free ? "" : '<small style="margin-top:8px">Swap in for:</small><div class="chips" style="margin:4px 0 0">' + sw.map((a) => '<button data-call="' + k + ":" + a + '">' + MEMBERS[a].n.split(" ")[0] + "</button>").join("") + "</div>")) + "</div>";
       }).join("");
     }
     const rec = HK.filter((k) => !known(k));
@@ -3600,7 +3601,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       if (buyKit(k)) say(MEMBERS[k].n + " is outfitted with " + PRE[kitTier(k)] + " kit.");
     } else if (d.call) {
       const [k, out] = d.call.split(":");
-      if (gameState.bench[k] && !(out && asg(out).k == "exp")) {
+      if (gameState.bench[k] && asg(k).k != "exp" && !(out && asg(out).k == "exp")) {
         if (out && gameState.hired[out]) {
           delete gameState.hired[out];
           gameState.bench[out] = 1;

@@ -37,7 +37,7 @@ document.addEventListener('click',e=>{
     return;
   }
   else if(d.kit){const k=d.kit;if(buyKit(k))say(MEMBERS[k].n+' is outfitted with '+PRE[kitTier(k)]+' kit.')}
-  else if(d.call){const [k,out]=d.call.split(':');if(gameState.bench[k]&&!(out&&asg(out).k=='exp')){if(out&&gameState.hired[out]){delete gameState.hired[out];gameState.bench[out]=1;gameState.mt[out]={k:'idle'};if(gameState.lead==out)gameState.lead=null;if(who==out)set_who('you')}if(nsl()<slots()){delete gameState.bench[k];gameState.hired[k]=1;gameState.mt[k]={k:'war'};if(!gameState.lead)gameState.lead=k;say(MEMBERS[k].n+' joins the party'+(out?', taking '+MEMBERS[out].n+"'s place.":'.'))}}}
+  else if(d.call){const [k,out]=d.call.split(':');if(gameState.bench[k]&&asg(k).k!='exp'&&!(out&&asg(out).k=='exp')){if(out&&gameState.hired[out]){delete gameState.hired[out];gameState.bench[out]=1;gameState.mt[out]={k:'idle'};if(gameState.lead==out)gameState.lead=null;if(who==out)set_who('you')}if(nsl()<slots()){delete gameState.bench[k];gameState.hired[k]=1;gameState.mt[k]={k:'war'};if(!gameState.lead)gameState.lead=k;say(MEMBERS[k].n+' joins the party'+(out?', taking '+MEMBERS[out].n+"'s place.":'.'))}}}
   else if(d.form){if(FM[d.form]&&CL()>=FM[d.form].cl)gameState.form=d.form}
   else if(d.do){const [k,id]=d.do.split(':');if(who!='you'&&gameState.hired[who]&&'skfr'.includes(k))assign(who,k,id);else{if(k=='c'&&!(gameState.cur&&gameState.cur.k=='c'&&gameState.cur.id==id)){gameState.ehp=null;set_hits([])}gameState.cur={k,id};gameState.p=0}}
   else if(d.style)gameState.style=d.style;

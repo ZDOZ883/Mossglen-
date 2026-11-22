@@ -1,6 +1,6 @@
 import { gameState, say } from './00-state';
 import { X } from './registry';
-import { DISHES, FM, GL, MEMBERS, IT, T, asg, cb, cl, fighters, ldx, lv, maxhp, mxp, petRoll, pm, sigPk } from './01-species-pets';
+import { DISHES, FM, GL, MEMBERS, IT, T, asg, cb, cl, fighters, known, ldx, lv, maxhp, mxp, petRoll, pm, roster, sigPk } from './01-species-pets';
 import { AK, CTX, D0, ENEMIES, GSK, H0, PSK, XK, ZN, fxTxt, gateOk } from './02-gear-data';
 // Gates, raids, expeditions, harvest raids. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- ancient gates
@@ -55,7 +55,7 @@ export const exFmt=(sec:any)=>{sec=Math.max(0,Math.round(sec));const h=Math.floo
 export const EXK=12;
 export const mhpx=(k:string)=>(30+cl(k)*10)*(MEMBERS[k].pet?1.25:1);
 export const exLead=(k:string)=>k?Math.min(.35,.08+cl(k)/500):0;
-export function exEligible(d:Delve,k:string){return !!gameState.hired[k]&&asg(k).k!='exp'&&cl(k)>=d.mlv}
+export function exEligible(d:Delve,k:string){return !!known(k)&&asg(k).k!='exp'&&cl(k)>=d.mlv}
 export const exPk=(mem:string[],n:string)=>mem.reduce((s,k)=>s+((MEMBERS[k].pk[n]||0)+sigPk(k,n))*(1+(cl(k)-1)*.02)*pm()*(MEMBERS[k].pet?1.25:1),0);
 export function exOdds(d:Delve,t:number,lead:any,mem:any,boon:any){
   const all=(lead?[lead]:[]).concat(mem.filter((k:string)=>k!=lead)),need=Math.max(1,d.party);
@@ -84,7 +84,7 @@ export const exs=():Expedition[]=>gameState.exs=gameState.exs||[];
 export const exSlots=()=>{const l=lv(gameState.xp.Leadership);return 1+(l>=85?1:0)+(l>=105?1:0)};
 export const EXPAR=[1,.6,.4];
 export const exOf=(k:string)=>exs().find(e=>e.mem.includes(k));
-export function exRestore(e:Expedition){e.mem.forEach(k=>{if(!gameState.hired[k])return;const pv=e.prev&&e.prev[k];gameState.mt[k]=pv&&X.validTask(pv)&&pv.k!='exp'?pv:{k:'war'}});}
+export function exRestore(e:Expedition){e.mem.forEach(k=>{const home=!!gameState.bench[k];if(!gameState.hired[k]&&!home)return;const pv=e.prev&&e.prev[k];gameState.mt[k]=pv&&X.validTask(pv)&&pv.k!='exp'&&(!home||pv.k=='idle'||pv.k=='bar')?pv:{k:home?'idle':'war'}});}
 export function exRecall(i:number){const e=exs()[i];if(!e)return;const d=DISHES.find(x=>x.id==e.id)!;exRestore(e);exs().splice(i,1);say('The expedition to '+d.n+' is called home early. Nothing was gained.')}
 export function exFinish(quiet:any,e:Expedition){
   const d=DISHES.find(x=>x.id==e.id)!,t=e.tier,win=Math.random()<e.odds;
@@ -100,7 +100,7 @@ export function exFinish(quiet:any,e:Expedition){
     if(t>=4&&Math.random()<.04*(t-3)*(1+cb('drop'))){X.gainItem(X.rndGear(Math.min(10,d.zb)))}
     const prev=gameState.best[d.id]||0;gameState.best[d.id]=Math.max(prev,t);if(t>prev&&t<5)say('Tier '+(t+1)+' of '+d.n+' unlocked.');
   }
-  e.mem.forEach(k=>{if(gameState.hired[k])mxp(k,12*t*scale*(win?1:.4)*(k==lead?1.5:1))});
+  e.mem.forEach(k=>{if(known(k))mxp(k,12*t*scale*(win?1:.4)*(k==lead?1.5:1))});
   ldx(30*t*e.mem.length*(scale/2)*(win?1:.4));
   say(s);exRestore(e);exs().splice(exs().indexOf(e),1);
 }
@@ -111,8 +111,8 @@ export function exView(){
     run+='<div class="row" style="flex-direction:column;align-items:stretch"><span>'+d!.n+' · tier '+e.tier+'<small>Led by '+MEMBERS[e.leader].n+' with '+e.mem.filter(k=>k!=e.leader).map(k=>MEMBERS[k].n.split(" ")[0]).join(', ')+(e.mem.length==1?' (alone)':'')+(e.boon?' · '+EXB[e.boon][0]:'')+((e.par||1)<1?' · pays '+Math.round((e.par||1)*100)+'%':'')+'</small></span><small>Odds when they set out: '+Math.round(e.odds*100)+'%. They return in '+exFmt(left)+', and these members are away until then.</small><div class="bar"><i id="exb_'+i+'"></i></div><div style="margin-top:8px"><button class="btn" data-exrecall="'+i+'">Recall party</button></div></div>';
   });
   if(exs().length>=exSlots())return run+(exSlots()<3?'<p class="mu">Leadership '+(exSlots()<2?85:105)+' lets you run another expedition at the same time.</p>':'');
-  const hs=Object.keys(gameState.hired);
-  let h=run+'<p class="sub">Send your party on an expedition without you'+(exSlots()>1?' (up to '+exSlots()+' at once, extra ones pay less)':'')+'. A leader gives the group a bonus. Everyone who goes is away until they return, so they cannot fight, work or train meanwhile. You stay free to do anything else, even while you are offline.</p>';
+  const hs=roster();
+  let h=run+'<p class="sub">Send your party, or anyone resting at home, on an expedition without you'+(exSlots()>1?' (up to '+exSlots()+' at once, extra ones pay less)':'')+'. A leader gives the group a bonus. Everyone who goes is away until they return, so they cannot fight, work or train meanwhile. You stay free to do anything else, even while you are offline.</p>';
   if(!hs.length)return h+'<p class="mu">Recruit a party member in the Party tab first.</p>';
   const sel=exSel.d?DISHES.find(x=>x.id==exSel.d):null;
   h+=DISHES.map(d=>{
