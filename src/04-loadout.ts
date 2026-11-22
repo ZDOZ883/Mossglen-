@@ -1,6 +1,6 @@
 import { S, TASKS, save, say } from './00-state';
 import { X } from './registry';
-import { FM, H, IT, SL, XS, adv, lv, maxhp, spAff } from './01-species-pets';
+import { FM, H, IT, SL, XS, adv, cb, cl, fighters, fw, lv, maxhp, onTask, pk, pm, spAff } from './01-species-pets';
 import { E, GSK, PSK, RFN, accScore, elv, gearSync } from './02-gear-data';
 import { enr } from './03-world-expeditions';
 // Smart loadout optimizer. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
@@ -87,14 +87,13 @@ export const offIt=()=>{const o=S.eq.off?IT[S.eq.off]:null;if(!o||is2h())return 
 export const shieldOn=()=>{const o=offIt();return !!o&&o.kind=='shield'};
 export const dwf=()=>{const o=offIt(),w=wst();return o&&o.kind=='off'&&w?Math.min(.46,.46*o.stat/w):0};
 export const shT=()=>shieldOn()?.08:0;
-export const maxHit=(e:Enemy)=>Math.max(1,Math.floor((1+lv(S.xp.Strength)*1+wst()*3.2)*3*(1+FM![S.form].dmg)*(is2h()?1.3:1)*(1+spAff())*(1+.25*adv(S.style,e.type))*(1+X.pk('dmg'))*(1+ef('dmg'))*(1+X.cb('dmgm'))*(X.onTask(e)?1.1+(S.su.keen?.15:0)+X.cb('tdmg'):1)));
+export const maxHit=(e:Enemy)=>Math.max(1,Math.floor((1+lv(S.xp.Strength)*1+wst()*3.2)*3*(1+FM![S.form].dmg)*(is2h()?1.3:1)*(1+spAff())*(1+.25*adv(S.style,e.type))*(1+pk('dmg'))*(1+ef('dmg'))*(1+cb('dmgm'))*(onTask(e)?1.1+(S.su.keen?.15:0)+cb('tdmg'):1)));
 export const eDef=(e:Enemy)=>elv(e)*.9+5+(e.boss?10:0);
 export const eAtk=(e:Enemy)=>elv(e)*.8+5+(e.boss?10:0);
-export const fw=(k:string)=>H[k].spec?.4:1;// specialists fight at 40%, so a bigger party is wider rather than stronger
-export const mdmg=(k:string,e:Enemy)=>{const c=X.cl(k);return fw(k)*c*(1.5+c/60)*(H[k].pet?1.25:1)*(1+.25*adv(H[k].st,e.type))};
-export const memDpr=(e:Enemy)=>X.fighters().reduce((q,k)=>q+mdmg(k,e),0)*X.pm()*.9;
+export const mdmg=(k:string,e:Enemy)=>{const c=cl(k);return fw(k)*c*(1.5+c/60)*(H[k].pet?1.25:1)*(1+.25*adv(H[k].st,e.type))};
+export const memDpr=(e:Enemy)=>fighters().reduce((q,k)=>q+mdmg(k,e),0)*pm()*.9;
 export const emax=(e:Enemy)=>Math.max(1,Math.round(e.dps*3*enr(e)));
-export const hitP=(e:Enemy)=>{const A=(lv(S.xp.Attack)+8)*(1+wst()/45),D=eDef(e);return clampH(1.5*A/(A+D)+(dwf()>0?.03:0)+X.cb('acc')+X.pk('acc'))};
+export const hitP=(e:Enemy)=>{const A=(lv(S.xp.Attack)+8)*(1+wst()/45),D=eDef(e);return clampH(1.5*A/(A+D)+(dwf()>0?.03:0)+cb('acc')+pk('acc'))};
 export const eHitP=(e:Enemy)=>{const A=eAtk(e),D=lv(S.xp.Defense)+8;return clampH(1.5*A/(A+D))};
 export function armor(){const d=['body','head','legs'].reduce((s,k)=>s+(S.eq[k]?IT[S.eq[k]].stat:0),0)+(shieldOn()?offIt()!.stat:0);return d/(d+103)}
 

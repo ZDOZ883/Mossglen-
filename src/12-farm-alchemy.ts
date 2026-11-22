@@ -1,11 +1,11 @@
 import { FXSRC, GATHERED, S, TASKS, TICKS, say } from './00-state';
 import { X } from './registry';
-import { CS, SK, V, lv, skPet } from './01-species-pets';
+import { CS, GL, SK, V, cb, ldx, lv, mxp, skPet, useMats } from './01-species-pets';
 import { KEEPX, gateOk } from './02-gear-data';
 import { H } from './01-species-pets';
 import { assign } from './08-party-state';
-import { CROPS, CROPSECS, GL, GV, GX, mspd, useMats } from './07-gear-ui';
-import { cb, isOn, refreshFx } from './11-engine';
+import { CROPS, CROPSECS, GV, GX, mspd } from './07-gear-ui';
+import { isOn, refreshFx } from './11-engine';
 // Farming and Alchemy. Both plug into the engine through the hook tables in 00-state, so no other system needed a special case.
 // Farming: timed plots. Seeds come from Foraging, mulch from Woodcutting, crops go to Cooking and Alchemy.
 // Alchemy: brews potions from Foraging herbs plus Farming crops; drinking one starts a timed buff through the normal effects system.
@@ -24,7 +24,7 @@ export const growMs = (i: number, mulch: boolean) => Math.round(CROPSECS[i] * 10
 // Party members can tend the farm: each one adds a share of your speed to every growing plot, up to double speed.
 export const farmhands = () => Object.keys(S.hired).filter(k => S.mt[k] && S.mt[k].k == 'm');
 export const tendRate = () => Math.min(1, farmhands().reduce((s, k) => s + mspd(k) * .4, 0) * (S.hired.dormouse ? 1.5 : 1));
-TASKS.m = { sk: 'Farming', dur: () => 30, done: () => {}, name: () => 'Tending the farm', valid: () => true, mname: () => 'Tending the farm', mdur: (k: string) => 30 / mspd(k), mact: (k: string) => { X.mxp(k, 8); X.ldx(4); } };
+TASKS.m = { sk: 'Farming', dur: () => 30, done: () => {}, name: () => 'Tending the farm', valid: () => true, mname: () => 'Tending the farm', mdur: (k: string) => 30 / mspd(k), mact: (k: string) => { mxp(k, 8); ldx(4); } };
 export const plots = () => { const a: any[] = S.farm = S.farm || []; while (a.length < PLOT_LV.length) a.push(null); return a; };
 
 function plant(i: number): boolean {

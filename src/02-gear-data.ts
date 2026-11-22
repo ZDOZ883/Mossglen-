@@ -1,6 +1,6 @@
 import { S, say } from './00-state';
 import { X } from './registry';
-import { BD, D, FOOD, H, IT, REQ, SL, V, WA, lv, skPet } from './01-species-pets';
+import { BD, CRS, D, FOOD, GN, H, IT, REQ, SL, V, WA, cb, ldx, lv, mxp, skPet, useMats } from './01-species-pets';
 // Gear: slots, grips, grades, items. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- expanded gear: legs, necklaces, rings, cloaks
 export const PRE=['Twig','Hide','Moss','Moonsteel','Amber','Frostglass','Sunforged','Starbound','Deepwood','Wyrmscale','Eclipse'];
@@ -32,7 +32,7 @@ for(let t=0;t<11;t++){
 export const qrank=(it:Item)=>it.q=='s'?0:it.q=='d'?2:1;
 export const rsLv=(rs:string)=>rs=='gath'?Math.max(...GSK.map(k=>lv(S.xp[k]))):rs=='prod'?Math.max(...PSK.map(k=>lv(S.xp[k]))):lv(S.xp[rs]);
 export const skey=(k:string)=>k.replace(/\d$/,'');
-export function itFx(it:Item){const o:any[]=[];(it.fx||[]).forEach((e:any)=>{const sc=e[2];if(sc==null)o.push({k:e[0],v:e[1],sk:null});else{const L=sc=='G'?GSK:sc=='P'?X.CRS.concat('Cooking'):sc=='A'?GSK.concat(X.CRS,'Cooking'):[sc];L.forEach(sk=>o.push({k:e[0],v:e[1],sk}))}});return o}
+export function itFx(it:Item){const o:any[]=[];(it.fx||[]).forEach((e:any)=>{const sc=e[2];if(sc==null)o.push({k:e[0],v:e[1],sk:null});else{const L=sc=='G'?GSK:sc=='P'?CRS.concat('Cooking'):sc=='A'?GSK.concat(CRS,'Cooking'):[sc];L.forEach(sk=>o.push({k:e[0],v:e[1],sk}))}});return o}
 export function gearFx(){const o:any[]=[];['neck','ring1','ring2'].forEach(k=>{const id=S.eq&&S.eq[k];if(id&&IT[id])o.push(...itFx(IT[id]))});return o}
 export let GSIG='';
 export function gearSync(){if(!S||!S.eq)return;const g=[S.eq.neck,S.eq.ring1,S.eq.ring2,S.cape].join('|');if(g!==GSIG){GSIG=g;X.refreshFx()}}
@@ -66,7 +66,7 @@ export const GSK=['Foraging','Woodcutting','Fishing','Mining','Hunting'],PSK=['C
 export const RF:Record<string,string[]>={Smithing:['Deepmetal Ingot','Wyrm Ingot','Eclipse Ingot'],Fletching:['Deepwood Plank','Wyrmwood Plank','Eclipse Plank'],Enchanting:['Deep Essence','Wyrm Essence','Eclipse Essence'],Tailoring:['Deepweave','Wyrmweave','Eclipse Weave']};
 export const RFN:Record<string,{n:string;sk:string;t:number;req:number}>={};Object.keys(RF).forEach(sk=>RF[sk].forEach((n:string,j:number)=>{const t=8+j;RFN['r'+sk[0]+t]={n,sk,t,req:REQ[t]};V[n]=[900,2400,6000][j]}));
 export const ctime=(id:string)=>IT[id].tier>=8?[14,20,28][IT[id].tier-8]:4;
-export function refRecipe(id:string){const f=RFN[id],q=6+2*(f.t-8),i=f.t-1,g=(k:string)=>X.GN[k][i][1],m={},add=(k:string,n:number)=>(m as any)[k]=((m as any)[k]||0)+n;
+export function refRecipe(id:string){const f=RFN[id],q=6+2*(f.t-8),i=f.t-1,g=(k:string)=>GN[k][i][1],m={},add=(k:string,n:number)=>(m as any)[k]=((m as any)[k]||0)+n;
   if(f.sk=='Smithing'){add(g('Mining'),2*q);add(g('Woodcutting'),q)}
   else if(f.sk=='Fletching'){add(g('Woodcutting'),2*q);add(g('Foraging'),q)}
   else if(f.sk=='Enchanting'){add(g('Foraging'),2*q);add(g('Mining'),q)}
@@ -75,10 +75,10 @@ export function refRecipe(id:string){const f=RFN[id],q=6+2*(f.t-8),i=f.t-1,g=(k:
 export function refineDone(id:string,mk?:any){
   const f=RFN[id];
   if(!gateOk(f.t-7)||lv(S.xp[f.sk])<f.req){if(mk)S.mt[mk]={k:'idle'};else S.cur=null;return}
-  if(!X.useMats(refRecipe(id),f.sk)){if(mk){S.mt[mk]={k:'idle'};say(H[mk].n+' ran out of materials for '+f.n+'.')}else{S.cur=null;say('Out of materials for '+f.n+'.')}return}
+  if(!useMats(refRecipe(id),f.sk)){if(mk){S.mt[mk]={k:'idle'};say(H[mk].n+' ran out of materials for '+f.n+'.')}else{S.cur=null;say('Out of materials for '+f.n+'.')}return}
   S.inv[f.n]=(S.inv[f.n]||0)+(mk?X.famCut(mk,1):1);skPet(f.sk);
   const x=[1800,3200,5600][f.t-8];
-  if(mk){X.mxp(mk,x*.6);X.ldx(x*.5)}else{const b=lv(S.xp[f.sk]);S.xp[f.sk]+=x*(1+X.cb('xp',f.sk));if(lv(S.xp[f.sk])>b)say(f.sk+' reaches level '+lv(S.xp[f.sk])+'.')}
+  if(mk){mxp(mk,x*.6);ldx(x*.5)}else{const b=lv(S.xp[f.sk]);S.xp[f.sk]+=x*(1+cb('xp',f.sk));if(lv(S.xp[f.sk])>b)say(f.sk+' reaches level '+lv(S.xp[f.sk])+'.')}
 }
 // protected items
 export const KP:Record<string,number>={};ZN.forEach(z=>{if(z[6])KP[z[6]]=1});Object.keys(RFN).forEach(id=>KP[RFN[id].n]=1);D.forEach(d=>KP[d.tr]=1);

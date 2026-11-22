@@ -1,14 +1,14 @@
 import { S, save, say } from './00-state';
-import { FM, H, IT, LT, V, XS, XT, nsl } from './01-species-pets';
+import { FM, H, IT, LD, LT, V, XS, XT, asg, cb, nsl } from './01-species-pets';
 import { KEEP } from './02-gear-data';
 import { exRecall, exSel, exStart, openGate, set_exSel, startHR, startRaid } from './03-world-expeditions';
 import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadout';
 import { cycle, shopBuy } from './05-combat';
 import { equipSlot, gsel, set_gsel, set_gtab } from './06-icons';
-import { LD, asg, buy, buyTool, offlineCap, set_skill, set_tab, set_who, skill, slBuy, slots, tab, taskAct, who } from './07-gear-ui';
+import { buy, buyTool, offlineCap, set_skill, set_tab, set_who, skill, slBuy, slots, tab, taskAct, who } from './07-gear-ui';
 import { assign, validTask } from './08-party-state';
 import { buUp, sgBuy } from './09-seasons-burrow';
-import { bars, cb, clampXp, hasWork, refreshFx, tick } from './11-engine';
+import { bars, clampXp, hasWork, refreshFx, tick } from './11-engine';
 import { CF, render, set_logSub } from './13-views';
 import { alchAct, farmAct } from './12-farm-alchemy';
 // Input handling, boot and timers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)

@@ -1,12 +1,12 @@
 import { GATHERED, S, TASKS, say } from './00-state';
 import { X } from './registry';
-import { CS, D, IT, PETS, SK, SL, SP, TR, lv, skPet } from './01-species-pets';
+import { CS, D, IT, LD, PETS, SK, SL, SP, T, TR, asg, cb, lv, mxp, skPet } from './01-species-pets';
 import { E, GSK, PSK, RFN, ZN, ctime, gateOk, refineDone } from './02-gear-data';
 import { HR, RD, exs, hrCount } from './03-world-expeditions';
 import { RT } from './04-loadout';
 import { cround } from './05-combat';
-import { A, CSK, LD, asg, cookDone, craftDone, mentor, tt, unlockText } from './07-gear-ui';
-import { mdur, memAct, mxp } from './08-party-state';
+import { A, CSK, cookDone, craftDone, mentor, tt, unlockText } from './07-gear-ui';
+import { mdur, memAct } from './08-party-state';
 import { BRATE, BU, buL } from './09-seasons-burrow';
 // Achievements and collection log. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- achievements and collection log
@@ -105,14 +105,13 @@ export function memTick(dt:any){
     while(S.mt[k]===t&&t.p!>=d&&n<5000){t.p!-=d;memAct(k,t);n++}
   });
 }
-export const T=(d:Delve)=>S.tier[d.id]||1;
 export function tierChips(d:Delve){let h='';for(let t=1;t<=5;t++)h+='<button class="'+(T(d)==t?'on':'')+'" data-tier="'+d.id+':'+t+'"'+(t>(S.best[d.id]||0)+1?' disabled':'')+'>Tier '+t+'</button>';return h}
-export const dur=()=>{const c=S.cur;if(!c)return 1;if(c.k=='s')return tt(A.find(a=>a.id==c.id));if(c.k=='r')return 6*Math.max(.3,1-X.cb('spd',RFN[c.id].sk));if(c.k=='f')return ctime(c.id)*Math.max(.3,1-X.cb('spd',CSK(c.id)));if(c.k=='k')return 3.5*Math.max(.3,1-X.cb('spd','Cooking'));if(TASKS[c.k])return TASKS[c.k].dur(c);return RT};
+export const dur=()=>{const c=S.cur;if(!c)return 1;if(c.k=='s')return tt(A.find(a=>a.id==c.id));if(c.k=='r')return 6*Math.max(.3,1-cb('spd',RFN[c.id].sk));if(c.k=='f')return ctime(c.id)*Math.max(.3,1-cb('spd',CSK(c.id)));if(c.k=='k')return 3.5*Math.max(.3,1-cb('spd','Cooking'));if(TASKS[c.k])return TASKS[c.k].dur(c);return RT};
 export function finish(quiet:any){
   const c=S.cur;
   if(c.k=='s'){
-    const a=A.find(x=>x.id==c.id);if(!gateOk(a.gate)){S.cur=null;return}skPet(a.sk);const b=(SP[S.sp!]==a.sk?1.15:1)*(lv(S.xp[a.sk])>=99?1.1:1)*(1+X.cb('xp',a.sk)),before=lv(S.xp[a.sk]);
-    S.xp[a.sk]+=a.xp*b;const yn=1+(Math.random()<lv(S.xp[a.sk])*.004+X.cb('yld',a.sk)?1:0);S.inv[a.item]=(S.inv[a.item]||0)+yn;hrCount(a,yn);GATHERED.forEach(f=>f(a));
+    const a=A.find(x=>x.id==c.id);if(!gateOk(a.gate)){S.cur=null;return}skPet(a.sk);const b=(SP[S.sp!]==a.sk?1.15:1)*(lv(S.xp[a.sk])>=99?1.1:1)*(1+cb('xp',a.sk)),before=lv(S.xp[a.sk]);
+    S.xp[a.sk]+=a.xp*b;const yn=1+(Math.random()<lv(S.xp[a.sk])*.004+cb('yld',a.sk)?1:0);S.inv[a.item]=(S.inv[a.item]||0)+yn;hrCount(a,yn);GATHERED.forEach(f=>f(a));
     if(lv(S.xp[a.sk])>before)say(a.sk+' reaches level '+lv(S.xp[a.sk])+'.'+unlockText(a.sk,lv(S.xp[a.sk]))+(lv(S.xp[a.sk])>=99?' Mastery: +10% xp.':''));
     else if(!quiet&&Math.random()<.12)say('You '+a.n.toLowerCase()+'. '+['A breeze rustles the ferns.','Somewhere, a woodpecker approves.','The brook chatters along.'][Math.floor(Math.random()*3)]);
   }else{
@@ -125,4 +124,4 @@ export function finish(quiet:any){
   }
 }
 
-Object.defineProperties(X,{famCut:{get:()=>famCut,configurable:true},T:{get:()=>T,configurable:true},tierChips:{get:()=>tierChips,configurable:true}});
+Object.defineProperties(X,{famCut:{get:()=>famCut,configurable:true},tierChips:{get:()=>tierChips,configurable:true}});

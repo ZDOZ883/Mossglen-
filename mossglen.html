@@ -162,17 +162,21 @@ nav button.on i{opacity:1}
     BD: () => BD,
     BEATS: () => BEATS,
     BYN: () => BYN,
+    CRS: () => CRS,
     CS: () => CS,
     D: () => D,
     FM: () => FM,
     FOOD: () => FOOD,
     FXC: () => FXC,
+    GL: () => GL,
+    GN: () => GN,
     GP: () => GP,
     H: () => H,
     HD: () => HD,
     HDN: () => HDN,
     HK: () => HK,
     IT: () => IT,
+    LD: () => LD,
     LT: () => LT,
     PB: () => PB,
     PETS: () => PETS,
@@ -183,6 +187,7 @@ nav button.on i{opacity:1}
     SP: () => SP,
     SPN: () => SPN,
     SPX: () => SPX,
+    T: () => T,
     TR: () => TR,
     V: () => V,
     W: () => W,
@@ -193,17 +198,28 @@ nav button.on i{opacity:1}
     ZPN: () => ZPN,
     ZPT: () => ZPT,
     adv: () => adv,
+    asg: () => asg,
+    cb: () => cb,
+    cl: () => cl,
+    fighters: () => fighters,
+    fw: () => fw,
     gainPet: () => gainPet,
+    ldx: () => ldx,
     lv: () => lv,
     maxhp: () => maxhp,
+    mxp: () => mxp,
     nsl: () => nsl,
+    onTask: () => onTask,
     pbs: () => pbs,
     petRoll: () => petRoll,
+    pk: () => pk,
+    pm: () => pm,
     set_FXC: () => set_FXC,
     skPet: () => skPet,
     spAff: () => spAff,
     spFx: () => spFx,
     spTxt: () => spTxt,
+    useMats: () => useMats,
     weak: () => weak
   });
   var SK = ["Foraging", "Woodcutting", "Fishing", "Mining", "Hunting"];
@@ -293,7 +309,7 @@ nav button.on i{opacity:1}
   }
   function petRoll(id, rate) {
     if (S.pets[id]) return;
-    if (Math.random() * rate < 1 + Math.max(0, X.cb("drop")) + X.ef("drop")) gainPet(id);
+    if (Math.random() * rate < 1 + Math.max(0, cb("drop")) + X.ef("drop")) gainPet(id);
   }
   var D = [
     { id: "hollow", n: "The Hollow Oak", req: 12, t: 30, a: [15, 30], tr: "Hollow Heart", type: "Magic" },
@@ -326,7 +342,7 @@ nav button.on i{opacity:1}
   var weak = (t) => Object.keys(BEATS).find((k) => BEATS[k] == t);
   var W = { Melee: ["Flint Claws", "Briar Spear", "Amber Cleaver"], Ranged: ["Twig Bow", "Birch Longbow", "Amber Crossbow"], Magic: ["Hazel Wand", "Mooncap Staff", "Amber Scepter"] };
   var AR = ["Bark Vest", "Mossweave Coat", "Amber Mail"];
-  var maxhp = () => Math.round((30 + lv(S.xp.Vitality) * 10) * (1 + X.cb("hpm") + X.pk("hp")));
+  var maxhp = () => Math.round((30 + lv(S.xp.Vitality) * 10) * (1 + cb("hpm") + pk("hp")));
   var SL = ["Melee", "Ranged", "Magic"];
   var XS = { bal: ["Balanced", 2, 2, 2, 2, 0.3, "Shares xp evenly between Attack, Strength and Defense, with a little for Leadership when members fight beside you."], acc: ["Accurate", 6, 0, 0, 2, 0, "Trains Attack: you land more of your hits."], agg: ["Aggressive", 0, 6, 0, 2, 0, "Trains Strength: your hits land harder."], def: ["Defensive", 0, 0, 6, 2, 0, "Trains Defense: enemies land fewer hits on you."] };
   var FM = { steady: { n: "Steady", cl: 1, d: "No bonuses or penalties." }, fury: { n: "Fury", cl: 10, dmg: 0.2, taken: 0.25, d: "+20% damage, +25% damage taken." }, bulwark: { n: "Bulwark", cl: 20, dmg: -0.1, taken: -0.2, d: "\u221210% damage, \u221220% damage taken." }, mender: { n: "Mender", cl: 35, dmg: -0.05, regen: 1, d: "\u22125% damage, double regeneration between fights." }, fortune: { n: "Fortune", cl: 50, dmg: -0.1, drop: 0.15, gold: 0.1, d: "\u221210% damage, +15% rare drops, +10% acorns." }, warband: { n: "Warband", cl: 65, dmg: -0.1, party: 1.5, d: "\u221210% damage. Perks of members fighting beside you are 1.5\xD7 stronger." } };
@@ -347,6 +363,46 @@ nav button.on i{opacity:1}
   function set_FXC(v) {
     FXC = v;
   }
+  function cb(k, sk) {
+    let v = 0;
+    for (let i = 0; i < FXC.length; i++) {
+      const e = FXC[i];
+      if (e.k == k && (e.sk == null || e.sk == "*" || e.sk == sk)) v += e.v;
+    }
+    return v;
+  }
+  var cl = (k) => lv(S.cx[k] || 0);
+  var GL = [1, 15, 30, 45, 60, 75, 90, 100, 110, 120];
+  var fw = (k) => H[k].spec ? 0.4 : 1;
+  var LD = () => lv(S.xp.Leadership);
+  var asg = (k) => S.mt[k] || { k: "war" };
+  var fighters = () => Object.keys(S.hired).filter((k) => asg(k).k == "war");
+  var pm = () => (FM[S.form] || FM.steady).party + cb("pmult");
+  var pk = (n) => Math.min({ taken: 0.45, speed: 0.4 }[n] || 99, fighters().reduce((s, k) => s + (H[k].pk[n] || 0) * fw(k) * (1 + (cl(k) - 1) * 0.02) * pm() * (H[k].pet ? 1.25 : 1), 0));
+  function mxp(k, x) {
+    const b = cl(k);
+    S.cx[k] = (S.cx[k] || 0) + x * (H[k].pet ? 1.5 : 1);
+    if (cl(k) > b) say(H[k].n + " reaches level " + cl(k) + ".");
+  }
+  function ldx(x) {
+    const b = LD();
+    S.xp.Leadership += x;
+    const a = LD();
+    if (a > b) {
+      const u = HK.filter((k) => H[k].lt > b && H[k].lt <= a).map((k) => H[k].n);
+      say("Leadership reaches level " + a + "." + (LT.some((l) => l > b && l <= a) ? " New party slot." : "") + (u.length ? " Now available: " + u.join(", ") + "." : ""));
+    }
+  }
+  var onTask = (e) => !!S.task && S.task.id == e.id;
+  var T = (d) => S.tier[d.id] || 1;
+  function useMats(r, sk) {
+    if (!Object.keys(r).every((k) => (S.inv[k] || 0) >= r[k])) return false;
+    if (sk && Math.random() < cb("save", sk)) return true;
+    Object.keys(r).forEach((k) => S.inv[k] -= r[k]);
+    return true;
+  }
+  var CRS = ["Smithing", "Fletching", "Enchanting", "Tailoring"];
+  var GN = { Foraging: [["Pick berries", "berries"], ["Dig up mushrooms", "mushrooms"], ["Sniff out truffles", "truffles"], ["Gather moonroot", "moonroot"], ["Find frostcaps", "frostcaps"], ["Pluck sunpetals", "sunpetals"], ["Reach for starbloom", "starbloom"], ["Cut deepbloom", "deepbloom"], ["Harvest wyrmcap", "wyrmcap"], ["Pluck eclipse lotus", "eclipse lotus"]], Woodcutting: [["Gather twigs", "twigs"], ["Gnaw birch logs", "birch logs"], ["Fell an oak limb", "oak limbs"], ["Cut willow boughs", "willow boughs"], ["Fell maple staves", "maple staves"], ["Hew yew limbs", "yew limbs"], ["Claim elderwood", "elderwood"], ["Fell ironroot", "ironroot"], ["Claim wyrmwood", "wyrmwood"], ["Hew duskoak", "duskoak"]], Fishing: [["Catch minnows", "minnows"], ["Spear trout", "trout"], ["Hook a pike", "pike"], ["Trap eels", "eels"], ["Net silver carp", "silver carp"], ["Lure moonfish", "moonfish"], ["Land a glassfin", "glassfin"], ["Hook cavefin", "cavefin"], ["Land a drakescale", "drakescale"], ["Spear voidfin", "voidfin"]], Mining: [["Collect pebbles", "pebbles"], ["Chip flint", "flint"], ["Pry out amber", "amber"], ["Dig silver", "silver"], ["Cut moonstone", "moonstone"], ["Free a garnet", "garnets"], ["Mine starstone", "starstone"], ["Cut deepcrystal", "deep crystal"], ["Mine wyrmiron", "wyrmiron"], ["Quarry eclipsite", "eclipsite"]], Hunting: [["Snare beetles", "beetles"], ["Trap crickets", "crickets"], ["Gather snails", "snails"], ["Catch frogs", "frogs"], ["Net newts", "newts"], ["Snare skinks", "sand skinks"], ["Lure moon moths", "moon moths"], ["Snare rootbeetles", "root beetles"], ["Net ember moths", "ember moths"], ["Trap dusk spiders", "dusk spiders"]] };
 
   // src/02-gear-data.ts
   var gear_data_exports = {};
@@ -440,7 +496,7 @@ nav button.on i{opacity:1}
       const sc = e[2];
       if (sc == null) o.push({ k: e[0], v: e[1], sk: null });
       else {
-        const L = sc == "G" ? GSK : sc == "P" ? X.CRS.concat("Cooking") : sc == "A" ? GSK.concat(X.CRS, "Cooking") : [sc];
+        const L = sc == "G" ? GSK : sc == "P" ? CRS.concat("Cooking") : sc == "A" ? GSK.concat(CRS, "Cooking") : [sc];
         L.forEach((sk) => o.push({ k: e[0], v: e[1], sk }));
       }
     });
@@ -526,7 +582,7 @@ nav button.on i{opacity:1}
   }));
   var ctime = (id) => IT[id].tier >= 8 ? [14, 20, 28][IT[id].tier - 8] : 4;
   function refRecipe(id) {
-    const f = RFN[id], q = 6 + 2 * (f.t - 8), i = f.t - 1, g = (k) => X.GN[k][i][1], m = {}, add = (k, n) => m[k] = (m[k] || 0) + n;
+    const f = RFN[id], q = 6 + 2 * (f.t - 8), i = f.t - 1, g = (k) => GN[k][i][1], m = {}, add = (k, n) => m[k] = (m[k] || 0) + n;
     if (f.sk == "Smithing") {
       add(g("Mining"), 2 * q);
       add(g("Woodcutting"), q);
@@ -549,7 +605,7 @@ nav button.on i{opacity:1}
       else S.cur = null;
       return;
     }
-    if (!X.useMats(refRecipe(id), f.sk)) {
+    if (!useMats(refRecipe(id), f.sk)) {
       if (mk) {
         S.mt[mk] = { k: "idle" };
         say(H[mk].n + " ran out of materials for " + f.n + ".");
@@ -563,11 +619,11 @@ nav button.on i{opacity:1}
     skPet(f.sk);
     const x = [1800, 3200, 5600][f.t - 8];
     if (mk) {
-      X.mxp(mk, x * 0.6);
-      X.ldx(x * 0.5);
+      mxp(mk, x * 0.6);
+      ldx(x * 0.5);
     } else {
       const b = lv(S.xp[f.sk]);
-      S.xp[f.sk] += x * (1 + X.cb("xp", f.sk));
+      S.xp[f.sk] += x * (1 + cb("xp", f.sk));
       if (lv(S.xp[f.sk]) > b) say(f.sk + " reaches level " + lv(S.xp[f.sk]) + ".");
     }
   }
@@ -698,12 +754,12 @@ nav button.on i{opacity:1}
     return (h ? h + "h " : "") + m + "m";
   };
   var EXK = 12;
-  var mhpx = (k) => (30 + X.cl(k) * 10) * (H[k].pet ? 1.25 : 1);
-  var exLead = (k) => k ? Math.min(0.35, 0.08 + X.cl(k) / 500) : 0;
+  var mhpx = (k) => (30 + cl(k) * 10) * (H[k].pet ? 1.25 : 1);
+  var exLead = (k) => k ? Math.min(0.35, 0.08 + cl(k) / 500) : 0;
   function exEligible(d, k) {
-    return !!S.hired[k] && X.asg(k).k != "exp" && X.cl(k) >= d.mlv;
+    return !!S.hired[k] && asg(k).k != "exp" && cl(k) >= d.mlv;
   }
-  var exPk = (mem, n) => mem.reduce((s, k) => s + (H[k].pk[n] || 0) * (1 + (X.cl(k) - 1) * 0.02) * X.pm() * (H[k].pet ? 1.25 : 1), 0);
+  var exPk = (mem, n) => mem.reduce((s, k) => s + (H[k].pk[n] || 0) * (1 + (cl(k) - 1) * 0.02) * pm() * (H[k].pet ? 1.25 : 1), 0);
   function exOdds(d, t, lead, mem, boon) {
     const all = (lead ? [lead] : []).concat(mem.filter((k) => k != lead)), need2 = Math.max(1, d.party);
     const lb = exLead(lead);
@@ -721,7 +777,7 @@ nav button.on i{opacity:1}
         dmg += e.hp / dpr * 0.65 * e.dps * dt;
       });
     }
-    const ok = all.length >= need2 && X.CL() >= d.cl && gateOk(d.gate) && all.every((k) => X.cl(k) >= d.mlv);
+    const ok = all.length >= need2 && X.CL() >= d.cl && gateOk(d.gate) && all.every((k) => cl(k) >= d.mlv);
     const rho = all.length ? PH * 1.5 / Math.max(1, dmg) : 0;
     const p = !all.length ? 0 : Math.max(0.03, Math.min(0.97, 0.5 + 0.55 * (rho - 1)));
     return { p: Math.max(0.03, Math.min(0.97, p + exPk(all, "succ") / 100)), ok, rho, dur: Math.round(exDur(d, t) * (1 - Math.min(0.4, exPk(all, "speed")))), lb, need: need2, n: all.length };
@@ -729,7 +785,7 @@ nav button.on i{opacity:1}
   function exStart() {
     const d = D.find((x) => x.id == exSel.d);
     if (!d || exs().length >= exSlots() || !exSel.l) return;
-    const t = X.T(d), mem = [exSel.l].concat(exSel.m.filter((k) => k != exSel.l)).filter((k) => exEligible(d, k)), o = exOdds(d, t, exSel.l, mem, exSel.b);
+    const t = T(d), mem = [exSel.l].concat(exSel.m.filter((k) => k != exSel.l)).filter((k) => exEligible(d, k)), o = exOdds(d, t, exSel.l, mem, exSel.b);
     if (!o.ok || mem.length < o.need) return;
     const prev = {};
     mem.forEach((k) => {
@@ -779,12 +835,12 @@ nav button.on i{opacity:1}
         S.inv[c] = (S.inv[c] || 0) + 1;
         s += " +1 " + c + ".";
       }
-      if (Math.random() < (0.4 + exLead(lead)) * (1 + X.ef("drop") + X.cb("drop"))) {
+      if (Math.random() < (0.4 + exLead(lead)) * (1 + X.ef("drop") + cb("drop"))) {
         S.seen[d.tr] = 1;
         S.inv[d.tr] = (S.inv[d.tr] || 0) + 1;
         s += " Trophy: " + d.tr + ".";
       }
-      if (t >= 4 && Math.random() < 0.04 * (t - 3) * (1 + X.cb("drop"))) {
+      if (t >= 4 && Math.random() < 0.04 * (t - 3) * (1 + cb("drop"))) {
         X.gainItem(X.rndGear(Math.min(10, d.zb)));
       }
       const prev = S.best[d.id] || 0;
@@ -792,9 +848,9 @@ nav button.on i{opacity:1}
       if (t > prev && t < 5) say("Tier " + (t + 1) + " of " + d.n + " unlocked.");
     }
     e.mem.forEach((k) => {
-      if (S.hired[k]) X.mxp(k, 12 * t * scale * (win ? 1 : 0.4) * (k == lead ? 1.5 : 1));
+      if (S.hired[k]) mxp(k, 12 * t * scale * (win ? 1 : 0.4) * (k == lead ? 1.5 : 1));
     });
-    X.ldx(30 * t * e.mem.length * (scale / 2) * (win ? 1 : 0.4));
+    ldx(30 * t * e.mem.length * (scale / 2) * (win ? 1 : 0.4));
     say(s);
     exRestore(e);
     exs().splice(exs().indexOf(e), 1);
@@ -811,17 +867,17 @@ nav button.on i{opacity:1}
     if (!hs.length) return h + '<p class="mu">Recruit a party member in the Party tab first.</p>';
     const sel = exSel.d ? D.find((x) => x.id == exSel.d) : null;
     h += D.map((d) => {
-      const t = X.T(d), on = sel && sel.id == d.id, ready = hs.filter((k) => exEligible(d, k)).length, ck = [["Combat level " + d.cl, X.CL() >= d.cl], [Math.max(1, d.party) + " member" + (Math.max(1, d.party) > 1 ? "s" : "") + (d.mlv ? " of level " + d.mlv + "+" : "") + " (" + ready + " ready)", ready >= Math.max(1, d.party)]].concat(d.gate ? [[GATE[d.gate - 1].n + " open", gateOk(d.gate)]] : []);
+      const t = T(d), on = sel && sel.id == d.id, ready = hs.filter((k) => exEligible(d, k)).length, ck = [["Combat level " + d.cl, X.CL() >= d.cl], [Math.max(1, d.party) + " member" + (Math.max(1, d.party) > 1 ? "s" : "") + (d.mlv ? " of level " + d.mlv + "+" : "") + " (" + ready + " ready)", ready >= Math.max(1, d.party)]].concat(d.gate ? [[GATE[d.gate - 1].n + " open", gateOk(d.gate)]] : []);
       return '<button class="row' + (on ? " on" : "") + '" style="flex-direction:column;align-items:stretch" data-exd="' + d.id + '"><span>' + d.n + (S.best[d.id] ? " \xB7 best tier " + S.best[d.id] : "") + "<small>" + E.filter((e) => e.dv == d.id && e.tier == t).map((e) => e.n).join(" \u2192 ") + " \xB7 about " + exFmt(exDur(d, t)) + "</small></span><small>" + ck.map((c) => (c[1] ? "\u2713 " : "\u2717 ") + c[0]).join(" \xB7 ") + "</small></button>";
     }).join("");
     if (sel) {
-      const t = X.T(sel), av = hs.filter((k) => X.asg(k).k != "exp"), el = av.filter((k) => exEligible(sel, k));
+      const t = T(sel), av = hs.filter((k) => asg(k).k != "exp"), el = av.filter((k) => exEligible(sel, k));
       exSel.m = exSel.m.filter((k) => el.includes(k));
       if (exSel.l && !el.includes(exSel.l)) exSel.l = null;
       const team = (exSel.l ? [exSel.l] : []).concat(exSel.m.filter((k) => k != exSel.l)), o = exOdds(sel, t, exSel.l, team.filter((k) => k != exSel.l), exSel.b);
       h += "<h2>" + sel.n + '</h2><p class="mu" style="margin-top:0">Tier</p><div class="chips">' + X.tierChips(sel) + "</div>";
-      h += '<p class="mu" style="margin:6px 0 4px">Leader (gives the group a bonus based on level)</p><div class="chips">' + (el.length ? el.map((k) => '<button class="' + (exSel.l == k ? "on" : "") + '" data-exl="' + k + '">' + H[k].n.split(" ")[0] + " L" + X.cl(k) + "</button>").join("") : '<span class="mu">No one is ready.</span>') + "</div>";
-      h += '<p class="mu" style="margin:6px 0 4px">Members</p><div class="chips">' + el.filter((k) => k != exSel.l).map((k) => '<button class="' + (exSel.m.includes(k) ? "on" : "") + '" data-exm="' + k + '">' + H[k].n.split(" ")[0] + " L" + X.cl(k) + "</button>").join("") + "</div>";
+      h += '<p class="mu" style="margin:6px 0 4px">Leader (gives the group a bonus based on level)</p><div class="chips">' + (el.length ? el.map((k) => '<button class="' + (exSel.l == k ? "on" : "") + '" data-exl="' + k + '">' + H[k].n.split(" ")[0] + " L" + cl(k) + "</button>").join("") : '<span class="mu">No one is ready.</span>') + "</div>";
+      h += '<p class="mu" style="margin:6px 0 4px">Members</p><div class="chips">' + el.filter((k) => k != exSel.l).map((k) => '<button class="' + (exSel.m.includes(k) ? "on" : "") + '" data-exm="' + k + '">' + H[k].n.split(" ")[0] + " L" + cl(k) + "</button>").join("") + "</div>";
       h += '<p class="mu" style="margin:6px 0 4px">Provision (optional)</p><div class="chips">' + Object.keys(EXB).map((b) => '<button class="' + (exSel.b == b ? "on" : "") + '" data-exb="' + b + '" title="' + EXB[b][1] + '">' + EXB[b][0] + "</button>").join("") + "</div>" + (exSel.b ? '<p class="mu" style="margin-top:0">' + EXB[exSel.b][1] + ".</p>" : "");
       h += '<div class="arena" style="margin:10px 0"><div class="nm"><span>Odds of success</span><span>' + (o.n ? Math.round(o.p * 100) + "%" : "\u2014") + '</span></div><p class="mu" style="margin:4px 0 0">' + (o.n ? "Leader bonus +" + Math.round(o.lb * 100) + "% damage. " : "Pick a leader. ") + "Away for about " + exFmt(o.dur) + ". A failed run still pays a quarter of the acorns.</p></div>";
       h += '<p><button class="btn" data-exgo="1"' + (o.ok && exSel.l ? "" : " disabled") + ">Send the expedition</button></p>";
@@ -830,8 +886,8 @@ nav button.on i{opacity:1}
   }
   var enr = (e) => e.raid && S.ehid == e.id && (S.rr || 0) > e.soft ? 1 + ((S.rr || 0) - e.soft) * 0.04 : 1;
   function raidOk(r) {
-    const fg = X.fighters();
-    return X.CL() >= r.cl && gateOk(r.gate) && fg.filter((k) => X.cl(k) >= r.mlv).length >= r.party;
+    const fg = fighters();
+    return X.CL() >= r.cl && gateOk(r.gate) && fg.filter((k) => cl(k) >= r.mlv).length >= r.party;
   }
   function startRaid(id) {
     const r = RD.find((x) => x.id == id);
@@ -865,27 +921,27 @@ nav button.on i{opacity:1}
     }
     const k = "rt" + r.id;
     S.pity[k] = (S.pity[k] || 0) + 1;
-    if (Math.random() < (1 + X.ef("drop") + X.cb("drop")) * 0.06 || S.pity[k] >= 25) {
+    if (Math.random() < (1 + X.ef("drop") + cb("drop")) * 0.06 || S.pity[k] >= 25) {
       S.pity[k] = 0;
       X.gainItem(r.tr);
     }
     const hk2 = "rh" + r.id;
     S.pity[hk2] = (S.pity[hk2] || 0) + 1;
-    if (Math.random() < (1 + X.ef("drop") + X.cb("drop")) * 0.2 || S.pity[hk2] >= 8) {
+    if (Math.random() < (1 + X.ef("drop") + cb("drop")) * 0.2 || S.pity[hk2] >= 8) {
       S.pity[hk2] = 0;
       X.gainItem(X.rndGear(Math.min(10, [7, 8, 9, 10][RD.indexOf(r)] + (Math.random() < 0.25 ? 1 : 0))));
     }
     say(m);
-    const fg = X.fighters();
-    fg.forEach((q) => X.mxp(q, r.rw * 0.01));
-    if (fg.length) X.ldx(r.rw * 4e-3 * fg.length);
+    const fg = fighters();
+    fg.forEach((q) => mxp(q, r.rw * 0.01));
+    if (fg.length) ldx(r.rw * 4e-3 * fg.length);
     S.cur = { k: "c", id: r.id + "s0" };
     S.ehp = null;
   }
   function raidView() {
-    const fg = X.fighters();
+    const fg = fighters();
     return '<h2>Raids</h2><p class="sub">Raids are chains of hard fights with no breaks. Lose once and the run ends. They need several strong members set to \u201CFight with me\u201D, good gear and plenty of food. Bosses enrage if a fight drags on. A cleared raid restarts on its own while you are away.</p>' + RD.map((r) => {
-      const act = S.cur && S.cur.k == "c" && E.find((e) => e.id == S.cur.id && e.raid == r.id), rdy = fg.filter((k) => X.cl(k) >= r.mlv).length;
+      const act = S.cur && S.cur.k == "c" && E.find((e) => e.id == S.cur.id && e.raid == r.id), rdy = fg.filter((k) => cl(k) >= r.mlv).length;
       const ck = [["Combat level " + r.cl, X.CL() >= r.cl], [r.party + " members fighting beside you, each level " + r.mlv + " (" + rdy + " ready)", rdy >= r.party]].concat(r.gate ? [[GATE[r.gate - 1].n + " open", gateOk(r.gate)]] : []);
       return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + r.n + (S.rc[r.id] ? " \xB7 cleared \xD7" + S.rc[r.id] : "") + "<small>" + E.filter((e) => e.raid == r.id).map((e) => e.n + " (" + e.type + ", " + e.hp.toLocaleString() + " hp)").join(" \u2192 ") + "</small></span><small>" + ck.map((c) => (c[1] ? "\u2713 " : "\u2717 ") + c[0]).join("<br>") + "<br>Reward: " + Math.round(r.rw / 1e3).toLocaleString() + "k acorns" + (r.core ? ", " + r.core[0] + "s" : "") + ", and a rare " + IT[r.tr].n + ".</small>" + (act ? '<div style="margin-top:8px"><span class="good">In progress: ' + act.n + '</span> <button class="btn" data-stop="1">Retreat</button></div>' : '<div style="margin-top:8px"><button class="btn" data-raid="' + r.id + '"' + (raidOk(r) ? "" : " disabled") + ">Enter the raid</button></div>") + "</div>";
     }).join("");
@@ -896,7 +952,7 @@ nav button.on i{opacity:1}
     { id: "h2", n: "The Wyrmwood Tithe", gate: 2, tier: 8, q: 250, fx: [["yld", 0.1], ["spd", 0.06], ["xp", 0.06], ["sell", 0.1]] },
     { id: "h3", n: "The Eclipse Reaping", gate: 3, tier: 9, q: 300, fx: [["yld", 0.12], ["spd", 0.1], ["xp", 0.1], ["sell", 0.15]] }
   ];
-  var hrOk = (r) => gateOk(r.gate) && GSK.every((k) => lv(S.xp[k]) >= X.GL[r.tier]);
+  var hrOk = (r) => gateOk(r.gate) && GSK.every((k) => lv(S.xp[k]) >= GL[r.tier]);
   var hrTxt = (r) => X.fxTxt(r.fx) + " on every gathering skill";
   function hrFx() {
     const o = [];
@@ -936,8 +992,8 @@ nav button.on i{opacity:1}
   }
   function hrView() {
     return fold("hr", "Harvest raids", '<p class="sub">A raid for gatherers. Collect a quota from every gathering skill, at or above the stated tier. You and your party members all count. The first clear of each grants a permanent blessing.</p>' + HR.map((r) => {
-      const on = S.hr && S.hr.id == r.id, ok = hrOk(r), n = S.hrc[r.id] || 0, it = X.GN.Foraging[r.tier][1];
-      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + r.n + (n ? " \xB7 cleared \xD7" + n : "") + "<small>" + r.q + " from each gathering skill at tier " + (r.tier + 1) + " (" + X.GL[r.tier] + "+) or better. Blessing: " + hrTxt(r) + ".</small></span>" + (on ? "<small>" + GSK.map((k) => k + " " + (S.hr.q[k] || 0) + "/" + r.q).join(" \xB7 ") + "</small>" : ok ? "" : "<small>" + (gateOk(r.gate) ? "" : "\u2717 " + GATE[r.gate - 1].n + " open<br>") + (GSK.every((k) => lv(S.xp[k]) >= X.GL[r.tier]) ? "" : "\u2717 Every gathering skill at " + X.GL[r.tier]) + "</small>") + '<div style="margin-top:8px"><button class="btn" data-hraid="' + r.id + '"' + (ok || on ? "" : " disabled") + ">" + (on ? "Abandon" : "Begin") + "</button></div></div>";
+      const on = S.hr && S.hr.id == r.id, ok = hrOk(r), n = S.hrc[r.id] || 0, it = GN.Foraging[r.tier][1];
+      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + r.n + (n ? " \xB7 cleared \xD7" + n : "") + "<small>" + r.q + " from each gathering skill at tier " + (r.tier + 1) + " (" + GL[r.tier] + "+) or better. Blessing: " + hrTxt(r) + ".</small></span>" + (on ? "<small>" + GSK.map((k) => k + " " + (S.hr.q[k] || 0) + "/" + r.q).join(" \xB7 ") + "</small>" : ok ? "" : "<small>" + (gateOk(r.gate) ? "" : "\u2717 " + GATE[r.gate - 1].n + " open<br>") + (GSK.every((k) => lv(S.xp[k]) >= GL[r.tier]) ? "" : "\u2717 Every gathering skill at " + GL[r.tier]) + "</small>") + '<div style="margin-top:8px"><button class="btn" data-hraid="' + r.id + '"' + (ok || on ? "" : " disabled") + ">" + (on ? "Abandon" : "Begin") + "</button></div></div>";
     }).join(""));
   }
   function set_exSel(v) {
@@ -963,7 +1019,6 @@ nav button.on i{opacity:1}
     eHitP: () => eHitP,
     ef: () => ef,
     emax: () => emax,
-    fw: () => fw,
     hit: () => hit,
     hitP: () => hitP,
     hits: () => hits,
@@ -1190,19 +1245,18 @@ nav button.on i{opacity:1}
     return o && o.kind == "off" && w ? Math.min(0.46, 0.46 * o.stat / w) : 0;
   };
   var shT = () => shieldOn() ? 0.08 : 0;
-  var maxHit = (e) => Math.max(1, Math.floor((1 + lv(S.xp.Strength) * 1 + wst() * 3.2) * 3 * (1 + FM[S.form].dmg) * (is2h() ? 1.3 : 1) * (1 + spAff()) * (1 + 0.25 * adv(S.style, e.type)) * (1 + X.pk("dmg")) * (1 + ef("dmg")) * (1 + X.cb("dmgm")) * (X.onTask(e) ? 1.1 + (S.su.keen ? 0.15 : 0) + X.cb("tdmg") : 1)));
+  var maxHit = (e) => Math.max(1, Math.floor((1 + lv(S.xp.Strength) * 1 + wst() * 3.2) * 3 * (1 + FM[S.form].dmg) * (is2h() ? 1.3 : 1) * (1 + spAff()) * (1 + 0.25 * adv(S.style, e.type)) * (1 + pk("dmg")) * (1 + ef("dmg")) * (1 + cb("dmgm")) * (onTask(e) ? 1.1 + (S.su.keen ? 0.15 : 0) + cb("tdmg") : 1)));
   var eDef = (e) => elv(e) * 0.9 + 5 + (e.boss ? 10 : 0);
   var eAtk = (e) => elv(e) * 0.8 + 5 + (e.boss ? 10 : 0);
-  var fw = (k) => H[k].spec ? 0.4 : 1;
   var mdmg = (k, e) => {
-    const c = X.cl(k);
+    const c = cl(k);
     return fw(k) * c * (1.5 + c / 60) * (H[k].pet ? 1.25 : 1) * (1 + 0.25 * adv(H[k].st, e.type));
   };
-  var memDpr = (e) => X.fighters().reduce((q, k) => q + mdmg(k, e), 0) * X.pm() * 0.9;
+  var memDpr = (e) => fighters().reduce((q, k) => q + mdmg(k, e), 0) * pm() * 0.9;
   var emax = (e) => Math.max(1, Math.round(e.dps * 3 * enr(e)));
   var hitP = (e) => {
     const A2 = (lv(S.xp.Attack) + 8) * (1 + wst() / 45), D3 = eDef(e);
-    return clampH(1.5 * A2 / (A2 + D3) + (dwf() > 0 ? 0.03 : 0) + X.cb("acc") + X.pk("acc"));
+    return clampH(1.5 * A2 / (A2 + D3) + (dwf() > 0 ? 0.03 : 0) + cb("acc") + pk("acc"));
   };
   var eHitP = (e) => {
     const A2 = eAtk(e), D3 = lv(S.xp.Defense) + 8;
@@ -1244,8 +1298,8 @@ nav button.on i{opacity:1}
   });
   function fight(e) {
     const Ep = hitP(e) * (maxHit(e) + 1) / 2 * (1 + dwf()) + memDpr(e), rounds = Math.max(1, e.hp / Math.max(0.01, Ep));
-    const Ee = eHitP(e) * (emax(e) + 1) / 2 * (1 - armor()) * (1 + FM[S.form].taken) * (1 - Math.min(0.6, X.pk("taken") + X.cb("taken") + shT() + (X.onTask(e) ? X.cb("ttaken") : 0))), reg = maxhp() * 0.01 * RT * (1 + FM[S.form].regen + X.cb("regen"));
-    return { ttk: rounds * RT, dmg: Math.max(0, (Ee - reg) * rounds - maxhp() * X.pk("heal")) };
+    const Ee = eHitP(e) * (emax(e) + 1) / 2 * (1 - armor()) * (1 + FM[S.form].taken) * (1 - Math.min(0.6, pk("taken") + cb("taken") + shT() + (onTask(e) ? cb("ttaken") : 0))), reg = maxhp() * 0.01 * RT * (1 + FM[S.form].regen + cb("regen"));
+    return { ttk: rounds * RT, dmg: Math.max(0, (Ee - reg) * rounds - maxhp() * pk("heal")) };
   }
   function canEq(it) {
     if (it.rs) return rsLv(it.rs) >= it.req;
@@ -1300,7 +1354,7 @@ nav button.on i{opacity:1}
     return pool[Math.floor(Math.random() * pool.length)] + "d";
   }
   function loot(e, quiet) {
-    const z = e.zone, g = 1 + ef("drop") + X.cb("drop") + FM[S.form].drop + (X.onTask(e) ? 0.1 + (S.su.fort ? 0.25 : 0) + X.cb("tdrop") : 0), t = dropTier(z), k = "z" + z + (e.boss ? "b" : "m");
+    const z = e.zone, g = 1 + ef("drop") + cb("drop") + FM[S.form].drop + (onTask(e) ? 0.1 + (S.su.fort ? 0.25 : 0) + cb("tdrop") : 0), t = dropTier(z), k = "z" + z + (e.boss ? "b" : "m");
     if (Math.random() < 0.6) {
       const m = ZN[z][4];
       S.inv[m] = (S.inv[m] || 0) + 1 + (Math.random() < 0.4 ? 1 : 0);
@@ -1337,19 +1391,19 @@ nav button.on i{opacity:1}
   }
   function onKill(e, quiet) {
     S.lsu = false;
-    const m = maxhp(), xs = XS[S.stance], xm = 1 + ef("xp") + X.cb("xpm"), c0 = CL(), ks = ["Attack", "Strength", "Defense", "Vitality"], b = ks.map((k) => lv(S.xp[k]));
+    const m = maxhp(), xs = XS[S.stance], xm = 1 + ef("xp") + cb("xpm"), c0 = CL(), ks = ["Attack", "Strength", "Defense", "Vitality"], b = ks.map((k) => lv(S.xp[k]));
     const ox = Math.min(1, Math.pow((elv(e) + 15) / Math.max(1, c0), 2));
-    const fg = X.fighters(), cm = S.cmd && fg.length > 0, sp = cm ? 0.6 : 1;
+    const fg = fighters(), cm = S.cmd && fg.length > 0, sp = cm ? 0.6 : 1;
     ks.forEach((k, i) => S.xp[k] += e.xp * xs[i + 1] * xm * ox * sp);
     const g = Math.round(e.a * (1 + ef("gold") + FM[S.form].gold));
     S.a += g;
     S.kc[e.id] = (S.kc[e.id] || 0) + 1;
     if (!e.inst) X.slayKill(e);
     if (fg.length) {
-      X.ldx(e.xp * (xs[5] + (cm ? 2.4 : 0)) * xm * ox);
-      fg.forEach((k) => X.mxp(k, e.xp * 1.6 * ox));
+      ldx(e.xp * (xs[5] + (cm ? 2.4 : 0)) * xm * ox);
+      fg.forEach((k) => mxp(k, e.xp * 1.6 * ox));
     }
-    S.hp = Math.min(m, S.hp + m * X.pk("heal"));
+    S.hp = Math.min(m, S.hp + m * pk("heal"));
     ks.forEach((k, i) => {
       if (lv(S.xp[k]) > b[i]) say(k + " reaches level " + lv(S.xp[k]) + ".");
     });
@@ -1380,7 +1434,7 @@ nav button.on i{opacity:1}
       if (!quiet) set_hits([]);
     }
     if (S.hp < m * 0.55) {
-      const hl = 1 + ef("heal") + X.cb("heal") + lv(S.xp.Cooking) * 4e-3, fk = Object.keys(FOOD).filter((k2) => S.inv[k2] > 0).sort((a, b) => FOOD[a] - FOOD[b]), k = fk.find((q) => FOOD[q] * hl >= m * 0.15) || fk[fk.length - 1];
+      const hl = 1 + ef("heal") + cb("heal") + lv(S.xp.Cooking) * 4e-3, fk = Object.keys(FOOD).filter((k2) => S.inv[k2] > 0).sort((a, b) => FOOD[a] - FOOD[b]), k = fk.find((q) => FOOD[q] * hl >= m * 0.15) || fk[fk.length - 1];
       if (k) {
         S.inv[k]--;
         const h = Math.round(FOOD[k] * hl);
@@ -1390,10 +1444,10 @@ nav button.on i{opacity:1}
     }
     if (Math.random() < hitP(e)) {
       let d = 1 + Math.floor(Math.random() * maxHit(e));
-      const cr = Math.random() < X.cb("crit");
+      const cr = Math.random() < cb("crit");
       if (cr) d *= 2;
       S.ehp -= d + Math.round(memDpr(e) * (0.75 + Math.random() * 0.5));
-      if (X.cb("lsteal")) S.hp = Math.min(m, S.hp + d * X.cb("lsteal"));
+      if (cb("lsteal")) S.hp = Math.min(m, S.hp + d * cb("lsteal"));
       if (!quiet) hit("You " + (cr ? "crit for " : "hit ") + d + ".");
     } else if (!quiet) hit("You miss.");
     if (S.ehp > 0 && dwf() > 0 && Math.random() < hitP(e)) {
@@ -1407,11 +1461,11 @@ nav button.on i{opacity:1}
       return;
     }
     if (Math.random() < eHitP(e)) {
-      const d = Math.max(1, Math.round((1 + Math.floor(Math.random() * emax(e))) * (1 - armor()) * (1 + FM[S.form].taken) * (1 - Math.min(0.6, X.pk("taken") + X.cb("taken") + shT() + (X.onTask(e) ? X.cb("ttaken") : 0)))));
+      const d = Math.max(1, Math.round((1 + Math.floor(Math.random() * emax(e))) * (1 - armor()) * (1 + FM[S.form].taken) * (1 - Math.min(0.6, pk("taken") + cb("taken") + shT() + (onTask(e) ? cb("ttaken") : 0)))));
       S.hp -= d;
       if (!quiet) hit(e.n + " hits you for " + d + ".");
     } else if (!quiet) hit(e.n + " misses.");
-    if (S.hp <= 0 && X.cb("ls") > 0 && !S.lsu) {
+    if (S.hp <= 0 && cb("ls") > 0 && !S.lsu) {
       S.lsu = true;
       S.hp = 1;
       if (!quiet) hit("Last stand! You hold on with 1 hp.");
@@ -1429,7 +1483,7 @@ nav button.on i{opacity:1}
       if (!quiet) hit("You are knocked out.");
       return;
     }
-    S.hp = Math.min(m, S.hp + m * 0.01 * RT * (1 + FM[S.form].regen + X.cb("regen")));
+    S.hp = Math.min(m, S.hp + m * 0.01 * RT * (1 + FM[S.form].regen + cb("regen")));
   }
   function cycle(k) {
     const ot = k == "ring1" ? S.eq.ring2 : k == "ring2" ? S.eq.ring1 : null;
@@ -1475,19 +1529,19 @@ nav button.on i{opacity:1}
     return '<div class="pick">' + ["Attack", "Strength", "Defense", "Vitality"].map((k, i) => '<div class="row' + (xs[i + 1] > 0 ? " on" : "") + '" style="flex-direction:column;align-items:flex-start;gap:2px"><span>' + k + " \xB7 " + lv(S.xp[k]) + "</span><small>" + note[k] + '</small><div class="bar xp" style="width:100%"><i style="width:' + X.pcx(k) + '%"></i></div></div>').join("") + "</div>";
   }
   function combatView() {
-    const m = maxhp(), st = S.style, z = S.zone, zz = ZN[z], cl2 = CL(), fgn = X.fighters();
-    let h = "<h2>Combat \xB7 level " + cl2 + "</h2>" + arenaView();
+    const m = maxhp(), st = S.style, z = S.zone, zz = ZN[z], cl5 = CL(), fgn = fighters();
+    let h = "<h2>Combat \xB7 level " + cl5 + "</h2>" + arenaView();
     h += '<p class="sub">Melee beats Ranged, Ranged beats Magic, Magic beats Melee: counter an enemy for +25% damage.</p>';
     h += '<div class="pick" style="grid-template-columns:repeat(3,1fr)">' + SL.map((s) => '<button class="row' + (st == s ? " on" : "") + '" data-style="' + s + '">' + s + "<small>" + (S.eq[s] ? IT[S.eq[s]].n : "No weapon") + "</small></button>").join("") + "</div>";
     h += "<h2>Combat stats</h2>" + statTiles();
     h += '<h2>Stance <span class="mu" style="display:inline">\xB7 where xp goes</span></h2><div class="chips">' + Object.keys(XS).map((k) => '<button class="' + (S.stance == k ? "on" : "") + '" data-stance="' + k + '">' + XS[k][0] + "</button>").join("") + '</div><p class="mu">' + XS[S.stance][6] + '</p><div class="chips"><button class="' + (S.cmd ? "on" : "") + '" data-cmd="1">Command: ' + (S.cmd ? "on" : "off") + '</button></div><p class="mu">Command splits your xp with Leadership. While members fight beside you, your stat xp drops to 60% and Leadership gains 2.4\xD7 a kill\u2019s base xp.' + (S.cmd && !fgn.length ? " No members are fighting with you, so Command is doing nothing and you keep full xp." : "") + "</p>";
-    h += '<h2>Form <span class="mu" style="display:inline">\xB7 combat buffs</span></h2><div class="chips">' + Object.keys(FM).map((k) => '<button class="' + (S.form == k ? "on" : "") + '" data-form="' + k + '"' + (cl2 < FM[k].cl ? " disabled" : "") + ">" + FM[k].n + (cl2 < FM[k].cl ? " (CL " + FM[k].cl + ")" : "") + "</button>").join("") + '</div><p class="mu">' + FM[S.form].d + "</p>";
+    h += '<h2>Form <span class="mu" style="display:inline">\xB7 combat buffs</span></h2><div class="chips">' + Object.keys(FM).map((k) => '<button class="' + (S.form == k ? "on" : "") + '" data-form="' + k + '"' + (cl5 < FM[k].cl ? " disabled" : "") + ">" + FM[k].n + (cl5 < FM[k].cl ? " (CL " + FM[k].cl + ")" : "") + "</button>").join("") + '</div><p class="mu">' + FM[S.form].d + "</p>";
     h += '<p class="mu">Fighting beside you: ' + (fgn.length ? fgn.map((k) => H[k].n).join(", ") : "no one. Recruit members in the Party tab.") + "</p>";
-    h += '<h2>Zones</h2><div class="chips">' + ZN.map((q, i) => '<button class="' + (z == i ? "on" : "") + '" data-zone="' + i + '"' + (zoneOpen(i) ? "" : " disabled") + ">" + q[0] + (zoneOpen(i) ? "" : cl2 < q[1] ? " (CL " + q[1] + ")" : " (Gate " + q[5] + ")") + "</button>").join("") + "</div>";
+    h += '<h2>Zones</h2><div class="chips">' + ZN.map((q, i) => '<button class="' + (z == i ? "on" : "") + '" data-zone="' + i + '"' + (zoneOpen(i) ? "" : " disabled") + ">" + q[0] + (zoneOpen(i) ? "" : cl5 < q[1] ? " (CL " + q[1] + ")" : " (Gate " + q[5] + ")") + "</button>").join("") + "</div>";
     const kills2 = E.filter((x) => x.zone == z && !x.boss && !x.inst).reduce((s, x) => s + (S.kc[x.id] || 0), 0);
     h += E.filter((e) => e.zone == z && !e.inst).map((e) => {
       const f = fight(e), on = S.cur && S.cur.k == "c" && S.cur.id == e.id, lock = e.boss && kills2 < 30;
-      return '<button class="row' + (on ? " on" : "") + '" data-do="c:' + e.id + '"' + (lock ? " disabled" : "") + "><span>" + (e.boss ? "Boss: " : "") + e.n + "<small>" + (X.onTask(e) ? "On task \xB7 " : "") + e.type + " \xB7 " + e.hp + " hp \xB7 weak to " + weak(e.type) + " \xB7 " + (lock ? "defeat " + kills2 + "/30 foes here first" : "kills " + (S.kc[e.id] || 0)) + '</small></span><small class="' + (f.dmg > m * 0.7 ? "bad" : "") + '">~' + Math.round(f.ttk) + "s<br>\u2212" + Math.round(f.dmg / m * 100) + "% hp</small></button>";
+      return '<button class="row' + (on ? " on" : "") + '" data-do="c:' + e.id + '"' + (lock ? " disabled" : "") + "><span>" + (e.boss ? "Boss: " : "") + e.n + "<small>" + (onTask(e) ? "On task \xB7 " : "") + e.type + " \xB7 " + e.hp + " hp \xB7 weak to " + weak(e.type) + " \xB7 " + (lock ? "defeat " + kills2 + "/30 foes here first" : "kills " + (S.kc[e.id] || 0)) + '</small></span><small class="' + (f.dmg > m * 0.7 ? "bad" : "") + '">~' + Math.round(f.ttk) + "s<br>\u2212" + Math.round(f.dmg / m * 100) + "% hp</small></button>";
     }).join("");
     const t = dropTier(z);
     h += z > 7 ? '<h2>Loot</h2><p class="mu">Every kill pays acorns and sometimes ' + zz[4] + ". Foes here drop " + zz[6] + " (1/40, or 1/6 from the boss, with bad-luck protection). Cores go into tier " + z + " gear and the next gate. No gear drops here: it is all crafted. The boss also drops " + IT["t" + z].n + " (1/12).</p>" : '<h2>Loot</h2><p class="mu">Every kill pays acorns and sometimes ' + zz[4] + ". Rare gear roll: 1/64 per kill, 1/10 from the boss, with bad-luck protection. Pool: " + [0, 1, 2].map((i) => IT["w" + i + t].n).concat([IT["b" + t].n, IT["h" + t].n]).join(", ") + ". The boss also drops " + IT["t" + z].n + " (1/12).</p>";
@@ -1619,24 +1673,19 @@ nav button.on i{opacity:1}
     DM: () => DM,
     DN: () => DN,
     DSK: () => DSK,
-    GL: () => GL,
-    GN: () => GN,
     GV: () => GV,
     GX: () => GX,
     HEAL: () => HEAL,
-    LD: () => LD,
     SCR: () => SCR,
     TC: () => TC,
     TK: () => TK,
     TL: () => TL,
     TM: () => TM,
     TN: () => TN,
-    asg: () => asg,
     bspd: () => bspd,
     burn: () => burn,
     buy: () => buy,
     buyTool: () => buyTool,
-    cl: () => cl,
     cookDone: () => cookDone,
     craftDone: () => craftDone,
     dishNeeds: () => dishNeeds,
@@ -1648,7 +1697,6 @@ nav button.on i{opacity:1}
     need: () => need,
     newTask: () => newTask,
     offlineCap: () => offlineCap,
-    onTask: () => onTask,
     power: () => power,
     recipe: () => recipe,
     scrap: () => scrap,
@@ -1665,7 +1713,6 @@ nav button.on i{opacity:1}
     toolRow: () => toolRow,
     tt: () => tt,
     unlockText: () => unlockText,
-    useMats: () => useMats,
     who: () => who
   });
   function gearView() {
@@ -1724,12 +1771,6 @@ nav button.on i{opacity:1}
     }
     return m;
   }
-  function useMats(r, sk) {
-    if (!Object.keys(r).every((k) => (S.inv[k] || 0) >= r[k])) return false;
-    if (sk && Math.random() < X.cb("save", sk)) return true;
-    Object.keys(r).forEach((k) => S.inv[k] -= r[k]);
-    return true;
-  }
   var SCR = [1, 1, 1, 1, 0.6, 0.8, 0.7, 0.55, 0.9, 0.7, 0.4];
   var scrap = (t) => Math.round(GP[t] * 0.15 * (SCR[t] ?? 1));
   function craftDone(id, mk) {
@@ -1751,11 +1792,11 @@ nav button.on i{opacity:1}
     }
     skPet(sk);
     if (mk) {
-      X.mxp(mk, x * 0.6);
-      X.ldx(x * 0.5);
+      mxp(mk, x * 0.6);
+      ldx(x * 0.5);
     } else {
       const b = lv(S.xp[sk]);
-      S.xp[sk] += x * (1 + X.cb("xp", sk));
+      S.xp[sk] += x * (1 + cb("xp", sk));
       if (lv(S.xp[sk]) > b) say(sk + " reaches level " + lv(S.xp[sk]) + ".");
     }
     if (!S.own[id]) {
@@ -1764,9 +1805,8 @@ nav button.on i{opacity:1}
       autoEq(id);
     } else S.a += scrap(it.tier);
   }
-  var onTask = (e) => !!S.task && S.task.id == e.id;
   function newTask() {
-    const sl = lv(S.xp.Slayer), cl2 = CL(), zm = ZN.reduce((m, z, i) => zoneOpen(i) ? i : m, 0);
+    const sl = lv(S.xp.Slayer), cl5 = CL(), zm = ZN.reduce((m, z, i) => zoneOpen(i) ? i : m, 0);
     const c = E.filter((e2) => !e2.boss && e2.zone >= zm - 2 && zoneOpen(e2.zone) && !e2.inst && Math.floor(ZN[e2.zone][1] * 0.5) <= sl);
     const e = c[Math.floor(Math.random() * c.length)], n = 20 + Math.floor(Math.random() * 21);
     S.task = { id: e.id, n, left: n };
@@ -1776,13 +1816,13 @@ nav button.on i{opacity:1}
     const k = S.task;
     if (!k || k.id != e.id) return;
     const b = lv(S.xp.Slayer);
-    S.xp.Slayer += e.xp * 3 * (1 + X.cb("txp"));
+    S.xp.Slayer += e.xp * 3 * (1 + cb("txp"));
     if (lv(S.xp.Slayer) > b) say("Slayer reaches level " + lv(S.xp.Slayer) + ".");
     k.left--;
     if (k.left <= 0) {
       S.str++;
       petRoll("p_Slayer", 400);
-      const p = Math.round((3 + e.zone * 2) * (S.str % 10 == 0 ? 3 : S.str % 5 == 0 ? 2 : 1) * (1 + X.cb("pts"))), ac = Math.round(e.a * k.n * 0.5);
+      const p = Math.round((3 + e.zone * 2) * (S.str % 10 == 0 ? 3 : S.str % 5 == 0 ? 2 : 1) * (1 + cb("pts"))), ac = Math.round(e.a * k.n * 0.5);
       S.pt += p;
       S.a += ac;
       say("Task complete! +" + p + " slayer points, +" + ac + " acorns (streak " + S.str + ").");
@@ -1830,7 +1870,7 @@ nav button.on i{opacity:1}
       V[n] = Math.round(GV[i] * 3.5);
     }));
   }
-  var burn = (d) => Math.max(0, 0.4 - (lv(S.xp.Cooking) - d.lv) * 0.02) * (1 - Math.min(0.9, X.cb("burn", "Cooking")));
+  var burn = (d) => Math.max(0, 0.4 - (lv(S.xp.Cooking) - d.lv) * 0.02) * (1 - Math.min(0.9, cb("burn", "Cooking")));
   var dishNeeds = (d) => {
     const nd = {};
     nd[d.raw] = d.q;
@@ -1857,11 +1897,11 @@ nav button.on i{opacity:1}
     S.inv[d.n] = (S.inv[d.n] || 0) + (mk ? X.famCut(mk, 1) : 1);
     skPet("Cooking");
     if (mk) {
-      X.mxp(mk, d.xp * 0.6);
-      X.ldx(d.xp * 0.5);
+      mxp(mk, d.xp * 0.6);
+      ldx(d.xp * 0.5);
       return;
     }
-    S.xp.Cooking += d.xp * (SP[S.sp] == "Cooking" ? 1.15 : 1) * (b >= 99 ? 1.1 : 1) * (1 + X.cb("xp", "Cooking"));
+    S.xp.Cooking += d.xp * (SP[S.sp] == "Cooking" ? 1.15 : 1) * (b >= 99 ? 1.1 : 1) * (1 + cb("xp", "Cooking"));
     const a = lv(S.xp.Cooking);
     if (a > b) say("Cooking reaches level " + a + "." + Object.keys(DISH).filter((k) => DISH[k].lv == a).map((k) => " Unlocked: " + DISH[k].n + ".").join(""));
   }
@@ -1874,15 +1914,14 @@ nav button.on i{opacity:1}
     }
   }
   var need = (l) => XT[Math.min(l + 1, 120)];
-  var GL = [1, 15, 30, 45, 60, 75, 90, 100, 110, 120], GX = [6, 18, 36, 60, 96, 144, 210, 360, 570, 900], GV = [1, 3, 8, 15, 30, 55, 100, 175, 350, 750];
-  var GN = { Foraging: [["Pick berries", "berries"], ["Dig up mushrooms", "mushrooms"], ["Sniff out truffles", "truffles"], ["Gather moonroot", "moonroot"], ["Find frostcaps", "frostcaps"], ["Pluck sunpetals", "sunpetals"], ["Reach for starbloom", "starbloom"], ["Cut deepbloom", "deepbloom"], ["Harvest wyrmcap", "wyrmcap"], ["Pluck eclipse lotus", "eclipse lotus"]], Woodcutting: [["Gather twigs", "twigs"], ["Gnaw birch logs", "birch logs"], ["Fell an oak limb", "oak limbs"], ["Cut willow boughs", "willow boughs"], ["Fell maple staves", "maple staves"], ["Hew yew limbs", "yew limbs"], ["Claim elderwood", "elderwood"], ["Fell ironroot", "ironroot"], ["Claim wyrmwood", "wyrmwood"], ["Hew duskoak", "duskoak"]], Fishing: [["Catch minnows", "minnows"], ["Spear trout", "trout"], ["Hook a pike", "pike"], ["Trap eels", "eels"], ["Net silver carp", "silver carp"], ["Lure moonfish", "moonfish"], ["Land a glassfin", "glassfin"], ["Hook cavefin", "cavefin"], ["Land a drakescale", "drakescale"], ["Spear voidfin", "voidfin"]], Mining: [["Collect pebbles", "pebbles"], ["Chip flint", "flint"], ["Pry out amber", "amber"], ["Dig silver", "silver"], ["Cut moonstone", "moonstone"], ["Free a garnet", "garnets"], ["Mine starstone", "starstone"], ["Cut deepcrystal", "deep crystal"], ["Mine wyrmiron", "wyrmiron"], ["Quarry eclipsite", "eclipsite"]], Hunting: [["Snare beetles", "beetles"], ["Trap crickets", "crickets"], ["Gather snails", "snails"], ["Catch frogs", "frogs"], ["Net newts", "newts"], ["Snare skinks", "sand skinks"], ["Lure moon moths", "moon moths"], ["Snare rootbeetles", "root beetles"], ["Net ember moths", "ember moths"], ["Trap dusk spiders", "dusk spiders"]] };
+  var GX = [6, 18, 36, 60, 96, 144, 210, 360, 570, 900], GV = [1, 3, 8, 15, 30, 55, 100, 175, 350, 750];
   var A = [];
   Object.keys(GN).forEach((sk) => GN[sk].forEach((g, i) => {
     A.push({ id: sk.slice(0, 2) + i, sk, n: g[0], lv: GL[i], t: i > 6 ? [9, 11, 14][i - 7] : 3 + i * 0.5, xp: GX[i], item: g[1], gate: i > 6 ? i - 6 : 0 });
     V[g[1]] = GV[i];
   }));
   var TN = ["Flint", "Bramble", "Moonsteel", "Amberforged", "Elderglass"], TC = [0, 150, 800, 4e3, 2e4], TL = [1, 10, 30, 50, 75], TM = [1, 0.9, 0.8, 0.7, 0.6], TK = { Foraging: "basket", Woodcutting: "axe", Fishing: "rod", Mining: "pick", Hunting: "snare" };
-  var tt = (a) => a.t * TM[S.tool[a.sk]] * Math.max(0.3, 1 - X.cb("spd", a.sk));
+  var tt = (a) => a.t * TM[S.tool[a.sk]] * Math.max(0.3, 1 - cb("spd", a.sk));
   function unlockText(sk, n) {
     const u = A.filter((a) => a.sk == sk && a.lv == n && !a.gate).map((a) => a.item);
     TL.forEach((l, i) => {
@@ -1903,16 +1942,13 @@ nav button.on i{opacity:1}
     return '<div class="row"><span>' + TN[t] + " " + TK[k] + "<small>Bonus yield " + Math.round(lv(S.xp[k]) * 0.4) + "% \xB7 " + (t < 4 ? "Next: " + TN[n] + " (level " + TL[n] + ", " + TM[n] + "\xD7 time)" : "Best tool") + "</small></span>" + (t < 4 ? '<button class="btn" data-tool="' + k + '"' + (lv(S.xp[k]) < TL[n] || S.a < TC[n] ? " disabled" : "") + ">" + TC[n] + "</button>" : "") + "</div>";
   }
   var tab = "skills", who = "you", skill = null;
-  var power = () => Math.floor(SK.concat(CS).reduce((s, k) => s + lv(S.xp[k]), 0) / 2) + X.fighters().reduce((s, k) => s + hp(k), 0);
-  var cl = (k) => lv(S.cx[k] || 0);
+  var power = () => Math.floor(SK.concat(CS).reduce((s, k) => s + lv(S.xp[k]), 0) / 2) + fighters().reduce((s, k) => s + hp(k), 0);
   var hp = (k) => H[k].p + (cl(k) - 1) * (k == S.lead ? 2 : 1);
-  var LD = () => lv(S.xp.Leadership);
   var slots = () => LT.filter((l) => l <= LD()).length;
   var mentor = () => 1 + Math.min(0.5, Math.max(0, LD() - 70) * 0.01);
   var offlineCap = () => (8 + Math.min(4, Math.max(0, Math.floor((LD() - 70) / 10)))) * 36e5;
-  var bspd = () => (0.25 + 75e-4 * LD()) * (1 + X.cb("mspd"));
+  var bspd = () => (0.25 + 75e-4 * LD()) * (1 + cb("mspd"));
   var mspd = (k) => bspd() * (1 + 0.01 * (cl(k) - 1));
-  var asg = (k) => S.mt[k] || { k: "war" };
   function set_who(v) {
     who = v;
   }
@@ -1922,38 +1958,16 @@ nav button.on i{opacity:1}
   function set_tab(v) {
     tab = v;
   }
-  Object.defineProperties(X, { slots: { get: () => slots, configurable: true }, GN: { get: () => GN, configurable: true }, useMats: { get: () => useMats, configurable: true }, cl: { get: () => cl, configurable: true }, asg: { get: () => asg, configurable: true }, GL: { get: () => GL, configurable: true }, A: { get: () => A, configurable: true }, CSK: { get: () => CSK, configurable: true }, onTask: { get: () => onTask, configurable: true }, slayKill: { get: () => slayKill, configurable: true } });
+  Object.defineProperties(X, { slots: { get: () => slots, configurable: true }, A: { get: () => A, configurable: true }, CSK: { get: () => CSK, configurable: true }, slayKill: { get: () => slayKill, configurable: true } });
 
   // src/08-party-state.ts
   var party_state_exports = {};
   __export(party_state_exports, {
     assign: () => assign,
-    fighters: () => fighters,
-    ldx: () => ldx,
     mdur: () => mdur,
     memAct: () => memAct,
-    mxp: () => mxp,
-    pk: () => pk,
-    pm: () => pm,
     validTask: () => validTask
   });
-  var fighters = () => Object.keys(S.hired).filter((k) => asg(k).k == "war");
-  var pm = () => (FM[S.form] || FM.steady).party + X.cb("pmult");
-  var pk = (n) => Math.min({ taken: 0.45, speed: 0.4 }[n] || 99, fighters().reduce((s, k) => s + (H[k].pk[n] || 0) * fw(k) * (1 + (cl(k) - 1) * 0.02) * pm() * (H[k].pet ? 1.25 : 1), 0));
-  function mxp(k, x) {
-    const b = cl(k);
-    S.cx[k] = (S.cx[k] || 0) + x * (H[k].pet ? 1.5 : 1);
-    if (cl(k) > b) say(H[k].n + " reaches level " + cl(k) + ".");
-  }
-  function ldx(x) {
-    const b = LD();
-    S.xp.Leadership += x;
-    const a = LD();
-    if (a > b) {
-      const u = HK.filter((k) => H[k].lt > b && H[k].lt <= a).map((k) => H[k].n);
-      say("Leadership reaches level " + a + "." + (LT.some((l) => l > b && l <= a) ? " New party slot." : "") + (u.length ? " Now available: " + u.join(", ") + "." : ""));
-    }
-  }
   function validTask(t) {
     return !!t && (!!TASKS[t.k] && TASKS[t.k].valid(t) || t.k == "war" || t.k == "idle" || t.k == "bar" || t.k == "exp" || t.k == "s" && !!A.find((a) => a.id == t.id) || t.k == "k" && !!DISH[t.id] || t.k == "f" && !!IT[t.id] && t.id[0] != "t" || t.k == "r" && !!RFN[t.id]);
   }
@@ -1974,7 +1988,7 @@ nav button.on i{opacity:1}
     }
     S.mt[k] = { k: kind, id, p: 0 };
   }
-  var mdur = (k, t) => TASKS[t.k] && TASKS[t.k].mdur ? TASKS[t.k].mdur(k, t) : (t.k == "s" ? tt(A.find((a) => a.id == t.id)) : t.k == "k" ? 3.5 * Math.max(0.3, 1 - X.cb("spd", "Cooking")) : t.k == "r" ? 6 * Math.max(0.3, 1 - X.cb("spd", RFN[t.id].sk)) : ctime(t.id) * Math.max(0.3, 1 - X.cb("spd", CSK(t.id)))) / (mspd(k) * pbs(k, X.skOf(t)));
+  var mdur = (k, t) => TASKS[t.k] && TASKS[t.k].mdur ? TASKS[t.k].mdur(k, t) : (t.k == "s" ? tt(A.find((a) => a.id == t.id)) : t.k == "k" ? 3.5 * Math.max(0.3, 1 - cb("spd", "Cooking")) : t.k == "r" ? 6 * Math.max(0.3, 1 - cb("spd", RFN[t.id].sk)) : ctime(t.id) * Math.max(0.3, 1 - cb("spd", CSK(t.id)))) / (mspd(k) * pbs(k, X.skOf(t)));
   function memAct(k, t) {
     const bail = () => {
       S.mt[k] = { k: "idle" };
@@ -1983,7 +1997,7 @@ nav button.on i{opacity:1}
       const a = A.find((x) => x.id == t.id);
       if (!a || lv(S.xp[a.sk]) < a.lv || !gateOk(a.gate)) return bail();
       skPet(a.sk);
-      const yn = 1 + (Math.random() < lv(S.xp[a.sk]) * 4e-3 + X.cb("yld", a.sk) + (pbs(k, a.sk) > 1 ? 0.15 : 0) ? 1 : 0);
+      const yn = 1 + (Math.random() < lv(S.xp[a.sk]) * 4e-3 + cb("yld", a.sk) + (pbs(k, a.sk) > 1 ? 0.15 : 0) ? 1 : 0);
       const pn = X.famCut(k, yn);
       S.inv[a.item] = (S.inv[a.item] || 0) + pn;
       hrCount(a, pn);
@@ -1999,7 +2013,7 @@ nav button.on i{opacity:1}
       refineDone(t.id, k);
     }
   }
-  Object.defineProperties(X, { pk: { get: () => pk, configurable: true }, mxp: { get: () => mxp, configurable: true }, ldx: { get: () => ldx, configurable: true }, validTask: { get: () => validTask, configurable: true }, fighters: { get: () => fighters, configurable: true }, pm: { get: () => pm, configurable: true } });
+  Object.defineProperties(X, { validTask: { get: () => validTask, configurable: true } });
 
   // src/09-seasons-burrow.ts
   var seasons_burrow_exports = {};
@@ -2009,7 +2023,6 @@ nav button.on i{opacity:1}
     BUA: () => BUA,
     BUI: () => BUI,
     BUQ: () => BUQ,
-    CRS: () => CRS,
     SG: () => SG,
     SGC: () => SGC,
     SGL: () => SGL,
@@ -2098,7 +2111,6 @@ nav button.on i{opacity:1}
     const ends = (m >= 60 ? Math.floor(m / 60) + "h " : "") + m % 60 + "m";
     return '<details class="chip"><summary><span>' + w.i + " " + w.n + "</span><em>" + ends + '</em></summary><div class="mu">' + w.d + "<br>" + wxTxt(w) + "<br>Next: " + nx.i + " " + nx.n + ", then " + n2.i + " " + n2.n + ". Combat is never affected.</div></details>";
   }
-  var CRS = ["Smithing", "Fletching", "Enchanting", "Tailoring"];
   var BUA = [3e3, 25e3, 15e4, 9e5, 5e6], BUQ = [40, 80, 150, 250, 400], BUI = [1, 3, 5, 7, 9];
   var BRATE = (L) => [0, 400, 900, 1600, 2600, 4e3][L];
   var buL = (id) => S && S.bu && S.bu[id] || 0;
@@ -2150,13 +2162,12 @@ nav button.on i{opacity:1}
       return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + b.n + " \xB7 tier " + L + " of 5<small>" + b.d + "</small></span><small>" + (L ? "Now: " + b.tx(L) : "Not built yet.") + (L < 5 ? "<br>Next: " + b.tx(L + 1) + "<br>Cost: " + c.a.toLocaleString() + " acorns" + (S.a >= c.a ? " \u2713" : " \u2717") + ", " + Object.keys(c.it).map((k) => c.it[k] + " \xD7 " + k + " (" + (S.inv[k] || 0) + ")" + ((S.inv[k] || 0) >= c.it[k] ? " \u2713" : " \u2717")).join(", ") : "<br>Fully upgraded.") + "</small>" + (L < 5 ? '<div style="margin-top:8px"><button class="btn" data-bu="' + b.id + '"' + (buOk(b) ? "" : " disabled") + ">" + (L ? "Upgrade" : "Build") + "</button></div>" : "") + "</div>";
     }).join("");
   }
-  Object.defineProperties(X, { CRS: { get: () => CRS, configurable: true }, sgView: { get: () => sgView, configurable: true }, buL: { get: () => buL, configurable: true } });
+  Object.defineProperties(X, { sgView: { get: () => sgView, configurable: true }, buL: { get: () => buL, configurable: true } });
 
   // src/10-achievements-log.ts
   var achievements_log_exports = {};
   __export(achievements_log_exports, {
     AC: () => AC,
-    T: () => T,
     allBu: () => allBu,
     bossDone: () => bossDone,
     checkAch: () => checkAch,
@@ -2331,7 +2342,6 @@ nav button.on i{opacity:1}
       }
     });
   }
-  var T = (d) => S.tier[d.id] || 1;
   function tierChips(d) {
     let h = "";
     for (let t = 1; t <= 5; t++) h += '<button class="' + (T(d) == t ? "on" : "") + '" data-tier="' + d.id + ":" + t + '"' + (t > (S.best[d.id] || 0) + 1 ? " disabled" : "") + ">Tier " + t + "</button>";
@@ -2341,9 +2351,9 @@ nav button.on i{opacity:1}
     const c = S.cur;
     if (!c) return 1;
     if (c.k == "s") return tt(A.find((a) => a.id == c.id));
-    if (c.k == "r") return 6 * Math.max(0.3, 1 - X.cb("spd", RFN[c.id].sk));
-    if (c.k == "f") return ctime(c.id) * Math.max(0.3, 1 - X.cb("spd", CSK(c.id)));
-    if (c.k == "k") return 3.5 * Math.max(0.3, 1 - X.cb("spd", "Cooking"));
+    if (c.k == "r") return 6 * Math.max(0.3, 1 - cb("spd", RFN[c.id].sk));
+    if (c.k == "f") return ctime(c.id) * Math.max(0.3, 1 - cb("spd", CSK(c.id)));
+    if (c.k == "k") return 3.5 * Math.max(0.3, 1 - cb("spd", "Cooking"));
     if (TASKS[c.k]) return TASKS[c.k].dur(c);
     return RT;
   };
@@ -2356,9 +2366,9 @@ nav button.on i{opacity:1}
         return;
       }
       skPet(a.sk);
-      const b = (SP[S.sp] == a.sk ? 1.15 : 1) * (lv(S.xp[a.sk]) >= 99 ? 1.1 : 1) * (1 + X.cb("xp", a.sk)), before = lv(S.xp[a.sk]);
+      const b = (SP[S.sp] == a.sk ? 1.15 : 1) * (lv(S.xp[a.sk]) >= 99 ? 1.1 : 1) * (1 + cb("xp", a.sk)), before = lv(S.xp[a.sk]);
       S.xp[a.sk] += a.xp * b;
-      const yn = 1 + (Math.random() < lv(S.xp[a.sk]) * 4e-3 + X.cb("yld", a.sk) ? 1 : 0);
+      const yn = 1 + (Math.random() < lv(S.xp[a.sk]) * 4e-3 + cb("yld", a.sk) ? 1 : 0);
       S.inv[a.item] = (S.inv[a.item] || 0) + yn;
       hrCount(a, yn);
       GATHERED.forEach((f) => f(a));
@@ -2388,7 +2398,7 @@ nav button.on i{opacity:1}
       S.cur = null;
     }
   }
-  Object.defineProperties(X, { famCut: { get: () => famCut, configurable: true }, T: { get: () => T, configurable: true }, tierChips: { get: () => tierChips, configurable: true } });
+  Object.defineProperties(X, { famCut: { get: () => famCut, configurable: true }, tierChips: { get: () => tierChips, configurable: true } });
 
   // src/11-engine.ts
   var engine_exports = {};
@@ -2410,7 +2420,6 @@ nav button.on i{opacity:1}
     capeRow: () => capeRow,
     capeTier: () => capeTier,
     capesView: () => capesView,
-    cb: () => cb,
     checkCapes: () => checkCapes,
     clampXp: () => clampXp,
     crew: () => crew,
@@ -2585,14 +2594,6 @@ nav button.on i{opacity:1}
     }
     return out;
   }
-  function cb(k, sk) {
-    let v = 0;
-    for (let i = 0; i < FXC.length; i++) {
-      const e = FXC[i];
-      if (e.k == k && (e.sk == null || e.sk == "*" || e.sk == sk)) v += e.v;
-    }
-    return v;
-  }
   function refreshFx() {
     if (S.cape && !capeOk(S.cape)) S.cape = null;
     set_FXC(capeFx().concat(hrFx(), buFx(), sgFx(), wxFx(), gearFx(), spFx(), ...FXSRC.map((f) => f())));
@@ -2638,10 +2639,10 @@ nav button.on i{opacity:1}
       const t = capeTier(k);
       return '<div class="row' + (S.cape == k ? " on" : "") + '"><span>' + (t ? capeName(k, t) : CAPN[k] + "\u2019s Cape") + "<small>" + (t ? cumFx(k, t) : k + " level " + lv(S.xp[k]) + " of 99") + "</small></span>" + wear(k, t) + "</div>";
     }).join("");
-    const cl2 = Object.keys(S.own).filter((i) => IT[i] && IT[i].slot == "cloak").sort((a, b) => IT[a].tier - IT[b].tier || qrank(IT[a]) - qrank(IT[b]));
-    if (cl2.length) {
+    const cl5 = Object.keys(S.own).filter((i) => IT[i] && IT[i].slot == "cloak").sort((a, b) => IT[a].tier - IT[b].tier || qrank(IT[a]) - qrank(IT[b]));
+    if (cl5.length) {
       h += "<h2>Crafted cloaks</h2>";
-      h += cl2.map((i) => {
+      h += cl5.map((i) => {
         const it = IT[i], id = "I:" + i, ok = canEq(it);
         return '<div class="row' + (S.cape == id ? " on" : "") + '"><span>' + it.n + "<small>" + istat(it) + (ok ? "" : " \xB7 needs " + reqText(it)) + "</small></span>" + (S.cape == id ? '<span class="good">Worn</span>' : ok ? '<button class="btn" data-cape="' + id + '">Wear</button>' : "") + "</div>";
       }).join("");
@@ -2703,7 +2704,7 @@ nav button.on i{opacity:1}
     const extra = k == "Leadership" ? " \xB7 " + nsl() + "/" + slots() + " slots" : "";
     return '<button class="row' + (w.length ? " on" : "") + '" data-skill="' + k + '"><span>' + k + "</span><small>Level " + lv(S.xp[k]) + (capeTier(k) ? " \xB7 " + TNAME[capeTier(k)] : "") + extra + (w.length ? " \xB7 " + w.join(", ") : "") + '</small><div class="bar xp" style="width:100%"><i style="width:' + pcx(k) + '%"></i></div></button>';
   }
-  Object.defineProperties(X, { cb: { get: () => cb, configurable: true }, refreshFx: { get: () => refreshFx, configurable: true }, fxTxt: { get: () => fxTxt, configurable: true }, CTX: { get: () => CTX, configurable: true }, capeFx: { get: () => capeFx, configurable: true }, GRP: { get: () => GRP, configurable: true }, CE: { get: () => CE, configurable: true }, capeOk: { get: () => capeOk, configurable: true }, capeLabel: { get: () => capeLabel, configurable: true }, pcx: { get: () => pcx, configurable: true }, capesView: { get: () => capesView, configurable: true }, skOf: { get: () => skOf, configurable: true }, grpTier: { get: () => grpTier, configurable: true }, capeTier: { get: () => capeTier, configurable: true }, capeName: { get: () => capeName, configurable: true }, grpName: { get: () => grpName, configurable: true } });
+  Object.defineProperties(X, { refreshFx: { get: () => refreshFx, configurable: true }, fxTxt: { get: () => fxTxt, configurable: true }, CTX: { get: () => CTX, configurable: true }, capeFx: { get: () => capeFx, configurable: true }, GRP: { get: () => GRP, configurable: true }, CE: { get: () => CE, configurable: true }, capeOk: { get: () => capeOk, configurable: true }, capeLabel: { get: () => capeLabel, configurable: true }, pcx: { get: () => pcx, configurable: true }, capesView: { get: () => capesView, configurable: true }, skOf: { get: () => skOf, configurable: true }, grpTier: { get: () => grpTier, configurable: true }, capeTier: { get: () => capeTier, configurable: true }, capeName: { get: () => capeName, configurable: true }, grpName: { get: () => grpName, configurable: true } });
 
   // src/12-farm-alchemy.ts
   var farm_alchemy_exports = {};
@@ -2750,8 +2751,8 @@ nav button.on i{opacity:1}
   var tendRate = () => Math.min(1, farmhands().reduce((s, k) => s + mspd(k) * 0.4, 0) * (S.hired.dormouse ? 1.5 : 1));
   TASKS.m = { sk: "Farming", dur: () => 30, done: () => {
   }, name: () => "Tending the farm", valid: () => true, mname: () => "Tending the farm", mdur: (k) => 30 / mspd(k), mact: (k) => {
-    X.mxp(k, 8);
-    X.ldx(4);
+    mxp(k, 8);
+    ldx(4);
   } };
   var plots = () => {
     const a = S.farm = S.farm || [];

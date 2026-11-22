@@ -1,11 +1,11 @@
 import { FXSRC, S, TASKS, TICKS, save, say } from './00-state';
 import { X } from './registry';
-import { D, FXC, H, IT, SK, XT, lv, maxhp, nsl, set_FXC, spFx } from './01-species-pets';
+import { D, FXC, H, IT, SK, XT, asg, cb, cl, lv, maxhp, nsl, set_FXC, spFx } from './01-species-pets';
 import { E, RFN, gearFx, gearSync, itFx, qrank } from './02-gear-data';
 import { exFinish, exs, hrFx } from './03-world-expeditions';
 import { hits, hitsStr, set_hitsStr } from './04-loadout';
 import { canEq, istat, reqText } from './05-combat';
-import { A, CSK, DISH, asg, mspd, set_who, slots, who } from './07-gear-ui';
+import { A, CSK, DISH, mspd, set_who, slots, who } from './07-gear-ui';
 import { mdur } from './08-party-state';
 import { buFx, buL, sgFx, wxCheck, wxFx } from './09-seasons-burrow';
 import { checkAch, dur, famShare, finish, memTick } from './10-achievements-log';
@@ -87,7 +87,6 @@ export function capeFx(){
   else{const t=capeTier(id);for(let i=0;i<t;i++)add(CE[id][i],id)}
   return out;
 }
-export function cb(k:string,sk?:string){let v=0;for(let i=0;i<FXC.length;i++){const e=FXC[i];if(e.k==k&&(e.sk==null||e.sk=='*'||e.sk==sk))v+=e.v}return v}
 export function refreshFx(){if(S.cape&&!capeOk(S.cape))S.cape=null;set_FXC(capeFx().concat(hrFx(),buFx(),sgFx(),wxFx(),gearFx(),spFx(),...FXSRC.map(f=>f())))}
 export function clampXp(){for(const k in S.xp)if(S.xp[k]>2e8)S.xp[k]=2e8}
 export function checkCapes(){
@@ -136,4 +135,4 @@ export function tile(k:string){
   return '<button class="row'+(w.length?' on':'')+'" data-skill="'+k+'"><span>'+k+'</span><small>Level '+lv(S.xp[k])+(capeTier(k)?' · '+TNAME[capeTier(k)]:'')+extra+(w.length?' · '+w.join(', '):'')+'</small><div class="bar xp" style="width:100%"><i style="width:'+pcx(k)+'%"></i></div></button>';
 }
 
-Object.defineProperties(X,{cb:{get:()=>cb,configurable:true},refreshFx:{get:()=>refreshFx,configurable:true},fxTxt:{get:()=>fxTxt,configurable:true},CTX:{get:()=>CTX,configurable:true},capeFx:{get:()=>capeFx,configurable:true},GRP:{get:()=>GRP,configurable:true},CE:{get:()=>CE,configurable:true},capeOk:{get:()=>capeOk,configurable:true},capeLabel:{get:()=>capeLabel,configurable:true},pcx:{get:()=>pcx,configurable:true},capesView:{get:()=>capesView,configurable:true},skOf:{get:()=>skOf,configurable:true},grpTier:{get:()=>grpTier,configurable:true},capeTier:{get:()=>capeTier,configurable:true},capeName:{get:()=>capeName,configurable:true},grpName:{get:()=>grpName,configurable:true}});
+Object.defineProperties(X,{refreshFx:{get:()=>refreshFx,configurable:true},fxTxt:{get:()=>fxTxt,configurable:true},CTX:{get:()=>CTX,configurable:true},capeFx:{get:()=>capeFx,configurable:true},GRP:{get:()=>GRP,configurable:true},CE:{get:()=>CE,configurable:true},capeOk:{get:()=>capeOk,configurable:true},capeLabel:{get:()=>capeLabel,configurable:true},pcx:{get:()=>pcx,configurable:true},capesView:{get:()=>capesView,configurable:true},skOf:{get:()=>skOf,configurable:true},grpTier:{get:()=>grpTier,configurable:true},capeTier:{get:()=>capeTier,configurable:true},capeName:{get:()=>capeName,configurable:true},grpName:{get:()=>grpName,configurable:true}});

@@ -40,7 +40,7 @@ export function gainPet(id:string){
 }
 export const PB:Record<string,number>={Attack:40000,Strength:40000,Defense:40000,Vitality:40000,Foraging:150000,Woodcutting:160000,Fishing:130000,Mining:250000,Hunting:100000,Cooking:110000,Smithing:90000,Fletching:80000,Enchanting:90000,Tailoring:85000,Farming:95000,Alchemy:90000};
 export function skPet(sk:string){if(typeof sk!='string')return;let r=PB[sk]-25*lv(S.xp[sk]);if(S.xp[sk]>=2e8)r/=15;petRoll('p_'+sk,r)}
-export function petRoll(id:string,rate:number){if(S.pets[id])return;if(Math.random()*rate<1+Math.max(0,X.cb('drop'))+X.ef('drop'))gainPet(id)}
+export function petRoll(id:string,rate:number){if(S.pets[id])return;if(Math.random()*rate<1+Math.max(0,cb('drop'))+X.ef('drop'))gainPet(id)}
 
 export const D=[
 {id:'hollow',n:'The Hollow Oak',req:12,t:30,a:[15,30],tr:'Hollow Heart',type:'Magic'},
@@ -57,7 +57,7 @@ export const adv=(a:string,b:string)=>BEATS[a]==b?1:BEATS[b]==a?-1:0;
 export const weak=(t:string)=>Object.keys(BEATS).find(k=>BEATS[k]==t);
 export const W:Record<string,string[]>={Melee:['Flint Claws','Briar Spear','Amber Cleaver'],Ranged:['Twig Bow','Birch Longbow','Amber Crossbow'],Magic:['Hazel Wand','Mooncap Staff','Amber Scepter']};
 export const AR=['Bark Vest','Mossweave Coat','Amber Mail'];
-export const maxhp=()=>Math.round((30+lv(S.xp.Vitality)*10)*(1+X.cb('hpm')+X.pk('hp')));
+export const maxhp=()=>Math.round((30+lv(S.xp.Vitality)*10)*(1+cb('hpm')+pk('hp')));
 export const SL=['Melee','Ranged','Magic'];
 export const XS:Record<string,any[]>={bal:['Balanced',2,2,2,2,.3,'Shares xp evenly between Attack, Strength and Defense, with a little for Leadership when members fight beside you.'],acc:['Accurate',6,0,0,2,0,'Trains Attack: you land more of your hits.'],agg:['Aggressive',0,6,0,2,0,'Trains Strength: your hits land harder.'],def:['Defensive',0,0,6,2,0,'Trains Defense: enemies land fewer hits on you.']};
 export const FM:Record<string,any>={steady:{n:'Steady',cl:1,d:'No bonuses or penalties.'},fury:{n:'Fury',cl:10,dmg:.2,taken:.25,d:'+20% damage, +25% damage taken.'},bulwark:{n:'Bulwark',cl:20,dmg:-.1,taken:-.2,d:'−10% damage, −20% damage taken.'},mender:{n:'Mender',cl:35,dmg:-.05,regen:1,d:'−5% damage, double regeneration between fights.'},fortune:{n:'Fortune',cl:50,dmg:-.1,drop:.15,gold:.1,d:'−10% damage, +15% rare drops, +10% acorns.'},warband:{n:'Warband',cl:65,dmg:-.1,party:1.5,d:'−10% damage. Perks of members fighting beside you are 1.5× stronger.'}};
@@ -72,3 +72,22 @@ export const TR=[['Acorn Charm',{gold:.1}],['Thornjaw’s Tooth',{dmg:.05}],['He
 TR.forEach((t:any,i)=>IT['t'+i]={n:t[0],slot:'trinket',tier:i,eff:t[1],req:t[2]||1,stat:0});
 
 export function set_FXC(v:any){FXC=v}
+// Shared helpers every module needs, kept here so they can be imported directly instead of going through the registry.
+export function cb(k:string,sk?:string){let v=0;for(let i=0;i<FXC.length;i++){const e=FXC[i];if(e.k==k&&(e.sk==null||e.sk=='*'||e.sk==sk))v+=e.v}return v}
+export const cl=(k:string)=>lv(S.cx[k]||0);
+export const GL=[1,15,30,45,60,75,90,100,110,120];
+export const fw=(k:string)=>H[k].spec?.4:1;// specialists fight at 40%, so a bigger party is wider rather than stronger
+export const LD=()=>lv(S.xp.Leadership);
+export const asg=(k:string)=>S.mt[k]||{k:'war'};
+// Party helpers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
+export const fighters=()=>Object.keys(S.hired).filter(k=>asg(k).k=='war');
+export const pm=()=>(FM[S.form]||FM.steady).party+cb('pmult');
+export const pk=(n:string)=>Math.min(({taken:.45,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+(H[k].pk[n]||0)*fw(k)*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),0));
+export function mxp(k:string,x:number){const b=cl(k);S.cx[k]=(S.cx[k]||0)+x*(H[k].pet?1.5:1);if(cl(k)>b)say(H[k].n+' reaches level '+cl(k)+'.')}
+export function ldx(x:number){const b=LD();S.xp.Leadership+=x;const a=LD();if(a>b){const u=HK.filter(k=>H[k].lt>b&&H[k].lt<=a).map(k=>H[k].n);say('Leadership reaches level '+a+'.'+(LT.some(l=>l>b&&l<=a)?' New party slot.':'')+(u.length?' Now available: '+u.join(', ')+'.':''))}}
+export const onTask=(e:Enemy)=>!!S.task&&S.task.id==e.id;
+export const T=(d:Delve)=>S.tier[d.id]||1;
+export function useMats(r:any,sk:string){if(!Object.keys(r).every(k=>(S.inv[k]||0)>=r[k]))return false;if(sk&&Math.random()<cb('save',sk))return true;Object.keys(r).forEach(k=>S.inv[k]-=r[k]);return true}
+// ---------- burrow home base
+export const CRS=['Smithing','Fletching','Enchanting','Tailoring'];
+export const GN:Record<string,string[][]>={Foraging:[['Pick berries','berries'],['Dig up mushrooms','mushrooms'],['Sniff out truffles','truffles'],['Gather moonroot','moonroot'],['Find frostcaps','frostcaps'],['Pluck sunpetals','sunpetals'],['Reach for starbloom','starbloom'],['Cut deepbloom','deepbloom'],['Harvest wyrmcap','wyrmcap'],['Pluck eclipse lotus','eclipse lotus']],Woodcutting:[['Gather twigs','twigs'],['Gnaw birch logs','birch logs'],['Fell an oak limb','oak limbs'],['Cut willow boughs','willow boughs'],['Fell maple staves','maple staves'],['Hew yew limbs','yew limbs'],['Claim elderwood','elderwood'],['Fell ironroot','ironroot'],['Claim wyrmwood','wyrmwood'],['Hew duskoak','duskoak']],Fishing:[['Catch minnows','minnows'],['Spear trout','trout'],['Hook a pike','pike'],['Trap eels','eels'],['Net silver carp','silver carp'],['Lure moonfish','moonfish'],['Land a glassfin','glassfin'],['Hook cavefin','cavefin'],['Land a drakescale','drakescale'],['Spear voidfin','voidfin']],Mining:[['Collect pebbles','pebbles'],['Chip flint','flint'],['Pry out amber','amber'],['Dig silver','silver'],['Cut moonstone','moonstone'],['Free a garnet','garnets'],['Mine starstone','starstone'],['Cut deepcrystal','deep crystal'],['Mine wyrmiron','wyrmiron'],['Quarry eclipsite','eclipsite']],Hunting:[['Snare beetles','beetles'],['Trap crickets','crickets'],['Gather snails','snails'],['Catch frogs','frogs'],['Net newts','newts'],['Snare skinks','sand skinks'],['Lure moon moths','moon moths'],['Snare rootbeetles','root beetles'],['Net ember moths','ember moths'],['Trap dusk spiders','dusk spiders']]};

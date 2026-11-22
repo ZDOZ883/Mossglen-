@@ -1,8 +1,8 @@
 import { S, save, say } from './00-state';
 import { X } from './registry';
-import { lv } from './01-species-pets';
+import { CRS, GN, lv } from './01-species-pets';
 import { GSK, ZN } from './02-gear-data';
-import { GN } from './07-gear-ui';
+
 // Slayer gear, seasons, burrow. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- slayer gear and seasons
 export const SG=[
@@ -35,8 +35,6 @@ export function wxView(){
   const ends=(m>=60?Math.floor(m/60)+'h ':'')+m%60+'m';
   return '<details class="chip"><summary><span>'+w.i+' '+w.n+'</span><em>'+ends+'</em></summary><div class="mu">'+w.d+'<br>'+wxTxt(w)+'<br>Next: '+nx.i+' '+nx.n+', then '+n2.i+' '+n2.n+'. Combat is never affected.</div></details>';
 }
-// ---------- burrow home base
-export const CRS=['Smithing','Fletching','Enchanting','Tailoring'];
 export const BUA=[3000,25000,150000,900000,5000000],BUQ=[40,80,150,250,400],BUI=[1,3,5,7,9];
 export const BRATE=(L:any)=>[0,400,900,1600,2600,4000][L];
 export const buL=(id:string)=>(S&&S.bu&&S.bu[id])||0;
@@ -57,4 +55,4 @@ export function burrowView(){
 }
 
 
-Object.defineProperties(X,{CRS:{get:()=>CRS,configurable:true},sgView:{get:()=>sgView,configurable:true},buL:{get:()=>buL,configurable:true}});
+Object.defineProperties(X,{sgView:{get:()=>sgView,configurable:true},buL:{get:()=>buL,configurable:true}});

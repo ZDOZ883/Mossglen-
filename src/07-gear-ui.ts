@@ -1,6 +1,6 @@
 import { S, say } from './00-state';
 import { X } from './registry';
-import { AR, CS, FOOD, GP, H, IT, LT, SK, SP, V, W, XT, lv, petRoll, skPet, weak } from './01-species-pets';
+import { AR, CS, FOOD, GL, GN, GP, H, IT, LD, LT, SK, SP, V, W, XT, asg, cb, cl, fighters, ldx, lv, mxp, onTask, petRoll, skPet, useMats, weak } from './01-species-pets';
 import { E, RF, ZN, gateOk, zoneOpen } from './02-gear-data';
 import { CL, armor, loadoutView } from './04-loadout';
 import { autoEq, istat, price, reqText } from './05-combat';
@@ -35,7 +35,6 @@ export function recipe(id:string){
   if(t>=8){Object.keys(m).forEach(k=>(m as any)[k]=Math.ceil((m as any)[k]*2.5));const mq=t>=9?2:1;(m as any)[RF[s][t-8]]=(id[0]=='b'?12:8)*mq;(m as any)[ZN[t][6]!]=(id[0]=='b'?3:2)*mq}
   return m;
 }
-export function useMats(r:any,sk:string){if(!Object.keys(r).every(k=>(S.inv[k]||0)>=r[k]))return false;if(sk&&Math.random()<X.cb('save',sk))return true;Object.keys(r).forEach(k=>S.inv[k]-=r[k]);return true}
 // Spare crafts sell as scrap. SCR trims the tiers where crafting out-earned the zone it is made for.
 export const SCR=[1,1,1,1,.6,.8,.7,.55,.9,.7,.4];
 export const scrap=(t:number)=>Math.round(GP[t]*.15*(SCR[t]??1));
@@ -44,10 +43,9 @@ export function craftDone(id:string,mk?:any){
   if(it.tier>=8&&!gateOk(it.tier-7)){if(mk)S.mt[mk]={k:'idle'};else S.cur=null;return}
   if(!useMats(r,sk)){if(mk){S.mt[mk]={k:'idle'};say(H[mk].n+' ran out of materials for '+it.n+'.')}else{S.cur=null;say('Out of materials for '+it.n+'.')}return}
   skPet(sk);
-  if(mk){X.mxp(mk,x*.6);X.ldx(x*.5)}else{const b=lv(S.xp[sk]);S.xp[sk]+=x*(1+X.cb('xp',sk));if(lv(S.xp[sk])>b)say(sk+' reaches level '+lv(S.xp[sk])+'.')}
+  if(mk){mxp(mk,x*.6);ldx(x*.5)}else{const b=lv(S.xp[sk]);S.xp[sk]+=x*(1+cb('xp',sk));if(lv(S.xp[sk])>b)say(sk+' reaches level '+lv(S.xp[sk])+'.')}
   if(!S.own[id]){S.own[id]=1;say((mk?H[mk].n+' crafted ':'Crafted ')+it.n+'.');autoEq(id)}else S.a+=scrap(it.tier);
 }
-export const onTask=(e:Enemy)=>!!S.task&&S.task.id==e.id;
 export function newTask(){
   const sl=lv(S.xp.Slayer),cl=CL(),zm=ZN.reduce((m,z,i)=>zoneOpen(i)?i:m,0);
   const c=E.filter(e=>!e.boss&&e.zone>=zm-2&&zoneOpen(e.zone)&&!e.inst&&Math.floor(ZN[e.zone][1]*.5)<=sl);
@@ -56,9 +54,9 @@ export function newTask(){
 }
 export function slayKill(e:Enemy){
   const k=S.task;if(!k||k.id!=e.id)return;
-  const b=lv(S.xp.Slayer);S.xp.Slayer+=e.xp*3*(1+X.cb('txp'));if(lv(S.xp.Slayer)>b)say('Slayer reaches level '+lv(S.xp.Slayer)+'.');
+  const b=lv(S.xp.Slayer);S.xp.Slayer+=e.xp*3*(1+cb('txp'));if(lv(S.xp.Slayer)>b)say('Slayer reaches level '+lv(S.xp.Slayer)+'.');
   k.left--;
-  if(k.left<=0){S.str++;petRoll('p_Slayer',400);const p=Math.round((3+e.zone*2)*(S.str%10==0?3:S.str%5==0?2:1)*(1+X.cb('pts'))),ac=Math.round(e.a*k.n*.5);S.pt+=p;S.a+=ac;say('Task complete! +'+p+' slayer points, +'+ac+' acorns (streak '+S.str+').');S.task=null}
+  if(k.left<=0){S.str++;petRoll('p_Slayer',400);const p=Math.round((3+e.zone*2)*(S.str%10==0?3:S.str%5==0?2:1)*(1+cb('pts'))),ac=Math.round(e.a*k.n*.5);S.pt+=p;S.a+=ac;say('Task complete! +'+p+' slayer points, +'+ac+' acorns (streak '+S.str+').');S.task=null}
 }
 export function taskAct(a:string){
   if(a=='new'&&!S.task)newTask();
@@ -79,7 +77,7 @@ export const DISH:Record<string,Dish>={},DN={G:['Turnip mash','Oat porridge','Pu
 export const CROPS=[['turnips','turnip seeds'],['oats','oat seeds'],['pumpkins','pumpkin seeds'],['honeyroot','honeyroot cuttings'],['frostbeets','frostbeet seeds'],['sunmelons','sunmelon seeds'],['stargourds','stargourd seeds'],['deepyams','deepyam cuttings'],['wyrmpeppers','wyrmpepper seeds'],['eclipse figs','eclipse fig cuttings']];
 export const CROPSECS=[300,600,1200,2400,3600,7200,10800,16200,21600,28800];// grow time per tier, capped at the 8 hour offline window
 export function initDish(){['F','I','H','G'].forEach(c=>(DN as any)[c].forEach((n:string,i:number)=>{const heal=Math.round(HEAL[i]*(DM as any)[c]);DISH['d'+c+i]={n,raw:c=='G'?CROPS[i][0]:GN[(DSK as any)[c]][i][1],q:c=='F'||c=='G'?3:2,side:c=='F'?null:GN.Foraging[i][1],lv:GL[i],gate:i>6?i-6:0,heal,xp:GX[i]*2};FOOD[n]=heal;V[n]=Math.round(GV[i]*3.5)}))}
-export const burn=(d:any)=>Math.max(0,.4-(lv(S.xp.Cooking)-d.lv)*.02)*(1-Math.min(.9,X.cb('burn','Cooking')));
+export const burn=(d:any)=>Math.max(0,.4-(lv(S.xp.Cooking)-d.lv)*.02)*(1-Math.min(.9,cb('burn','Cooking')));
 export const dishNeeds=(d:any)=>{const nd:Record<string,any>={};nd[d.raw]=d.q;if(d.side)nd[d.side]=1;return nd};
 export function cookDone(id:string,mk?:any){
   const d=DISH[id];
@@ -87,34 +85,30 @@ export function cookDone(id:string,mk?:any){
   const b=lv(S.xp.Cooking),burnt=Math.random()<burn(d);
   if(burnt){if(!mk&&Math.random()<.2)say('You burn the '+d.n.toLowerCase()+'.');return}
   S.inv[d.n]=(S.inv[d.n]||0)+(mk?X.famCut(mk,1):1);skPet('Cooking');
-  if(mk){X.mxp(mk,d.xp*.6);X.ldx(d.xp*.5);return}
-  S.xp.Cooking+=d.xp*(SP[S.sp!]=='Cooking'?1.15:1)*(b>=99?1.1:1)*(1+X.cb('xp','Cooking'));
+  if(mk){mxp(mk,d.xp*.6);ldx(d.xp*.5);return}
+  S.xp.Cooking+=d.xp*(SP[S.sp!]=='Cooking'?1.15:1)*(b>=99?1.1:1)*(1+cb('xp','Cooking'));
   const a=lv(S.xp.Cooking);if(a>b)say('Cooking reaches level '+a+'.'+Object.keys(DISH).filter(k=>DISH[k].lv==a).map(k=>' Unlocked: '+DISH[k].n+'.').join(''));
 }
 export function buy(k:string){const t=S.gear[k],c=(k=='arm'?[100,400,1000]:[80,300,900])[t];if(t<3&&S.a>=c){S.a-=c;S.gear[k]++;say('Equipped '+(k=='arm'?AR[t]:W[k][t])+'.')}}
 export const need=(l:number)=>XT[Math.min(l+1,120)];
-export const GL=[1,15,30,45,60,75,90,100,110,120],GX=[6,18,36,60,96,144,210,360,570,900],GV=[1,3,8,15,30,55,100,175,350,750];
-export const GN:Record<string,string[][]>={Foraging:[['Pick berries','berries'],['Dig up mushrooms','mushrooms'],['Sniff out truffles','truffles'],['Gather moonroot','moonroot'],['Find frostcaps','frostcaps'],['Pluck sunpetals','sunpetals'],['Reach for starbloom','starbloom'],['Cut deepbloom','deepbloom'],['Harvest wyrmcap','wyrmcap'],['Pluck eclipse lotus','eclipse lotus']],Woodcutting:[['Gather twigs','twigs'],['Gnaw birch logs','birch logs'],['Fell an oak limb','oak limbs'],['Cut willow boughs','willow boughs'],['Fell maple staves','maple staves'],['Hew yew limbs','yew limbs'],['Claim elderwood','elderwood'],['Fell ironroot','ironroot'],['Claim wyrmwood','wyrmwood'],['Hew duskoak','duskoak']],Fishing:[['Catch minnows','minnows'],['Spear trout','trout'],['Hook a pike','pike'],['Trap eels','eels'],['Net silver carp','silver carp'],['Lure moonfish','moonfish'],['Land a glassfin','glassfin'],['Hook cavefin','cavefin'],['Land a drakescale','drakescale'],['Spear voidfin','voidfin']],Mining:[['Collect pebbles','pebbles'],['Chip flint','flint'],['Pry out amber','amber'],['Dig silver','silver'],['Cut moonstone','moonstone'],['Free a garnet','garnets'],['Mine starstone','starstone'],['Cut deepcrystal','deep crystal'],['Mine wyrmiron','wyrmiron'],['Quarry eclipsite','eclipsite']],Hunting:[['Snare beetles','beetles'],['Trap crickets','crickets'],['Gather snails','snails'],['Catch frogs','frogs'],['Net newts','newts'],['Snare skinks','sand skinks'],['Lure moon moths','moon moths'],['Snare rootbeetles','root beetles'],['Net ember moths','ember moths'],['Trap dusk spiders','dusk spiders']]};
+export const GX=[6,18,36,60,96,144,210,360,570,900],GV=[1,3,8,15,30,55,100,175,350,750];
 export const A:any[]=[];Object.keys(GN).forEach(sk=>GN[sk].forEach((g:string[],i:number)=>{A.push({id:sk.slice(0,2)+i,sk,n:g[0],lv:GL[i],t:i>6?[9,11,14][i-7]:3+i*.5,xp:GX[i],item:g[1],gate:i>6?i-6:0});V[g[1]]=GV[i]}));
 export const TN=['Flint','Bramble','Moonsteel','Amberforged','Elderglass'],TC=[0,150,800,4000,20000],TL=[1,10,30,50,75],TM=[1,.9,.8,.7,.6],TK={Foraging:'basket',Woodcutting:'axe',Fishing:'rod',Mining:'pick',Hunting:'snare'};
-export const tt=(a:any)=>a.t*TM[S.tool[a.sk]]*Math.max(.3,1-X.cb('spd',a.sk));
+export const tt=(a:any)=>a.t*TM[S.tool[a.sk]]*Math.max(.3,1-cb('spd',a.sk));
 export function unlockText(sk:string,n:number){const u=A.filter(a=>a.sk==sk&&a.lv==n&&!a.gate).map(a=>a.item);TL.forEach((l,i)=>{if(l==n&&i>0)u.push(TN[i]+' '+(TK as any)[sk])});return u.length?' Unlocked: '+u.join(', ')+'.':''}
 export function buyTool(sk:string){const t=S.tool[sk]+1;if(t<5&&lv(S.xp[sk])>=TL[t]&&S.a>=TC[t]){S.a-=TC[t];S.tool[sk]=t;say('Equipped '+TN[t]+' '+(TK as any)[sk]+'.')}}
 export function toolRow(k:string){const t=S.tool[k],n=t+1;return '<div class="row"><span>'+TN[t]+' '+(TK as any)[k]+'<small>Bonus yield '+Math.round(lv(S.xp[k])*.4)+'% · '+(t<4?'Next: '+TN[n]+' (level '+TL[n]+', '+TM[n]+'× time)':'Best tool')+'</small></span>'+(t<4?'<button class="btn" data-tool="'+k+'"'+(lv(S.xp[k])<TL[n]||S.a<TC[n]?' disabled':'')+'>'+TC[n]+'</button>':'')+'</div>'}
 export let tab='skills',who='you',skill:any=null;
-export const power=()=>Math.floor(SK.concat(CS).reduce((s,k)=>s+lv(S.xp[k]),0)/2)+X.fighters().reduce((s,k)=>s+hp(k),0);
-export const cl=(k:string)=>lv(S.cx[k]||0);
+export const power=()=>Math.floor(SK.concat(CS).reduce((s,k)=>s+lv(S.xp[k]),0)/2)+fighters().reduce((s,k)=>s+hp(k),0);
 export const hp=(k:string)=>H[k].p+(cl(k)-1)*(k==S.lead?2:1);
-export const LD=()=>lv(S.xp.Leadership);
 export const slots=()=>LT.filter(l=>l<=LD()).length;
 // Leadership past 70: mentoring speeds barracks training, and the offline window stretches an hour per ten levels (to 12h).
 export const mentor=()=>1+Math.min(.5,Math.max(0,LD()-70)*.01);
 export const offlineCap=()=>(8+Math.min(4,Math.max(0,Math.floor((LD()-70)/10))))*3600e3;
-export const bspd=()=>(.25+.0075*LD())*(1+X.cb('mspd'));
+export const bspd=()=>(.25+.0075*LD())*(1+cb('mspd'));
 export const mspd=(k:string)=>bspd()*(1+.01*(cl(k)-1));
-export const asg=(k:string)=>S.mt[k]||{k:'war'};
 
 export function set_who(v:any){who=v}
 export function set_skill(v:any){skill=v}
 export function set_tab(v:any){tab=v}
-Object.defineProperties(X,{slots:{get:()=>slots,configurable:true},GN:{get:()=>GN,configurable:true},useMats:{get:()=>useMats,configurable:true},cl:{get:()=>cl,configurable:true},asg:{get:()=>asg,configurable:true},GL:{get:()=>GL,configurable:true},A:{get:()=>A,configurable:true},CSK:{get:()=>CSK,configurable:true},onTask:{get:()=>onTask,configurable:true},slayKill:{get:()=>slayKill,configurable:true}});
+Object.defineProperties(X,{slots:{get:()=>slots,configurable:true},A:{get:()=>A,configurable:true},CSK:{get:()=>CSK,configurable:true},slayKill:{get:()=>slayKill,configurable:true}});
