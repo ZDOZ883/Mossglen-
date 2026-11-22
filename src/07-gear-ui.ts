@@ -10,14 +10,14 @@ import { bonusSummary, gsel, gtab, icon, iconOf, pickerHtml, tileHtml } from './
 // ---------- skilling outfits (worn automatically for the skill you train; combat gear is never touched)
 export function outfitsView():string{
   const act=gameState.cur?X.skOf(gameState.cur):null,fav=gameState.ofocus||'';
-  let h='<h2>Skilling outfits</h2><p class="sub">Each skill has a four-piece outfit in three tiers. Every piece adds a little xp. Wear all four and you get a set bonus at the tier of your weakest piece. The best outfit for the skill you train is worn automatically, and your combat gear stays as it was. Novice pieces turn up while you train the skill itself (about 1 in 5,000 actions). Better pieces drop from zone bosses, expeditions and raids.</p>';
+  let h='<h2>Skilling outfits</h2><p class="sub">Each skill has a five-piece outfit (Cap, Vest, Gloves, Boots, Legs) in three tiers. Every piece adds a little xp. Wear all five and you get a set bonus at the tier of your weakest piece. The best outfit for the skill you train is worn automatically, and your combat gear stays as it was. Novice pieces turn up while you train the skill itself (about 1 in 8,000 actions). Better pieces drop from zone bosses, expeditions and raids.</p>';
   h+='<p class="mu" style="margin:0 0 4px">Drops lean toward (60%):</p><div class="chips"><button class="'+(fav?'':'on')+'" data-ofocus="">Any skill</button>'+OUTFIT_SK.map(s=>'<button class="'+(fav==s?'on':'')+'" data-ofocus="'+s+'">'+s+'</button>').join('')+'</div>';
   h+='<p class="mu">Pieces found: '+outFound()+' of '+OUTFIT_SK.length*OUT_SLOTS.length+'. Dropping an outfit upgrades a piece you are missing first.</p>';
   h+=OUTFIT_SK.map(sk=>{
     const p=outPieces(sk),set=outSet(sk),worn=act==sk,nxt=set<3?set+1:0;
     return '<div class="row'+(worn?' on':'')+'" style="flex-direction:column;align-items:stretch"><span>'+sk+(worn?' · worn now':'')+'<small>'+(set?OUT_TIERS[set]+' set: '+OUT_SETNAME[set]+' · '+outPerkTxt(sk,set):'No set bonus yet')+(outXp(sk)>0?' · pieces +'+(Math.round(outXp(sk)*1000)/10)+'% xp':'')+'</small></span>'
       +'<div class="chips" style="margin:6px 0 0">'+OUT_SLOTS.map((n,i)=>'<span class="mu" style="border:1px solid var(--ln);border-radius:999px;padding:2px 10px;font-size:14px;'+(p[i]?'color:var(--tx);':'')+'">'+n+' · '+(p[i]?OUT_TIERS[p[i]]:'none')+'</span>').join('')+'</div>'
-      +(nxt?'<small class="mu" style="margin-top:6px">Next, the '+OUT_TIERS[nxt]+' set'+(set==0?' (needs all four pieces)':' (upgrade every piece to '+OUT_TIERS[nxt]+')')+': '+outPerkTxt(sk,nxt)+'.</small>':'')+'</div>';
+      +(nxt?'<small class="mu" style="margin-top:6px">Next, the '+OUT_TIERS[nxt]+' set'+(set==0?' (needs all five pieces)':' (upgrade every piece to '+OUT_TIERS[nxt]+')')+': '+outPerkTxt(sk,nxt)+'.</small>':'')+'</div>';
   }).join('');
   return h;
 }

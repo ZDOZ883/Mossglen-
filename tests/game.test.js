@@ -1205,18 +1205,20 @@ describe('tutorial and item directory', () => {
     for (const k of ['xp', 'spd', 'yld', 'save', 'burn']) for (const sk of ['Mining', 'Foraging', 'Cooking']) base[k + sk] = g.ev(`cb('${k}','${sk}')`);
     const d = (k, sk) => g.ev(`cb('${k}','${sk}')`) - base[k + sk];
     g.ev(`gameState.og={'Mining:0':3,'Mining:1':3,'Mining:2':3};refreshFx()`);
-    assert.ok(Math.abs(d('xp', 'Mining') - 0.045) < 1e-9, 'three Master pieces give 4.5% xp');
+    assert.ok(Math.abs(d('xp', 'Mining') - 0.036) < 1e-9, 'three Master pieces give 3.6% xp');
     assert.equal(g.ev(`outSet('Mining')`), 0, 'three pieces are not a set');
     assert.ok(Math.abs(d('spd', 'Mining')) < 1e-9);
-    g.ev(`gameState.og['Mining:3']=1;refreshFx()`);
+    g.ev(`gameState.og['Mining:3']=3;refreshFx()`);
+    assert.equal(g.ev(`outSet('Mining')`), 0, 'four of five pieces are not a set');
+    g.ev(`gameState.og['Mining:4']=1;refreshFx()`);
     assert.equal(g.ev(`outSet('Mining')`), 1, 'one Novice piece holds the set at Novice');
     assert.ok(Math.abs(d('spd', 'Mining') - 0.03) < 1e-9);
     assert.ok(Math.abs(d('yld', 'Mining')) < 1e-9, 'Novice set has no yield bonus yet');
     assert.ok(Math.abs(d('spd', 'Foraging')) < 1e-9, 'it only applies to its own skill');
-    g.ev(`gameState.og['Mining:3']=3;refreshFx()`);
+    g.ev(`gameState.og['Mining:4']=3;refreshFx()`);
     assert.equal(g.ev(`outSet('Mining')`), 3);
-    assert.ok(d('yld', 'Mining') > 0 && d('xp', 'Mining') > 0.06);
-    g.ev(`gameState.og={'Cooking:0':3,'Cooking:1':3,'Cooking:2':3,'Cooking:3':3};refreshFx()`);
+    assert.ok(d('yld', 'Mining') > 0 && d('xp', 'Mining') > 0.05);
+    g.ev(`gameState.og={'Cooking:0':3,'Cooking:1':3,'Cooking:2':3,'Cooking:3':3,'Cooking:4':3};refreshFx()`);
     assert.ok(d('burn', 'Cooking') > 0 && d('save', 'Cooking') > 0, 'crafters save materials and burn less');
   });
 
@@ -1224,7 +1226,7 @@ describe('tutorial and item directory', () => {
     const g = load({ seed: 6 });
     g.ev(`gameState.sp='Badger'`);
     const eq0 = g.ev(`JSON.stringify(gameState.eq)+gameState.style`);
-    for (let i = 0; i < 48; i++) g.ev(`outfitGive(1)`);
+    for (let i = 0; i < 60; i++) g.ev(`outfitGive(1)`);
     assert.equal(g.ev(`outMissing(1)`), 0, 'every missing piece is found with no wasted drops');
     const a0 = g.ev('gameState.a');
     g.ev(`outfitGive(1)`);

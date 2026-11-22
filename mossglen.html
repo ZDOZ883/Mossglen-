@@ -925,10 +925,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   });
   var OUTFIT_SK = ["Foraging", "Woodcutting", "Fishing", "Mining", "Hunting", "Farming", "Cooking", "Smithing", "Fletching", "Enchanting", "Tailoring", "Alchemy"];
   var OUT_GATHER = ["Foraging", "Woodcutting", "Fishing", "Mining", "Hunting", "Farming"];
-  var OUT_SLOTS = ["Cap", "Vest", "Gloves", "Boots"];
+  var OUT_SLOTS = ["Cap", "Vest", "Gloves", "Boots", "Legs"];
   var OUT_TIERS = ["", "Novice", "Adept", "Master"];
   var OUT_NOUN = { Foraging: "Forager", Woodcutting: "Woodcutter", Fishing: "Angler", Mining: "Miner", Hunting: "Hunter", Farming: "Farmer", Cooking: "Cook", Smithing: "Smith", Fletching: "Fletcher", Enchanting: "Enchanter", Tailoring: "Tailor", Alchemy: "Alchemist" };
-  var OUT_XP = [0, 5e-3, 0.01, 0.015];
+  var OUT_XP = [0, 4e-3, 8e-3, 0.012];
   var OUT_DUP = [0, 150, 600, 2e3];
   var OUT_SETNAME = ["", "Steady Hands", "Bountiful", "Mastery"];
   var outName = (sk, slot, tier) => OUT_TIERS[tier] + " " + OUT_NOUN[sk] + "\u2019s " + OUT_SLOTS[slot];
@@ -989,8 +989,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     X.refreshFx();
     return outKey(sk, i);
   }
-  var OUT_ACT_RATE = 5e3;
-  var OUT_BOSS = [0.04, 100], OUT_EXP = [0.02, 0.01, 25], OUT_RAID = [0.12, 12];
+  var OUT_ACT_RATE = 8e3;
+  var OUT_BOSS = [0.01, 300], OUT_EXP = [0.015, 5e-3, 60], OUT_RAID = [0.05, 30];
   SKACT.push((sk) => {
     if (!OUTFIT_SK.includes(sk) || Math.random() * OUT_ACT_RATE >= 1) return;
     if (OUT_SLOTS.some((_, i) => outTier(sk, i) < 1)) outfitGive(1, sk);
@@ -2217,12 +2217,12 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   });
   function outfitsView() {
     const act = gameState.cur ? X.skOf(gameState.cur) : null, fav = gameState.ofocus || "";
-    let h = '<h2>Skilling outfits</h2><p class="sub">Each skill has a four-piece outfit in three tiers. Every piece adds a little xp. Wear all four and you get a set bonus at the tier of your weakest piece. The best outfit for the skill you train is worn automatically, and your combat gear stays as it was. Novice pieces turn up while you train the skill itself (about 1 in 5,000 actions). Better pieces drop from zone bosses, expeditions and raids.</p>';
+    let h = '<h2>Skilling outfits</h2><p class="sub">Each skill has a five-piece outfit (Cap, Vest, Gloves, Boots, Legs) in three tiers. Every piece adds a little xp. Wear all five and you get a set bonus at the tier of your weakest piece. The best outfit for the skill you train is worn automatically, and your combat gear stays as it was. Novice pieces turn up while you train the skill itself (about 1 in 8,000 actions). Better pieces drop from zone bosses, expeditions and raids.</p>';
     h += '<p class="mu" style="margin:0 0 4px">Drops lean toward (60%):</p><div class="chips"><button class="' + (fav ? "" : "on") + '" data-ofocus="">Any skill</button>' + OUTFIT_SK.map((s) => '<button class="' + (fav == s ? "on" : "") + '" data-ofocus="' + s + '">' + s + "</button>").join("") + "</div>";
     h += '<p class="mu">Pieces found: ' + outFound() + " of " + OUTFIT_SK.length * OUT_SLOTS.length + ". Dropping an outfit upgrades a piece you are missing first.</p>";
     h += OUTFIT_SK.map((sk) => {
       const p = outPieces(sk), set = outSet(sk), worn = act == sk, nxt = set < 3 ? set + 1 : 0;
-      return '<div class="row' + (worn ? " on" : "") + '" style="flex-direction:column;align-items:stretch"><span>' + sk + (worn ? " \xB7 worn now" : "") + "<small>" + (set ? OUT_TIERS[set] + " set: " + OUT_SETNAME[set] + " \xB7 " + outPerkTxt(sk, set) : "No set bonus yet") + (outXp(sk) > 0 ? " \xB7 pieces +" + Math.round(outXp(sk) * 1e3) / 10 + "% xp" : "") + '</small></span><div class="chips" style="margin:6px 0 0">' + OUT_SLOTS.map((n, i) => '<span class="mu" style="border:1px solid var(--ln);border-radius:999px;padding:2px 10px;font-size:14px;' + (p[i] ? "color:var(--tx);" : "") + '">' + n + " \xB7 " + (p[i] ? OUT_TIERS[p[i]] : "none") + "</span>").join("") + "</div>" + (nxt ? '<small class="mu" style="margin-top:6px">Next, the ' + OUT_TIERS[nxt] + " set" + (set == 0 ? " (needs all four pieces)" : " (upgrade every piece to " + OUT_TIERS[nxt] + ")") + ": " + outPerkTxt(sk, nxt) + ".</small>" : "") + "</div>";
+      return '<div class="row' + (worn ? " on" : "") + '" style="flex-direction:column;align-items:stretch"><span>' + sk + (worn ? " \xB7 worn now" : "") + "<small>" + (set ? OUT_TIERS[set] + " set: " + OUT_SETNAME[set] + " \xB7 " + outPerkTxt(sk, set) : "No set bonus yet") + (outXp(sk) > 0 ? " \xB7 pieces +" + Math.round(outXp(sk) * 1e3) / 10 + "% xp" : "") + '</small></span><div class="chips" style="margin:6px 0 0">' + OUT_SLOTS.map((n, i) => '<span class="mu" style="border:1px solid var(--ln);border-radius:999px;padding:2px 10px;font-size:14px;' + (p[i] ? "color:var(--tx);" : "") + '">' + n + " \xB7 " + (p[i] ? OUT_TIERS[p[i]] : "none") + "</span>").join("") + "</div>" + (nxt ? '<small class="mu" style="margin-top:6px">Next, the ' + OUT_TIERS[nxt] + " set" + (set == 0 ? " (needs all five pieces)" : " (upgrade every piece to " + OUT_TIERS[nxt] + ")") + ": " + outPerkTxt(sk, nxt) + ".</small>" : "") + "</div>";
     }).join("");
     return h;
   }
@@ -3614,7 +3614,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     const rl = RD.map((r, i) => '<div style="margin-top:6px"><b>' + r.n + "</b> \xB7 combat level " + r.cl + ", " + r.party + " members of level " + r.mlv + "+<br>" + (r.core ? r.core[0] + " (" + r.core[1] + " or " + (r.core[1] + 1) + " per clear), " : "") + "trophy <b>" + IT[r.tr].n + "</b> (about 6% per clear, guaranteed by 25), " + PRE[Math.min(10, [7, 8, 9, 10][i])] + " gear (about 1 in 5, guaranteed by 8), and the raid pet.</div>").join("");
     const note = '<p style="margin-top:6px">Chances shown are base rates. Rare-drop bonuses from gear, pets, blessings and tasks multiply them, and bad-luck protection guarantees a drop eventually. Gear can also be bought in the Shop and crafted from materials in the Gear tab.</p>';
     const od = OUTFIT_SK.map((sk) => '<div style="margin-top:6px"><b>' + sk + "</b>: " + [1, 2, 3].map((t) => OUT_TIERS[t] + " set, " + outPerkTxt(sk, t)).join("; ") + "</div>").join("");
-    const ol = "<p>Four pieces per skill (Cap, Vest, Gloves, Boots), three tiers. Each piece gives a little xp. A full set gives the bonus of its weakest piece. Novice pieces also turn up while you train that skill (about 1 in 5,000 actions). Zone bosses drop Novice pieces in zones 1 to 4, Adept in zones 5 to 8 and Master in the deep zones. Expeditions and raids drop them too (raids give Adept and Master). Drops only roll for pieces you are missing, and you can set the skill they favour in Gear > Outfits.</p>" + od;
+    const ol = "<p>Five pieces per skill (Cap, Vest, Gloves, Boots, Legs), three tiers. Each piece gives a little xp. A full set of five gives the bonus of its weakest piece. Novice pieces also turn up while you train that skill (about 1 in 8,000 actions). Zone bosses drop Novice pieces in zones 1 to 4, Adept in zones 5 to 8 and Master in the deep zones. Expeditions and raids drop them too (raids give Adept and Master). Drops only roll for pieces you are missing, and you can set the skill they favour in Gear > Outfits.</p>" + od;
     const ul = "<p>Each boss has one signature weapon, about 12% stronger than an Heirloom of its tier, for the style listed. They are extremely rare and found once each.</p>" + BWEAPONS.map((w) => '<div style="margin-top:6px">' + uniqLine(w).replace("Signature weapon ", "<b>" + (w.z != null ? w.boss : RD[w.raid].st[RD[w.raid].st.length - 1][0]) + "</b>: ") + "</div>").join("");
     return dens("Item directory \xB7 boss signature weapons", ul) + dens("Item directory \xB7 skilling outfits", ol) + dens("Item directory \xB7 zones", note + zl) + dens("Item directory \xB7 delves and expeditions", dl) + dens("Item directory \xB7 raids", rl);
   }

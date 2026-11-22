@@ -1,16 +1,17 @@
-// Skilling outfits: four pieces per skill (Cap, Vest, Gloves, Boots), three tiers (Novice, Adept, Master).
+// Skilling outfits: five pieces per skill (Cap, Vest, Gloves, Boots, Legs), three tiers (Novice, Adept, Master).
 // Only the best piece of each slot matters, so each is stored as a tier number. Pieces give a little xp for their skill.
-// Wearing all four gives a set perk at the tier of your weakest piece. Outfits are worn automatically for the skill you train,
+// Wearing all five gives a set perk at the tier of your weakest piece. Outfits are worn automatically for the skill you train,
 // and they never touch combat gear. Pieces drop from zone bosses, expeditions and raids.
 import { FXSRC, SKACT, gameState, say } from './00-state';
 import { X } from './registry';
 
 export const OUTFIT_SK = ['Foraging', 'Woodcutting', 'Fishing', 'Mining', 'Hunting', 'Farming', 'Cooking', 'Smithing', 'Fletching', 'Enchanting', 'Tailoring', 'Alchemy'];
 export const OUT_GATHER = ['Foraging', 'Woodcutting', 'Fishing', 'Mining', 'Hunting', 'Farming'];
-export const OUT_SLOTS = ['Cap', 'Vest', 'Gloves', 'Boots'];
+// Legs were added after launch, so they sit last: saved pieces keep their slot numbers.
+export const OUT_SLOTS = ['Cap', 'Vest', 'Gloves', 'Boots', 'Legs'];
 export const OUT_TIERS = ['', 'Novice', 'Adept', 'Master'];
 export const OUT_NOUN: Record<string, string> = { Foraging: 'Forager', Woodcutting: 'Woodcutter', Fishing: 'Angler', Mining: 'Miner', Hunting: 'Hunter', Farming: 'Farmer', Cooking: 'Cook', Smithing: 'Smith', Fletching: 'Fletcher', Enchanting: 'Enchanter', Tailoring: 'Tailor', Alchemy: 'Alchemist' };
-export const OUT_XP = [0, .005, .01, .015];
+export const OUT_XP = [0, .004, .008, .012];
 export const OUT_DUP = [0, 150, 600, 2000];
 export const OUT_SETNAME = ['', 'Steady Hands', 'Bountiful', 'Mastery'];
 
@@ -19,7 +20,7 @@ export const outKey = (sk: string, slot: number) => sk + ':' + slot;
 export const outOwned = () => gameState.og = gameState.og || {};
 export const outTier = (sk: string, slot: number) => outOwned()[outKey(sk, slot)] || 0;
 export const outPieces = (sk: string) => OUT_SLOTS.map((_, i) => outTier(sk, i));
-// The set tier is that of the weakest piece, and only counts once all four slots are filled.
+// The set tier is that of the weakest piece, and only counts once all five slots are filled.
 export const outSet = (sk: string) => Math.min(...outPieces(sk));
 export const outXp = (sk: string) => outPieces(sk).reduce((s, t) => s + OUT_XP[t], 0);
 // How many pieces could still be upgraded to this tier. Zero means a drop of that tier would be wasted.
@@ -69,10 +70,10 @@ export function outfitGive(tier: number, only?: string): string | null {
   X.refreshFx();
   return outKey(sk, i);
 }
-// Training a skill can turn up its own Novice pieces (about 1 in 5,000 actions), like RuneScape's activity-based outfits.
-export const OUT_ACT_RATE = 5000;
+// Training a skill can turn up its own Novice pieces (about 1 in 8,000 actions), like RuneScape's activity-based outfits.
+export const OUT_ACT_RATE = 8000;
 // Other sources: [chance, guaranteed after this many tries]. Boss kills, expedition wins (chance = base + step per tier), raid clears.
-export const OUT_BOSS = [.04, 100], OUT_EXP = [.02, .01, 25], OUT_RAID = [.12, 12];
+export const OUT_BOSS = [.01, 300], OUT_EXP = [.015, .005, 60], OUT_RAID = [.05, 30];
 SKACT.push(sk => {
   if (!OUTFIT_SK.includes(sk) || Math.random() * OUT_ACT_RATE >= 1) return;
   if (OUT_SLOTS.some((_, i) => outTier(sk, i) < 1)) outfitGive(1, sk);
