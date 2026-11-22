@@ -423,6 +423,80 @@ describe('gear slots', () => {
     assert.ok(g.ev(`mdmg('p_z6',${e})`) > g.ev(`mdmg('p_Attack',${e})`) && g.ev(`mdmg('p_r0',${e})`) > g.ev(`mdmg('p_z6',${e})`), 'boss pets beat skill pets and raid pets beat boss pets');
   });
 
+  it('save codes round-trip, bad codes are refused, and the old save is backed up on import', () => {
+    const g = load({ seed: 3 });
+    g.ev(`gameState.sp='Badger';gameState.a=12345;gameState.xp.Mining=4242;gameState.log=['Ünïcode ✓']`);
+    const code = g.ev('exportSave()');
+    assert.ok(code.startsWith('MG1:'));
+    assert.match(g.ev('importSave("junk")'), /not a Mossglen/);
+    assert.match(g.ev('importSave("")'), /Paste/);
+    assert.match(g.ev(`importSave(JSON.stringify({xp:{},sp:'x',v:99}))`), /newer version/);
+    assert.match(g.ev(`importSave(JSON.stringify({a:1}))`), /does not look/);
+    g.ev('gameState.a=1');
+    assert.equal(g.ev(`importSave(${JSON.stringify(code)})`), null);
+    assert.equal(g.ev(`JSON.parse(localStorage.getItem('hollowbrook1')).a`), 12345);
+    assert.equal(g.ev(`JSON.parse(localStorage.getItem('hollowbrook1')).log[0]`), 'Ünïcode ✓');
+    assert.equal(g.ev(`JSON.parse(localStorage.getItem('hollowbrook1_bak')).a`), 1, 'the previous save is kept as a backup');
+  });
+
+  it('coming back after time away shows a summary that can be dismissed', () => {
+    const g = load({ seed: 9, save: OLD_SAVE, awaySec: 3600 });
+    const r = g.ev('gameState.rep');
+    if (r) {
+      assert.ok(r.secs >= 3000);
+      assert.ok(/While you were away/.test(g.view('skills')));
+      g.click({ repx: '1' });
+      assert.ok(!g.ev('!!gameState.rep'));
+    }
+  });
+
+  it('the stats page lists the journey and tracks acorns earned and spent', () => {
+    const g = load({ seed: 10 });
+    g.ev(`gameState.sp='Badger';gameState.a=0;gameState.st={t:0,earn:0,spend:0}`);
+    g.ev('const a0=gameState.a;gameState.a+=500;trackAcorns(a0)');
+    g.ev('const a1=gameState.a;gameState.a-=120;trackAcorns(a1)');
+    assert.equal(g.ev('gameState.st.earn'), 500);
+    assert.equal(g.ev('gameState.st.spend'), 120);
+    g.ev(`set_logSub('stats')`);
+    const h = g.view('log');
+    assert.ok(/Acorns earned/.test(h) && /Enemies defeated/.test(h) && /Pets found/.test(h));
+    assert.ok(!/NaN|undefined/.test(h));
+    g.ev(`set_logSub('log')`);
+  });
+
+  it('non-melee styles show one Focused stance instead of two identical ones', () => {
+    const g = load({ seed: 11 });
+    g.ev(`gameState.sp='Badger';gameState.style='Ranged';gameState.stance='agg'`);
+    assert.equal(g.ev('stanceList().join()'), 'bal,acc,def');
+    assert.equal(g.ev('stanceNow()'), 'acc');
+    assert.equal(g.ev('stanceName("acc")'), 'Focused');
+    g.ev(`gameState.style='Melee'`);
+    assert.equal(g.ev('stanceList().length'), 4);
+    assert.equal(g.ev('stanceName("acc")'), 'Accurate');
+  });
+
+  it('recruit signature perks unlock at kit tiers 5 and 10 and never apply to pets', () => {
+    const g = load({ seed: 15 });
+    g.ev(`gameState.sp='Badger';gameState.xp.Leadership=XT[60];gameState.hired={fox:1};gameState.bench={};gameState.mt={fox:{k:'war'}};gameState.cx.fox=XT[60];gameState.mk={}`);
+    const p0 = g.ev('pk("dmg")');
+    g.ev('gameState.mk.fox=4');
+    const p4 = g.ev('pk("dmg")');
+    g.ev('gameState.mk.fox=5');
+    const p5 = g.ev('pk("dmg")');
+    g.ev('gameState.mk.fox=10');
+    const p10 = g.ev('pk("dmg")');
+    assert.ok(p4 > p0 && p5 - p4 > 0.01, 'tier 5 adds the first signature step');
+    assert.ok(p10 > p5 && (1 + p10) / (1 + p0) < 1.1, 'tier 10 adds more, but changes your damage by under 10%');
+    assert.equal(g.ev('sigPk("p_Attack","dmg")'), 0);
+  });
+
+  it('seasons now touch Farming and Alchemy but never combat', () => {
+    const g = load({ seed: 16 });
+    const bad = g.ev(`WX.flatMap(w=>w.fx.filter(e=>['Foraging','Woodcutting','Fishing','Mining','Hunting','Cooking','Farming','Alchemy'].indexOf(e[2][0])<0).map(e=>w.id+':'+e[0]+':'+e[2]))`);
+    assert.equal(bad.length, 0, String(bad));
+    assert.ok(g.ev(`WX.every(w=>w.fx.some(e=>e[2][0]=='Farming'||e[2][0]=='Alchemy'))`), 'every season has a farming or alchemy effect');
+  });
+
   it('old saves start Ranged and Magic at their Attack xp', () => {
     const g = load({ seed: 6 });
     g.ev(`gameState.xp.Attack=XT[50];delete gameState.xp.Ranged;delete gameState.xp.Magic;gameState.v=2;migrate()`);
@@ -514,7 +588,7 @@ describe('expeditions', () => {
 
 // ---------------------------------------------------------------------------
 describe('barracks, seasons and species', () => {
-  it('the barracks trains members and idle members trickle', () => {
+  it('the barracks trains only the members sent there; resting members do not trickle', () => {
     const g = load({ seed: 3 });
     g.ev(`gameState.sp='Otter';gameState.hired={mole:1,hare:1};gameState.mt={mole:{k:'idle'},hare:{k:'idle'}};gameState.bu={bar:1};gameState.a=1e9;`);
     g.click({ assign: 'mole:bar' });
@@ -522,7 +596,7 @@ describe('barracks, seasons and species', () => {
     g.ev('tick(3600,true)');
     const bar = g.ev('gameState.cx.mole||0') - x0, idle = g.ev('gameState.cx.hare||0') - y0;
     assert.equal(Math.round(bar), 400);
-    assert.ok(idle > 0 && idle < bar / 2);
+    assert.equal(idle, 0, 'resting members no longer trickle xp');
   });
 
   it('assigning to the barracks needs a barracks', () => {

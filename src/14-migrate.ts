@@ -22,7 +22,7 @@ import { validTask } from './08-party-state';
 export const SAVE_VERSION = 3;
 
 function ensureDefaults() {
-  gameState.tier=gameState.tier||{};gameState.best=gameState.best||{};gameState.cx=gameState.cx||{};gameState.bench=gameState.bench||{};gameState.mk=gameState.mk||{};gameState.lead=gameState.lead||null;gameState.style=gameState.style||'Melee';gameState.gear=gameState.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(gameState.xp.Attack==null&&(gameState.xp.Melee||gameState.xp.Ranged||gameState.xp.Magic)){const b0=Math.max(gameState.xp.Melee||0,gameState.xp.Ranged||0,gameState.xp.Magic||0);gameState.xp.Attack=gameState.xp.Strength=gameState.xp.Defense=b0}
+  gameState.tier=gameState.tier||{};gameState.best=gameState.best||{};gameState.cx=gameState.cx||{};gameState.bench=gameState.bench||{};gameState.mk=gameState.mk||{};gameState.st=gameState.st||{t:0,earn:0,spend:0};gameState.lead=gameState.lead||null;gameState.style=gameState.style||'Melee';gameState.gear=gameState.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(gameState.xp.Attack==null&&(gameState.xp.Melee||gameState.xp.Ranged||gameState.xp.Magic)){const b0=Math.max(gameState.xp.Melee||0,gameState.xp.Ranged||0,gameState.xp.Magic||0);gameState.xp.Attack=gameState.xp.Strength=gameState.xp.Defense=b0}
   COMBAT_SKILLS.forEach(k=>gameState.xp[k]=gameState.xp[k]||(k=='Vitality'?XT[10]:0));gameState.tool=gameState.tool||{Foraging:0,Woodcutting:0,Fishing:0,Mining:0};if(gameState.cur&&gameState.cur.k=='s'&&!ACHIEVEMENTS.find(a=>a.id==gameState.cur.id))gameState.cur=null;
   if(gameState.cur&&gameState.cur.k=='c'&&!ENEMIES.find(e=>e.id==gameState.cur.id))gameState.cur=null;
   if(gameState.cur&&gameState.cur.k=='d')gameState.cur=null; // live delves were replaced by timed expeditions
@@ -46,7 +46,26 @@ export const MIGRATIONS: { v: number; run: () => void }[] = [
   { v: 3, run: () => { gameState.xp.Ranged = Math.max(gameState.xp.Ranged || 0, gameState.xp.Attack || 0); gameState.xp.Magic = Math.max(gameState.xp.Magic || 0, gameState.xp.Attack || 0); } },
 ];
 
+// Save export and import. A save code is "MG1:" plus the save as base64 text (plain JSON where base64 is unavailable).
+const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+function toB64(s: string) { const u = unescape(encodeURIComponent(s)); let o = ''; for (let i = 0; i < u.length; i += 3) { const a = u.charCodeAt(i), b = u.charCodeAt(i + 1), c = u.charCodeAt(i + 2); o += B64[a >> 2] + B64[((a & 3) << 4) | ((b || 0) >> 4)] + (i + 1 < u.length ? B64[((b & 15) << 2) | ((c || 0) >> 6)] : '=') + (i + 2 < u.length ? B64[c & 63] : '='); } return o; }
+function fromB64(t: string) { const s = t.replace(/[^A-Za-z0-9+/]/g, ''); let o = ''; for (let i = 0; i < s.length; i += 4) { const n = [0, 1, 2, 3].map(j => (i + j < s.length ? B64.indexOf(s[i + j]) : -1)); o += String.fromCharCode((n[0] << 2) | (n[1] >> 4)); if (n[2] >= 0) o += String.fromCharCode(((n[1] & 15) << 4) | (n[2] >> 2)); if (n[3] >= 0) o += String.fromCharCode(((n[2] & 3) << 6) | n[3]); } return decodeURIComponent(escape(o)); }
+export const exportSave = () => 'MG1:' + toB64(JSON.stringify(gameState));
+/** Replace the current save with a pasted code. Returns an error message, or null when the save was accepted (the caller reloads). */
+export function importSave(text: string): string | null {
+  const t = String(text || '').trim();
+  if (!t) return 'Paste a save code first.';
+  let data: any;
+  try { data = JSON.parse(t.startsWith('MG1:') ? fromB64(t.slice(4)) : t.replace(/^MG0:/, '')); } catch (e) { return 'That is not a Mossglen save code.'; }
+  if (!data || typeof data != 'object' || !data.xp || typeof data.xp != 'object' || !data.sp) return 'That code does not look like a Mossglen save.';
+  if ((data.v || 1) > SAVE_VERSION) return 'That save is from a newer version of Mossglen. Open the newest version first.';
+  try { localStorage.setItem('hollowbrook1_bak', JSON.stringify(gameState)); localStorage.setItem('hollowbrook1', JSON.stringify(data)); } catch (e) { return 'Could not write the save in this browser.'; }
+  return null;
+}
+
 export function migrate() {
+  // Keep a copy of the save as it was before any upgrade touches it.
+  if (gameState.sp && (gameState.v || 1) < SAVE_VERSION) { try { localStorage.setItem('hollowbrook1_bak', JSON.stringify(gameState)); } catch (e) {} }
   ensureDefaults();
   let v = gameState.v || 1;
   for (const m of MIGRATIONS) if (v < m.v) { m.run(); v = m.v; }

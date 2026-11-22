@@ -17,7 +17,7 @@ interface Expedition {
 }
 interface SaveState {
   sp: string | null; a: number; hp: number; xp: Record<string, number>; inv: Record<string, number>;
-  own: Record<string, number>; eq: Record<string, string | null | undefined | any>; cur: any; hired: Record<string, number>; mk: Record<string, number>; hrr?: number; bench: Record<string, number>;
+  own: Record<string, number>; eq: Record<string, string | null | undefined | any>; cur: any; hired: Record<string, number>; st?: { t: number; earn: number; spend: number }; rep?: any; mk: Record<string, number>; hrr?: number; bench: Record<string, number>;
   mt: Record<string, Task>; cx: Record<string, number>; ex: Expedition | null; t: number;
   [k: string]: any;
 }

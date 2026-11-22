@@ -90,6 +90,18 @@ export const pm=()=>(FM[gameState.form]||FM.steady).party+cb('pmult');
 // Member combat stats are their level shaped by role: [Attack, Defense, Vitality] multipliers, so a party's overall strength stays the same while roles matter.
 export const STAT_MULT:Record<string,[number,number,number]>={Tank:[.9,1.05,1.05],Striker:[1.1,.85,.85],Healer:[.9,.95,1.15],Scout:[1,.9,.9],Specialist:[1,1,1],Pet:[1,1,1]};
 // Kit stands in for gear: recruits are better equipped the later they join, boss pets carry a little more than skill pets, and raid pets the most.
+// Signature perks: recruits (not pets) earn a small extra of their own at kit tiers 5 and 10, so they keep a reason to exist beside the stronger pets.
+export const KITSIG:Record<string,[Record<string,number>,Record<string,number>,string]>={
+  mole:[{taken:.006},{taken:.008,hp:.012},'Hardened hide: more damage reduction, then more health'],
+  hare:[{speed:.016},{speed:.02,acc:.012},'Fleet of foot: faster expeditions, then better aim'],
+  owl:[{loot:.04},{loot:.06,succ:1},'Keen eyes: more expedition loot, then better odds'],
+  otter:[{heal:.0016},{heal:.0024,hp:.008},'Steady paws: stronger mending, then more health'],
+  badger:[{taken:.008},{taken:.008,succ:1},'Immovable: more damage reduction, then better expedition odds'],
+  fox:[{dmg:.012},{dmg:.012,acc:.008},'Flank master: more damage, then better aim'],
+  dormouse:[{heal:.002},{heal:.004},'Green thumb: a little more mending'],
+  shrew:[{dmg:.004},{dmg:.008},'Sharp tongue: a little more damage'],
+  magpie:[{loot:.04},{loot:.08},'Eye for shinies: more expedition loot']};
+export const sigPk=(k:string,n:string)=>{const s=KITSIG[k],t=kitTier(k);return s?(t>=5?s[0][n]||0:0)+(t>=10?s[1][n]||0:0):0};
 export const KIT_STEP=.01,KIT_COST=2,KIT_MAX=10;
 export const kitTier=(k:string)=>MEMBERS[k]&&!MEMBERS[k].pet?Math.min(KIT_MAX,gameState.mk[k]||0):0;
 export const kit=(k:string)=>{if(/^p_z\d+$/.test(k))return .045+.012*(+k.slice(3));if(/^p_r\d+$/.test(k))return .18+.03*(+k.slice(3));if(MEMBERS[k].pet)return 0;return KIT_STEP*kitTier(k)};
@@ -100,7 +112,7 @@ export const mst=(k:string)=>{const c=cl(k),m=STAT_MULT[MEMBERS[k].role]||[1,1,1
 // Each perk grows with the stat that fits it: damage and accuracy with Attack, damage taken with Defense, healing and health with Vitality.
 const PSTAT:Record<string,'a'|'d'|'v'>={dmg:'a',acc:'a',taken:'d',heal:'v',hp:'v'};
 export const plv=(k:string,n:string)=>{const s=PSTAT[n];return s?mst(k)[s]:cl(k)};
-export const pk=(n:string)=>Math.min(({taken:.45,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+(MEMBERS[k].pk[n]||0)*fw(k)*(1+(plv(k,n)-1)*.02)*(1+kit(k))*pm()*(MEMBERS[k].pet?1.25:1),0));
+export const pk=(n:string)=>Math.min(({taken:.45,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+((MEMBERS[k].pk[n]||0)+sigPk(k,n))*fw(k)*(1+(plv(k,n)-1)*.02)*(1+kit(k))*pm()*(MEMBERS[k].pet?1.25:1),0));
 export function mxp(k:string,x:number){const b=cl(k);gameState.cx[k]=(gameState.cx[k]||0)+x*(MEMBERS[k].pet?1.5:1);if(cl(k)>b)say(MEMBERS[k].n+' reaches level '+cl(k)+'.')}
 export function ldx(x:number){const b=LD();gameState.xp.Leadership+=x;const a=LD();if(a>b){const u=HK.filter(k=>MEMBERS[k].lt>b&&MEMBERS[k].lt<=a).map(k=>MEMBERS[k].n);say('Leadership reaches level '+a+'.'+(LT.some(l=>l>b&&l<=a)?' New party slot.':'')+(u.length?' Now available: '+u.join(', ')+'.':''))}}
 export const onTask=(e:Enemy)=>!!gameState.task&&gameState.task.id==e.id;

@@ -1,6 +1,6 @@
 import { gameState, TASKS } from './00-state';
 import { X } from './registry';
-import { COMBAT_SKILLS, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
+import { COMBAT_SKILLS, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, KITSIG, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
 import { AF, CE, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
 import { GATE, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
@@ -71,7 +71,7 @@ export function perkTxt(k:string){return Object.keys(MEMBERS[k].pk).map(n=>{cons
 export const kitRow=(k:string)=>{
   if(MEMBERS[k].pet)return '';
   const t=kitTier(k),n=kitNext(k);
-  return '<div class="chips" style="margin:8px 0 0"><small style="align-self:center">Kit: '+(t?PRE[t]+' (tier '+t+', +'+t+'% to perks and damage)':'none')+'</small>'+(n?'<button data-kit="'+k+'"'+(gameState.a<n.cost||cl(k)<n.req?' disabled':'')+'>Outfit '+PRE[n.t]+' · '+n.cost.toLocaleString()+(cl(k)<n.req?' · needs level '+n.req:'')+'</button>':'')+'</div>';
+  return '<div class="chips" style="margin:8px 0 0"><small style="align-self:center">Kit: '+(t?PRE[t]+' (tier '+t+', +'+t+'% to perks and damage)':'none')+'</small>'+(KITSIG[k]?'<small class="mu" style="align-self:center">'+(t>=10?'Signature perks unlocked: ':t>=5?'First signature perk unlocked (second at tier 10): ':'Signature perks at tiers 5 and 10: ')+KITSIG[k][2]+'.</small>':'')+(n?'<button data-kit="'+k+'"'+(gameState.a<n.cost||cl(k)<n.req?' disabled':'')+'>Outfit '+PRE[n.t]+' · '+n.cost.toLocaleString()+(cl(k)<n.req?' · needs level '+n.req:'')+'</button>':'')+'</div>';
 };
 export const statTxt=(k:string)=>{const s=mst(k);return 'Attack '+s.a+' · Defense '+s.d+' · Vitality '+s.v+(kit(k)>0?' · kit +'+(Math.round(kit(k)*1000)/10)+'%':'')};
 export function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(exOf(k)?exOf(k)!.dur-exOf(k)!.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+Math.round(BRATE(buL('bar'))*mentor()).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+ACHIEVEMENTS.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id!].n:t.k=='f'?'Crafting: '+IT[t.id!].n:t.k=='r'?'Refining: '+RFN[t.id!].n:TASKS[t.k]&&TASKS[t.k].mname?TASKS[t.k].mname!(t):'Resting. Send them to work from a skill page.'}
@@ -105,8 +105,36 @@ export function partyView(){
 }
 export let logSub='log';
 export function set_logSub(v:string){logSub=v}
-export const dataView=()=>'<h2>Your save</h2><p class="mu">Mossglen saves in this browser automatically. There is one character and no resets, so starting over erases everything for good.</p><h2>Danger zone</h2><p class="mu">Erases your character, party, gear and every skill. You will be asked to type ERASE to confirm.</p><p><button class="btn" data-reset="1" style="font-size:14px">Erase all progress</button></p>';
-export const logTabs=()=>'<div class="seg">'+[['log','Collection'],['guide','Guide'],['data','Data']].map(t=>'<button data-logsub="'+t[0]+'" class="'+(logSub==t[0]?'on':'')+'">'+t[1]+'</button>').join('')+'</div>';
+export const repCard=()=>{
+  const r=gameState.rep;if(!r)return '';
+  const bits:string[]=[];
+  if(r.a)bits.push((r.a>0?'+':'')+r.a.toLocaleString()+' acorns');
+  r.xp.forEach((x:any)=>bits.push('+'+x[1].toLocaleString()+' '+x[0]+' xp'));
+  if(r.items>0)bits.push(r.items.toLocaleString()+' items gathered');
+  if(r.kills>0)bits.push(r.kills.toLocaleString()+' enemies defeated');
+  if(r.gear>0)bits.push(r.gear+' new item'+(r.gear>1?'s':'')+' found');
+  if(r.pets>0)bits.push(r.pets+' pet'+(r.pets>1?'s':'')+' found');
+  if(r.member)bits.push('your party trained');
+  return '<div class="stat sans"><div class="mu now">While you were away · '+exFmt(r.secs)+'</div><div>'+(bits.length?bits.join(' · '):'Nothing much happened.')+'</div><div style="margin-top:8px"><button class="btn" data-repx="1" style="font-size:14px">Dismiss</button></div></div>';
+};
+export let saveMsg='';export function set_saveMsg(v:string){saveMsg=v}
+export const dataView=()=>'<h2>Your save</h2><p class="mu">Mossglen saves in this browser automatically, and keeps a backup before any upgrade or import. To move your character to another device or browser, export a save code here and import it there.</p><div class="chips"><button data-savex="export">Show save code</button><button data-savex="copy">Copy</button><button data-savex="download">Download file</button></div><textarea id="savebox" rows="4" style="width:100%;box-sizing:border-box;margin-top:8px" placeholder="Paste a save code here to import it"></textarea><div class="chips"><button data-savex="import">Import this code</button></div><p class="mu" id="savemsg">'+saveMsg+'</p><p class="mu">Importing replaces your current character. Your current save is kept as a backup in this browser first.</p><h2>Danger zone</h2><p class="mu">Erases your character, party, gear and every skill. You will be asked to type ERASE to confirm.</p><p><button class="btn" data-reset="1" style="font-size:14px">Erase all progress</button></p>';
+export function statsView(){
+  const st=gameState.st||{t:0,earn:0,spend:0},sk=GATHER_SKILLS.concat(COMBAT_SKILLS),kills=Object.values(gameState.kc||{}).reduce((s:number,v:any)=>s+v,0) as number,fmt=(n:number)=>Math.round(n).toLocaleString();
+  const rows:[string,string][]=[
+    ['Time played with the game open',exFmt(st.t)],
+    ['Acorns earned',fmt(st.earn)],['Acorns spent',fmt(st.spend)],
+    ['Total level',fmt(sk.reduce((q,k)=>q+lv(gameState.xp[k]),0))],
+    ['Skills at level 99 or higher',sk.filter(k=>lv(gameState.xp[k])>=99).length+' of '+sk.length],
+    ['Enemies defeated',fmt(kills)],
+    ['Raids cleared',fmt(Object.values(gameState.rc||{}).reduce((s:number,v:any)=>s+v,0) as number)],
+    ['Items in the collection log',fmt(Object.keys(gameState.col||{}).length)],
+    ['Pets found',Object.keys(gameState.pets).length+' of '+PETS.length],
+    ['Party roster',roster().length+' recruited · '+nsl()+' of '+slots()+' slots in use']
+  ];
+  return '<h2>Your journey</h2>'+rows.map(r=>'<div class="row"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('')+'<p class="mu">Counts start from the day this feature arrived, except totals that were already recorded.</p>';
+}
+export const logTabs=()=>'<div class="seg">'+[['log','Collection'],['guide','Guide'],['stats','Stats'],['data','Data']].map(t=>'<button data-logsub="'+t[0]+'" class="'+(logSub==t[0]?'on':'')+'">'+t[1]+'</button>').join('')+'</div>';
 const dens=(t:string,b:string)=>'<details class="chip"><summary><span>'+t+'</span><em>open</em></summary><div class="mu">'+b+'</div></details>';
 export function guideView(){
   const capes=Object.keys(CE).map(k=>capeRow(k).replace('<div class="row"><span>','<div class="row"><span><b>'+k+'</b> · ')).join('');
@@ -115,7 +143,7 @@ export function guideView(){
 }
 export function view(){
   if(tab=='burrow')return burrowView();
-  if(tab=='log')return logTabs()+(logSub=='guide'?guideView():logSub=='data'?dataView():logView());
+  if(tab=='log')return logTabs()+(logSub=='guide'?guideView():logSub=='data'?dataView():logSub=='stats'?statsView():logView());
   if(tab=='skills')return skillsView();
   if(tab=='combat')return combatView();
   if(tab=='gear')return gearView();
@@ -131,11 +159,13 @@ export function render(){
     app!.innerHTML='<div class="hero"><span class="leaf">🍃</span><h1>Mossglen</h1></div><p class="sub" style="text-align:center">A quiet valley where small folk work, explore, and nap. Who are you?</p><div class="pick">'+
     Object.keys(SP).map(s=>'<button class="row" data-sp="'+s+'">'+s+'<small>+15% '+SP[s]+' xp</small><small>'+SPX[s].t+'</small><small>'+SPX[s].w+' '+SPX[s].st+' style +4% damage.</small></button>').join('')+'</div>';return;
   }
-  const cn=curName();
+  const cn=curName(),sb=document.getElementById('savebox') as HTMLTextAreaElement|null,sbv=sb?sb.value:'';
   app!.innerHTML='<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">'+gameState.sp+' of the valley · total level '+GATHER_SKILLS.concat(COMBAT_SKILLS).reduce((s,k)=>s+lv(gameState.xp[k]),0)+'</p>'+
   '<div class="stat sans"><div class="mu now">You are currently</div>'+(cn?'<div style="display:flex;justify-content:space-between"><span>'+cn+(gameState.cur.k=='c'?' <small class="mu" id="se"></small>':'')+'</span><button class="btn" data-stop="1">Rest</button></div><div class="bar'+(gameState.cur.k=='c'?' hp':'')+'"><i id="pb"></i></div>':'<span class="mu">Resting. Choose an activity below to begin.</span>')+potStatus()+(hasWork()?'<div class="mu" style="font-size:14px;margin-top:4px">'+workNames()+'</div>':'')+'</div>'+
+  repCard()+
   '<nav>'+[['skills','Skills','leaf'],['combat','Fight','swords'],['gear','Gear','shield'],['party','Party','paw'],['delve','Explore','lantern'],['burrow','Burrow','burrow'],['log','Log','tome'],['pack','Pack','satchel']].map(t=>'<button data-tab="'+t[0]+'" class="'+(tab==t[0]?'on':'')+'"><i>'+icon(t[2],25)+'</i>'+t[1]+'</button>').join('')+'</nav>'+
   view()+'<div id="log">'+gameState.log.map((l:number)=>'<p>'+l+'</p>').join('')+'</div>';
+  {const nb=document.getElementById('savebox') as HTMLTextAreaElement|null;if(nb&&sbv)nb.value=sbv}
   bars();
 }
 

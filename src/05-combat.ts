@@ -69,6 +69,12 @@ export function arenaView(){
   else h+='<p class="mu" style="margin:12px 0 0">Not fighting. Pick an enemy below.</p>';
   return h+'<div id="hits" class="hits"></div></div>';
 }
+// Ranged and Magic train one skill, so Accurate and Aggressive would do the same thing there: they show as a single Focused stance.
+const ranged=()=>(gameState.style||'Melee')!='Melee';
+export const stanceList=()=>ranged()?['bal','acc','def']:Object.keys(XS);
+export const stanceNow=()=>ranged()&&gameState.stance=='agg'?'acc':gameState.stance;
+export const stanceName=(k:string)=>ranged()&&k=='acc'?'Focused':XS[k][0];
+export const stanceNote=(k:string)=>ranged()&&k=='acc'?'Trains your '+gameState.style+' skill, which sets both your hit chance and your damage.':XS[k][6];
 export function statTiles(){
   const xs=XS[gameState.stance],note={Attack:'Melee hit chance',Strength:'Melee max hit',Ranged:'Ranged hit chance and max hit',Magic:'Magic hit chance and max hit',Defense:'Enemy hit chance (all styles)',Vitality:'Health '+maxhp()+' (all styles)'};
   const sh=(k:string)=>{const o=OFF[gameState.style]||OFF.Melee;return k=='Defense'?xs[3]:k=='Vitality'?xs[4]:(o[0]==k?xs[1]:0)+(o[1]==k?xs[2]:0)};
@@ -80,7 +86,7 @@ export function combatView(){
   h+='<p class="sub">Melee beats Ranged, Ranged beats Magic, Magic beats Melee: counter an enemy for +25% damage.</p>';
   h+='<div class="pick" style="grid-template-columns:repeat(3,1fr)">'+SL.map(s=>'<button class="row'+(st==s?' on':'')+'" data-style="'+s+'">'+s+'<small>'+(gameState.eq[s]?IT[gameState.eq[s]].n:'No weapon')+'</small></button>').join('')+'</div>';
   h+='<h2>Combat stats</h2>'+statTiles();
-  h+='<h2>Stance <span class="mu" style="display:inline">· where xp goes</span></h2><div class="chips">'+Object.keys(XS).map(k=>'<button class="'+(gameState.stance==k?'on':'')+'" data-stance="'+k+'">'+XS[k][0]+'</button>').join('')+'</div><p class="mu">'+XS[gameState.stance][6]+'</p><div class="chips"><button class="'+(gameState.cmd?'on':'')+'" data-cmd="1">Command: '+(gameState.cmd?'on':'off')+'</button></div><p class="mu">Command splits your xp with Leadership. While members fight beside you, your stat xp drops to 60% and Leadership gains 2.4× a kill’s base xp.'+(gameState.cmd&&!fgn.length?' No members are fighting with you, so Command is doing nothing and you keep full xp.':'')+'</p>';
+  h+='<h2>Stance <span class="mu" style="display:inline">· where xp goes</span></h2><div class="chips">'+stanceList().map(k=>'<button class="'+(stanceNow()==k?'on':'')+'" data-stance="'+k+'">'+stanceName(k)+'</button>').join('')+'</div><p class="mu">'+stanceNote(stanceNow())+'</p><div class="chips"><button class="'+(gameState.cmd?'on':'')+'" data-cmd="1">Command: '+(gameState.cmd?'on':'off')+'</button></div><p class="mu">Command splits your xp with Leadership. While members fight beside you, your stat xp drops to 60% and Leadership gains 2.4× a kill’s base xp.'+(gameState.cmd&&!fgn.length?' No members are fighting with you, so Command is doing nothing and you keep full xp.':'')+'</p>';
   h+='<h2>Form <span class="mu" style="display:inline">· combat buffs</span></h2><div class="chips">'+Object.keys(FM).map(k=>'<button class="'+(gameState.form==k?'on':'')+'" data-form="'+k+'"'+(cl<FM[k].cl?' disabled':'')+'>'+FM[k].n+(cl<FM[k].cl?' (CL '+FM[k].cl+')':'')+'</button>').join('')+'</div><p class="mu">'+FM[gameState.form].d+'</p>';
   h+='<p class="mu">Fighting beside you: '+(fgn.length?fgn.map(k=>MEMBERS[k].n).join(', '):'no one. Recruit members in the Party tab.')+'</p>';
   h+='<h2>Zones</h2><div class="chips">'+ZN.map((q,i)=>'<button class="'+(z==i?'on':'')+'" data-zone="'+i+'"'+(zoneOpen(i)?'':' disabled')+'>'+q[0]+(zoneOpen(i)?'':cl<q[1]?' (CL '+q[1]+')':' (Gate '+q[5]+')')+'</button>').join('')+'</div>';

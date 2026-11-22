@@ -1,6 +1,6 @@
 import { gameState, say } from './00-state';
 import { X } from './registry';
-import { DISHES, FM, GL, MEMBERS, IT, T, asg, cb, cl, fighters, ldx, lv, maxhp, mxp, petRoll, pm } from './01-species-pets';
+import { DISHES, FM, GL, MEMBERS, IT, T, asg, cb, cl, fighters, ldx, lv, maxhp, mxp, petRoll, pm, sigPk } from './01-species-pets';
 import { AK, CTX, D0, ENEMIES, GSK, H0, PSK, XK, ZN, fxTxt, gateOk } from './02-gear-data';
 // Gates, raids, expeditions, harvest raids. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- ancient gates
@@ -56,7 +56,7 @@ export const EXK=12;
 export const mhpx=(k:string)=>(30+cl(k)*10)*(MEMBERS[k].pet?1.25:1);
 export const exLead=(k:string)=>k?Math.min(.35,.08+cl(k)/500):0;
 export function exEligible(d:Delve,k:string){return !!gameState.hired[k]&&asg(k).k!='exp'&&cl(k)>=d.mlv}
-export const exPk=(mem:string[],n:string)=>mem.reduce((s,k)=>s+(MEMBERS[k].pk[n]||0)*(1+(cl(k)-1)*.02)*pm()*(MEMBERS[k].pet?1.25:1),0);
+export const exPk=(mem:string[],n:string)=>mem.reduce((s,k)=>s+((MEMBERS[k].pk[n]||0)+sigPk(k,n))*(1+(cl(k)-1)*.02)*pm()*(MEMBERS[k].pet?1.25:1),0);
 export function exOdds(d:Delve,t:number,lead:any,mem:any,boon:any){
   const all=(lead?[lead]:[]).concat(mem.filter((k:string)=>k!=lead)),need=Math.max(1,d.party);
   const lb=exLead(lead);let dm=1,hm=1,dt=1;

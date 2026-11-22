@@ -133,12 +133,24 @@ nav button.on i{opacity:1}
     TICKS: () => TICKS,
     gameState: () => gameState,
     save: () => save,
-    say: () => say
+    say: () => say,
+    trackAcorns: () => trackAcorns
   });
   var gameState = null;
   try {
     gameState = JSON.parse(localStorage.getItem("hollowbrook1"));
   } catch (e) {
+  }
+  if (!gameState || typeof gameState != "object") {
+    try {
+      const raw = localStorage.getItem("hollowbrook1");
+      if (raw) {
+        localStorage.setItem("hollowbrook1_damaged", raw);
+        const b = localStorage.getItem("hollowbrook1_bak");
+        if (b) gameState = JSON.parse(b);
+      }
+    } catch (e) {
+    }
   }
   if (!gameState) gameState = { sp: null, xp: { Foraging: 0, Woodcutting: 0, Fishing: 0, Mining: 0 }, inv: {}, a: 0, cur: null, p: 0, hired: {}, bench: {}, mk: {}, t: Date.now(), log: [] };
   var save = () => {
@@ -146,6 +158,12 @@ nav button.on i{opacity:1}
       localStorage.setItem("hollowbrook1", JSON.stringify(gameState));
     } catch (e) {
     }
+  };
+  var trackAcorns = (a0) => {
+    const d = gameState.a - a0;
+    if (!gameState.st) gameState.st = { t: 0, earn: 0, spend: 0 };
+    if (d > 0) gameState.st.earn += d;
+    else if (d < 0) gameState.st.spend -= d;
   };
   var say = (m) => {
     gameState.log.unshift(m);
@@ -177,6 +195,7 @@ nav button.on i{opacity:1}
     HDN: () => HDN,
     HK: () => HK,
     IT: () => IT,
+    KITSIG: () => KITSIG,
     KIT_COST: () => KIT_COST,
     KIT_MAX: () => KIT_MAX,
     KIT_STEP: () => KIT_STEP,
@@ -230,6 +249,7 @@ nav button.on i{opacity:1}
     pm: () => pm,
     roster: () => roster,
     set_FXC: () => set_FXC,
+    sigPk: () => sigPk,
     skPet: () => skPet,
     spAff: () => spAff,
     spFx: () => spFx,
@@ -405,6 +425,21 @@ nav button.on i{opacity:1}
   var fighters = () => Object.keys(gameState.hired).filter((k) => asg(k).k == "war");
   var pm = () => (FM[gameState.form] || FM.steady).party + cb("pmult");
   var STAT_MULT = { Tank: [0.9, 1.05, 1.05], Striker: [1.1, 0.85, 0.85], Healer: [0.9, 0.95, 1.15], Scout: [1, 0.9, 0.9], Specialist: [1, 1, 1], Pet: [1, 1, 1] };
+  var KITSIG = {
+    mole: [{ taken: 6e-3 }, { taken: 8e-3, hp: 0.012 }, "Hardened hide: more damage reduction, then more health"],
+    hare: [{ speed: 0.016 }, { speed: 0.02, acc: 0.012 }, "Fleet of foot: faster expeditions, then better aim"],
+    owl: [{ loot: 0.04 }, { loot: 0.06, succ: 1 }, "Keen eyes: more expedition loot, then better odds"],
+    otter: [{ heal: 16e-4 }, { heal: 24e-4, hp: 8e-3 }, "Steady paws: stronger mending, then more health"],
+    badger: [{ taken: 8e-3 }, { taken: 8e-3, succ: 1 }, "Immovable: more damage reduction, then better expedition odds"],
+    fox: [{ dmg: 0.012 }, { dmg: 0.012, acc: 8e-3 }, "Flank master: more damage, then better aim"],
+    dormouse: [{ heal: 2e-3 }, { heal: 4e-3 }, "Green thumb: a little more mending"],
+    shrew: [{ dmg: 4e-3 }, { dmg: 8e-3 }, "Sharp tongue: a little more damage"],
+    magpie: [{ loot: 0.04 }, { loot: 0.08 }, "Eye for shinies: more expedition loot"]
+  };
+  var sigPk = (k, n) => {
+    const s = KITSIG[k], t = kitTier(k);
+    return s ? (t >= 5 ? s[0][n] || 0 : 0) + (t >= 10 ? s[1][n] || 0 : 0) : 0;
+  };
   var KIT_STEP = 0.01, KIT_COST = 2, KIT_MAX = 10;
   var kitTier = (k) => MEMBERS[k] && !MEMBERS[k].pet ? Math.min(KIT_MAX, gameState.mk[k] || 0) : 0;
   var kit = (k) => {
@@ -434,7 +469,7 @@ nav button.on i{opacity:1}
     const s = PSTAT[n];
     return s ? mst(k)[s] : cl(k);
   };
-  var pk = (n) => Math.min({ taken: 0.45, speed: 0.4 }[n] || 99, fighters().reduce((s, k) => s + (MEMBERS[k].pk[n] || 0) * fw(k) * (1 + (plv(k, n) - 1) * 0.02) * (1 + kit(k)) * pm() * (MEMBERS[k].pet ? 1.25 : 1), 0));
+  var pk = (n) => Math.min({ taken: 0.45, speed: 0.4 }[n] || 99, fighters().reduce((s, k) => s + ((MEMBERS[k].pk[n] || 0) + sigPk(k, n)) * fw(k) * (1 + (plv(k, n) - 1) * 0.02) * (1 + kit(k)) * pm() * (MEMBERS[k].pet ? 1.25 : 1), 0));
   function mxp(k, x) {
     const b = cl(k);
     gameState.cx[k] = (gameState.cx[k] || 0) + x * (MEMBERS[k].pet ? 1.5 : 1);
@@ -919,7 +954,7 @@ nav button.on i{opacity:1}
   function exEligible(d, k) {
     return !!gameState.hired[k] && asg(k).k != "exp" && cl(k) >= d.mlv;
   }
-  var exPk = (mem, n) => mem.reduce((s, k) => s + (MEMBERS[k].pk[n] || 0) * (1 + (cl(k) - 1) * 0.02) * pm() * (MEMBERS[k].pet ? 1.25 : 1), 0);
+  var exPk = (mem, n) => mem.reduce((s, k) => s + ((MEMBERS[k].pk[n] || 0) + sigPk(k, n)) * (1 + (cl(k) - 1) * 0.02) * pm() * (MEMBERS[k].pet ? 1.25 : 1), 0);
   function exOdds(d, t, lead, mem, boon) {
     const all = (lead ? [lead] : []).concat(mem.filter((k) => k != lead)), need2 = Math.max(1, d.party);
     const lb = exLead(lead);
@@ -1476,6 +1511,10 @@ nav button.on i{opacity:1}
     reqText: () => reqText,
     rndGear: () => rndGear,
     shopBuy: () => shopBuy,
+    stanceList: () => stanceList,
+    stanceName: () => stanceName,
+    stanceNote: () => stanceNote,
+    stanceNow: () => stanceNow,
     statTiles: () => statTiles
   });
   function fight(e) {
@@ -1722,6 +1761,11 @@ nav button.on i{opacity:1}
     else h += '<p class="mu" style="margin:12px 0 0">Not fighting. Pick an enemy below.</p>';
     return h + '<div id="hits" class="hits"></div></div>';
   }
+  var ranged = () => (gameState.style || "Melee") != "Melee";
+  var stanceList = () => ranged() ? ["bal", "acc", "def"] : Object.keys(XS);
+  var stanceNow = () => ranged() && gameState.stance == "agg" ? "acc" : gameState.stance;
+  var stanceName = (k) => ranged() && k == "acc" ? "Focused" : XS[k][0];
+  var stanceNote = (k) => ranged() && k == "acc" ? "Trains your " + gameState.style + " skill, which sets both your hit chance and your damage." : XS[k][6];
   function statTiles() {
     const xs = XS[gameState.stance], note = { Attack: "Melee hit chance", Strength: "Melee max hit", Ranged: "Ranged hit chance and max hit", Magic: "Magic hit chance and max hit", Defense: "Enemy hit chance (all styles)", Vitality: "Health " + maxhp() + " (all styles)" };
     const sh = (k) => {
@@ -1736,7 +1780,7 @@ nav button.on i{opacity:1}
     h += '<p class="sub">Melee beats Ranged, Ranged beats Magic, Magic beats Melee: counter an enemy for +25% damage.</p>';
     h += '<div class="pick" style="grid-template-columns:repeat(3,1fr)">' + SL.map((s) => '<button class="row' + (st == s ? " on" : "") + '" data-style="' + s + '">' + s + "<small>" + (gameState.eq[s] ? IT[gameState.eq[s]].n : "No weapon") + "</small></button>").join("") + "</div>";
     h += "<h2>Combat stats</h2>" + statTiles();
-    h += '<h2>Stance <span class="mu" style="display:inline">\xB7 where xp goes</span></h2><div class="chips">' + Object.keys(XS).map((k) => '<button class="' + (gameState.stance == k ? "on" : "") + '" data-stance="' + k + '">' + XS[k][0] + "</button>").join("") + '</div><p class="mu">' + XS[gameState.stance][6] + '</p><div class="chips"><button class="' + (gameState.cmd ? "on" : "") + '" data-cmd="1">Command: ' + (gameState.cmd ? "on" : "off") + '</button></div><p class="mu">Command splits your xp with Leadership. While members fight beside you, your stat xp drops to 60% and Leadership gains 2.4\xD7 a kill\u2019s base xp.' + (gameState.cmd && !fgn.length ? " No members are fighting with you, so Command is doing nothing and you keep full xp." : "") + "</p>";
+    h += '<h2>Stance <span class="mu" style="display:inline">\xB7 where xp goes</span></h2><div class="chips">' + stanceList().map((k) => '<button class="' + (stanceNow() == k ? "on" : "") + '" data-stance="' + k + '">' + stanceName(k) + "</button>").join("") + '</div><p class="mu">' + stanceNote(stanceNow()) + '</p><div class="chips"><button class="' + (gameState.cmd ? "on" : "") + '" data-cmd="1">Command: ' + (gameState.cmd ? "on" : "off") + '</button></div><p class="mu">Command splits your xp with Leadership. While members fight beside you, your stat xp drops to 60% and Leadership gains 2.4\xD7 a kill\u2019s base xp.' + (gameState.cmd && !fgn.length ? " No members are fighting with you, so Command is doing nothing and you keep full xp." : "") + "</p>";
     h += '<h2>Form <span class="mu" style="display:inline">\xB7 combat buffs</span></h2><div class="chips">' + Object.keys(FM).map((k) => '<button class="' + (gameState.form == k ? "on" : "") + '" data-form="' + k + '"' + (cl2 < FM[k].cl ? " disabled" : "") + ">" + FM[k].n + (cl2 < FM[k].cl ? " (CL " + FM[k].cl + ")" : "") + "</button>").join("") + '</div><p class="mu">' + FM[gameState.form].d + "</p>";
     h += '<p class="mu">Fighting beside you: ' + (fgn.length ? fgn.map((k) => MEMBERS[k].n).join(", ") : "no one. Recruit members in the Party tab.") + "</p>";
     h += '<h2>Zones</h2><div class="chips">' + ZN.map((q, i) => '<button class="' + (z == i ? "on" : "") + '" data-zone="' + i + '"' + (zoneOpen(i) ? "" : " disabled") + ">" + q[0] + (zoneOpen(i) ? "" : cl2 < q[1] ? " (CL " + q[1] + ")" : " (Gate " + q[5] + ")") + "</button>").join("") + "</div>";
@@ -2292,10 +2336,10 @@ nav button.on i{opacity:1}
     }).join("");
   }
   var WX = [
-    { id: "spring", n: "Spring", i: "\u{1F331}", d: "New growth. Foragers thrive, the shallows run well, and the rock stays muddy.", fx: [["spd", 0.2, ["Foraging"]], ["yld", 0.05, ["Foraging"]], ["spd", 0.1, ["Fishing"]], ["spd", -0.1, ["Mining"]]] },
-    { id: "summer", n: "Summer", i: "\u2600\uFE0F", d: "Long bright days. Good for fishing, timber and the stove, hard on the berry patches.", fx: [["spd", 0.2, ["Fishing"]], ["spd", 0.1, ["Woodcutting"]], ["spd", 0.15, ["Cooking"]], ["burn", -0.15, ["Cooking"]], ["spd", -0.1, ["Foraging"]]] },
-    { id: "autumn", n: "Autumn", i: "\u{1F342}", d: "Harvest time. Prey is fat and the traplines pay well, but the rivers are low.", fx: [["spd", 0.2, ["Hunting"]], ["yld", 0.1, ["Hunting"]], ["xp", 0.1, ["Foraging"]], ["spd", -0.1, ["Fishing"]]] },
-    { id: "winter", n: "Winter", i: "\u2744\uFE0F", d: "Hard frost. Dig deep and keep the hearth lit, because little grows and the water ices over.", fx: [["spd", 0.2, ["Mining"]], ["yld", 0.05, ["Mining"]], ["spd", 0.15, ["Cooking"]], ["spd", -0.2, ["Foraging"]], ["spd", -0.15, ["Fishing"]], ["spd", -0.1, ["Woodcutting"]]] }
+    { id: "spring", n: "Spring", i: "\u{1F331}", d: "New growth. Foragers thrive, crops sprout fast, the shallows run well, and the rock stays muddy.", fx: [["spd", 0.2, ["Foraging"]], ["yld", 0.05, ["Foraging"]], ["spd", 0.2, ["Farming"]], ["spd", 0.1, ["Fishing"]], ["spd", -0.1, ["Mining"]]] },
+    { id: "summer", n: "Summer", i: "\u2600\uFE0F", d: "Long bright days. Good for fishing, timber and the stove, steady for the fields, hard on the berry patches and on herbs left to wilt.", fx: [["spd", 0.2, ["Fishing"]], ["spd", 0.1, ["Woodcutting"]], ["spd", 0.15, ["Cooking"]], ["burn", -0.15, ["Cooking"]], ["spd", 0.1, ["Farming"]], ["spd", -0.1, ["Alchemy"]], ["spd", -0.1, ["Foraging"]]] },
+    { id: "autumn", n: "Autumn", i: "\u{1F342}", d: "Harvest time. Prey is fat, the traplines and the fields pay well, but the rivers are low.", fx: [["spd", 0.2, ["Hunting"]], ["yld", 0.1, ["Hunting"]], ["yld", 0.1, ["Farming"]], ["xp", 0.1, ["Foraging"]], ["spd", -0.1, ["Fishing"]]] },
+    { id: "winter", n: "Winter", i: "\u2744\uFE0F", d: "Hard frost. Dig deep and keep the hearth lit: brewing goes well by the fire, but little grows and the water ices over.", fx: [["spd", 0.2, ["Mining"]], ["yld", 0.05, ["Mining"]], ["spd", 0.15, ["Cooking"]], ["spd", 0.2, ["Alchemy"]], ["spd", -0.25, ["Farming"]], ["spd", -0.2, ["Foraging"]], ["spd", -0.15, ["Fishing"]], ["spd", -0.1, ["Woodcutting"]]] }
   ];
   var WS = 43200;
   var wxSlot = () => Math.floor(Date.now() / 1e3 / WS);
@@ -2331,7 +2375,7 @@ nav button.on i{opacity:1}
     { id: "shop", n: "Workshop", d: "Faster crafting and refining, and a chance to save materials.", mats: ["Mining", "Hunting"], fx: (L) => [["spd", 0.03 * L, CRS], ["save", 0.03 * L, CRS]], tx: (L) => 3 * L + "% faster crafting, " + 3 * L + "% chance to save materials" },
     { id: "kitchen", n: "Kitchen", d: "Faster cooking, fewer burnt meals and stronger food.", mats: ["Foraging", "Fishing"], fx: (L) => [["spd", 0.03 * L, ["Cooking"]], ["burn", 0.08 * L, ["Cooking"]], ["heal", 0.04 * L, null]], tx: (L) => 3 * L + "% faster cooking, " + 8 * L + "% less burning, +" + 4 * L + "% food healing" },
     { id: "larder", n: "Larder", d: "Sell goods for more, and your skilling members send more home to you.", mats: ["Hunting", "Fishing"], fx: (L) => [["sell", 0.03 * L, null]], tx: (L) => "+" + 3 * L + "% acorns from sales, members send +" + 2 * L + "% more to your pack" },
-    { id: "bar", n: "Barracks", d: "Members you send here train a little, even when idle. Members who are resting trickle at a quarter of that rate. Set members to Barracks in the Party tab.", mats: ["Foraging", "Woodcutting"], fx: (L) => [], tx: (L) => BRATE(L).toLocaleString() + " xp per hour per member" }
+    { id: "bar", n: "Barracks", d: "Members you send here train steadily, whether they are in your party or resting at home. Resting members who are not assigned here do not train. Set members to Barracks in the Party tab.", mats: ["Foraging", "Woodcutting"], fx: (L) => [], tx: (L) => BRATE(L).toLocaleString() + " xp per hour per member" }
   ];
   function buCost(b, t) {
     const i = BUI[t - 1], it = {};
@@ -2533,10 +2577,7 @@ nav button.on i{opacity:1}
       if (asg(k).k != "exp" && e.mem.includes(k)) gameState.mt[k] = { k: "exp" };
     }));
     Object.keys(gameState.bench).forEach((k) => {
-      const t = asg(k);
-      if (t.k == "bar") {
-        if (buL("bar")) mxp(k, dt * BRATE(buL("bar")) * mentor() / 3600);
-      } else if (buL("bar")) mxp(k, dt * BRATE(buL("bar")) * mentor() / 3600 * 0.25);
+      if (asg(k).k == "bar" && buL("bar")) mxp(k, dt * BRATE(buL("bar")) * mentor() / 3600);
     });
     Object.keys(gameState.hired).forEach((k) => {
       const t = asg(k);
@@ -2545,10 +2586,7 @@ nav button.on i{opacity:1}
         mxp(k, dt * BRATE(buL("bar")) * mentor() / 3600);
         return;
       }
-      if (t.k == "idle") {
-        if (buL("bar")) mxp(k, dt * BRATE(buL("bar")) * mentor() / 3600 * 0.25);
-        return;
-      }
+      if (t.k == "idle") return;
       if (t.k == "war") return;
       t.p = (t.p || 0) + dt;
       const d = mdur(k, t);
@@ -2789,7 +2827,7 @@ nav button.on i{opacity:1}
     return n.length ? "<br>" + n.join(", ") + " working" : "";
   };
   var working = () => Object.keys(gameState.hired).filter((k) => asg(k).k != "war" && asg(k).k != "idle" && asg(k).k != "exp");
-  var hasWork = () => exs().length > 0 || working().length > 0 || buL("bar") > 0 && roster().some((k) => asg(k).k == "idle" || asg(k).k == "bar");
+  var hasWork = () => exs().length > 0 || working().length > 0 || buL("bar") > 0 && roster().some((k) => asg(k).k == "bar");
   var ING = Object.fromEntries("Pick Picking,Dig Digging,Sniff Sniffing,Gather Gathering,Find Finding,Pluck Plucking,Reach Reaching,Cut Cutting,Harvest Harvesting,Gnaw Gnawing,Fell Felling,Hew Hewing,Claim Claiming,Catch Catching,Spear Spearing,Hook Hooking,Trap Trapping,Net Netting,Lure Luring,Land Landing,Collect Collecting,Chip Chipping,Pry Prying,Free Freeing,Mine Mining,Quarry Quarrying,Snare Snaring".split(",").map((x) => x.split(" ")));
   var ing = (n) => {
     const w = n.split(" ");
@@ -3078,10 +3116,14 @@ nav button.on i{opacity:1}
     partyView: () => partyView,
     perkTxt: () => perkTxt,
     render: () => render,
+    repCard: () => repCard,
+    saveMsg: () => saveMsg,
     set_logSub: () => set_logSub,
+    set_saveMsg: () => set_saveMsg,
     skillPage: () => skillPage,
     skillsView: () => skillsView,
     statTxt: () => statTxt,
+    statsView: () => statsView,
     view: () => view
   });
   function skillsView() {
@@ -3155,7 +3197,7 @@ nav button.on i{opacity:1}
   var kitRow = (k) => {
     if (MEMBERS[k].pet) return "";
     const t = kitTier(k), n = kitNext(k);
-    return '<div class="chips" style="margin:8px 0 0"><small style="align-self:center">Kit: ' + (t ? PRE[t] + " (tier " + t + ", +" + t + "% to perks and damage)" : "none") + "</small>" + (n ? '<button data-kit="' + k + '"' + (gameState.a < n.cost || cl(k) < n.req ? " disabled" : "") + ">Outfit " + PRE[n.t] + " \xB7 " + n.cost.toLocaleString() + (cl(k) < n.req ? " \xB7 needs level " + n.req : "") + "</button>" : "") + "</div>";
+    return '<div class="chips" style="margin:8px 0 0"><small style="align-self:center">Kit: ' + (t ? PRE[t] + " (tier " + t + ", +" + t + "% to perks and damage)" : "none") + "</small>" + (KITSIG[k] ? '<small class="mu" style="align-self:center">' + (t >= 10 ? "Signature perks unlocked: " : t >= 5 ? "First signature perk unlocked (second at tier 10): " : "Signature perks at tiers 5 and 10: ") + KITSIG[k][2] + ".</small>" : "") + (n ? '<button data-kit="' + k + '"' + (gameState.a < n.cost || cl(k) < n.req ? " disabled" : "") + ">Outfit " + PRE[n.t] + " \xB7 " + n.cost.toLocaleString() + (cl(k) < n.req ? " \xB7 needs level " + n.req : "") + "</button>" : "") + "</div>";
   };
   var statTxt = (k) => {
     const s = mst(k);
@@ -3197,8 +3239,41 @@ nav button.on i{opacity:1}
   function set_logSub(v) {
     logSub = v;
   }
-  var dataView = () => '<h2>Your save</h2><p class="mu">Mossglen saves in this browser automatically. There is one character and no resets, so starting over erases everything for good.</p><h2>Danger zone</h2><p class="mu">Erases your character, party, gear and every skill. You will be asked to type ERASE to confirm.</p><p><button class="btn" data-reset="1" style="font-size:14px">Erase all progress</button></p>';
-  var logTabs = () => '<div class="seg">' + [["log", "Collection"], ["guide", "Guide"], ["data", "Data"]].map((t) => '<button data-logsub="' + t[0] + '" class="' + (logSub == t[0] ? "on" : "") + '">' + t[1] + "</button>").join("") + "</div>";
+  var repCard = () => {
+    const r = gameState.rep;
+    if (!r) return "";
+    const bits = [];
+    if (r.a) bits.push((r.a > 0 ? "+" : "") + r.a.toLocaleString() + " acorns");
+    r.xp.forEach((x) => bits.push("+" + x[1].toLocaleString() + " " + x[0] + " xp"));
+    if (r.items > 0) bits.push(r.items.toLocaleString() + " items gathered");
+    if (r.kills > 0) bits.push(r.kills.toLocaleString() + " enemies defeated");
+    if (r.gear > 0) bits.push(r.gear + " new item" + (r.gear > 1 ? "s" : "") + " found");
+    if (r.pets > 0) bits.push(r.pets + " pet" + (r.pets > 1 ? "s" : "") + " found");
+    if (r.member) bits.push("your party trained");
+    return '<div class="stat sans"><div class="mu now">While you were away \xB7 ' + exFmt(r.secs) + "</div><div>" + (bits.length ? bits.join(" \xB7 ") : "Nothing much happened.") + '</div><div style="margin-top:8px"><button class="btn" data-repx="1" style="font-size:14px">Dismiss</button></div></div>';
+  };
+  var saveMsg = "";
+  function set_saveMsg(v) {
+    saveMsg = v;
+  }
+  var dataView = () => '<h2>Your save</h2><p class="mu">Mossglen saves in this browser automatically, and keeps a backup before any upgrade or import. To move your character to another device or browser, export a save code here and import it there.</p><div class="chips"><button data-savex="export">Show save code</button><button data-savex="copy">Copy</button><button data-savex="download">Download file</button></div><textarea id="savebox" rows="4" style="width:100%;box-sizing:border-box;margin-top:8px" placeholder="Paste a save code here to import it"></textarea><div class="chips"><button data-savex="import">Import this code</button></div><p class="mu" id="savemsg">' + saveMsg + '</p><p class="mu">Importing replaces your current character. Your current save is kept as a backup in this browser first.</p><h2>Danger zone</h2><p class="mu">Erases your character, party, gear and every skill. You will be asked to type ERASE to confirm.</p><p><button class="btn" data-reset="1" style="font-size:14px">Erase all progress</button></p>';
+  function statsView() {
+    const st = gameState.st || { t: 0, earn: 0, spend: 0 }, sk = GATHER_SKILLS.concat(COMBAT_SKILLS), kills2 = Object.values(gameState.kc || {}).reduce((s, v) => s + v, 0), fmt2 = (n) => Math.round(n).toLocaleString();
+    const rows = [
+      ["Time played with the game open", exFmt(st.t)],
+      ["Acorns earned", fmt2(st.earn)],
+      ["Acorns spent", fmt2(st.spend)],
+      ["Total level", fmt2(sk.reduce((q, k) => q + lv(gameState.xp[k]), 0))],
+      ["Skills at level 99 or higher", sk.filter((k) => lv(gameState.xp[k]) >= 99).length + " of " + sk.length],
+      ["Enemies defeated", fmt2(kills2)],
+      ["Raids cleared", fmt2(Object.values(gameState.rc || {}).reduce((s, v) => s + v, 0))],
+      ["Items in the collection log", fmt2(Object.keys(gameState.col || {}).length)],
+      ["Pets found", Object.keys(gameState.pets).length + " of " + PETS.length],
+      ["Party roster", roster().length + " recruited \xB7 " + nsl() + " of " + slots() + " slots in use"]
+    ];
+    return "<h2>Your journey</h2>" + rows.map((r) => '<div class="row"><span>' + r[0] + "</span><b>" + r[1] + "</b></div>").join("") + '<p class="mu">Counts start from the day this feature arrived, except totals that were already recorded.</p>';
+  }
+  var logTabs = () => '<div class="seg">' + [["log", "Collection"], ["guide", "Guide"], ["stats", "Stats"], ["data", "Data"]].map((t) => '<button data-logsub="' + t[0] + '" class="' + (logSub == t[0] ? "on" : "") + '">' + t[1] + "</button>").join("") + "</div>";
   var dens = (t, b) => '<details class="chip"><summary><span>' + t + '</span><em>open</em></summary><div class="mu">' + b + "</div></details>";
   function guideView() {
     const capes = Object.keys(CE).map((k) => capeRow(k).replace('<div class="row"><span>', '<div class="row"><span><b>' + k + "</b> \xB7 ")).join("");
@@ -3207,7 +3282,7 @@ nav button.on i{opacity:1}
   }
   function view() {
     if (tab == "burrow") return burrowView();
-    if (tab == "log") return logTabs() + (logSub == "guide" ? guideView() : logSub == "data" ? dataView() : logView());
+    if (tab == "log") return logTabs() + (logSub == "guide" ? guideView() : logSub == "data" ? dataView() : logSub == "stats" ? statsView() : logView());
     if (tab == "skills") return skillsView();
     if (tab == "combat") return combatView();
     if (tab == "gear") return gearView();
@@ -3223,8 +3298,12 @@ nav button.on i{opacity:1}
       app.innerHTML = '<div class="hero"><span class="leaf">\u{1F343}</span><h1>Mossglen</h1></div><p class="sub" style="text-align:center">A quiet valley where small folk work, explore, and nap. Who are you?</p><div class="pick">' + Object.keys(SP).map((s) => '<button class="row" data-sp="' + s + '">' + s + "<small>+15% " + SP[s] + " xp</small><small>" + SPX[s].t + "</small><small>" + SPX[s].w + " " + SPX[s].st + " style +4% damage.</small></button>").join("") + "</div>";
       return;
     }
-    const cn = curName();
-    app.innerHTML = '<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">' + gameState.sp + " of the valley \xB7 total level " + GATHER_SKILLS.concat(COMBAT_SKILLS).reduce((s, k) => s + lv(gameState.xp[k]), 0) + '</p><div class="stat sans"><div class="mu now">You are currently</div>' + (cn ? '<div style="display:flex;justify-content:space-between"><span>' + cn + (gameState.cur.k == "c" ? ' <small class="mu" id="se"></small>' : "") + '</span><button class="btn" data-stop="1">Rest</button></div><div class="bar' + (gameState.cur.k == "c" ? " hp" : "") + '"><i id="pb"></i></div>' : '<span class="mu">Resting. Choose an activity below to begin.</span>') + potStatus() + (hasWork() ? '<div class="mu" style="font-size:14px;margin-top:4px">' + workNames() + "</div>" : "") + "</div><nav>" + [["skills", "Skills", "leaf"], ["combat", "Fight", "swords"], ["gear", "Gear", "shield"], ["party", "Party", "paw"], ["delve", "Explore", "lantern"], ["burrow", "Burrow", "burrow"], ["log", "Log", "tome"], ["pack", "Pack", "satchel"]].map((t) => '<button data-tab="' + t[0] + '" class="' + (tab == t[0] ? "on" : "") + '"><i>' + icon(t[2], 25) + "</i>" + t[1] + "</button>").join("") + "</nav>" + view() + '<div id="log">' + gameState.log.map((l) => "<p>" + l + "</p>").join("") + "</div>";
+    const cn = curName(), sb = document.getElementById("savebox"), sbv = sb ? sb.value : "";
+    app.innerHTML = '<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">' + gameState.sp + " of the valley \xB7 total level " + GATHER_SKILLS.concat(COMBAT_SKILLS).reduce((s, k) => s + lv(gameState.xp[k]), 0) + '</p><div class="stat sans"><div class="mu now">You are currently</div>' + (cn ? '<div style="display:flex;justify-content:space-between"><span>' + cn + (gameState.cur.k == "c" ? ' <small class="mu" id="se"></small>' : "") + '</span><button class="btn" data-stop="1">Rest</button></div><div class="bar' + (gameState.cur.k == "c" ? " hp" : "") + '"><i id="pb"></i></div>' : '<span class="mu">Resting. Choose an activity below to begin.</span>') + potStatus() + (hasWork() ? '<div class="mu" style="font-size:14px;margin-top:4px">' + workNames() + "</div>" : "") + "</div>" + repCard() + "<nav>" + [["skills", "Skills", "leaf"], ["combat", "Fight", "swords"], ["gear", "Gear", "shield"], ["party", "Party", "paw"], ["delve", "Explore", "lantern"], ["burrow", "Burrow", "burrow"], ["log", "Log", "tome"], ["pack", "Pack", "satchel"]].map((t) => '<button data-tab="' + t[0] + '" class="' + (tab == t[0] ? "on" : "") + '"><i>' + icon(t[2], 25) + "</i>" + t[1] + "</button>").join("") + "</nav>" + view() + '<div id="log">' + gameState.log.map((l) => "<p>" + l + "</p>").join("") + "</div>";
+    {
+      const nb = document.getElementById("savebox");
+      if (nb && sbv) nb.value = sbv;
+    }
     bars();
   }
   Object.defineProperties(X, { render: { get: () => render, configurable: true } });
@@ -3234,6 +3313,8 @@ nav button.on i{opacity:1}
   __export(migrate_exports, {
     MIGRATIONS: () => MIGRATIONS,
     SAVE_VERSION: () => SAVE_VERSION,
+    exportSave: () => exportSave,
+    importSave: () => importSave,
     migrate: () => migrate
   });
   var SAVE_VERSION = 3;
@@ -3243,6 +3324,7 @@ nav button.on i{opacity:1}
     gameState.cx = gameState.cx || {};
     gameState.bench = gameState.bench || {};
     gameState.mk = gameState.mk || {};
+    gameState.st = gameState.st || { t: 0, earn: 0, spend: 0 };
     gameState.lead = gameState.lead || null;
     gameState.style = gameState.style || "Melee";
     gameState.gear = gameState.gear || { Melee: 0, Ranged: 0, Magic: 0, arm: 0 };
@@ -3358,7 +3440,54 @@ nav button.on i{opacity:1}
       gameState.xp.Magic = Math.max(gameState.xp.Magic || 0, gameState.xp.Attack || 0);
     } }
   ];
+  var B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  function toB64(s) {
+    const u = unescape(encodeURIComponent(s));
+    let o = "";
+    for (let i = 0; i < u.length; i += 3) {
+      const a = u.charCodeAt(i), b = u.charCodeAt(i + 1), c = u.charCodeAt(i + 2);
+      o += B64[a >> 2] + B64[(a & 3) << 4 | (b || 0) >> 4] + (i + 1 < u.length ? B64[(b & 15) << 2 | (c || 0) >> 6] : "=") + (i + 2 < u.length ? B64[c & 63] : "=");
+    }
+    return o;
+  }
+  function fromB64(t) {
+    const s = t.replace(/[^A-Za-z0-9+/]/g, "");
+    let o = "";
+    for (let i = 0; i < s.length; i += 4) {
+      const n = [0, 1, 2, 3].map((j) => i + j < s.length ? B64.indexOf(s[i + j]) : -1);
+      o += String.fromCharCode(n[0] << 2 | n[1] >> 4);
+      if (n[2] >= 0) o += String.fromCharCode((n[1] & 15) << 4 | n[2] >> 2);
+      if (n[3] >= 0) o += String.fromCharCode((n[2] & 3) << 6 | n[3]);
+    }
+    return decodeURIComponent(escape(o));
+  }
+  var exportSave = () => "MG1:" + toB64(JSON.stringify(gameState));
+  function importSave(text) {
+    const t = String(text || "").trim();
+    if (!t) return "Paste a save code first.";
+    let data;
+    try {
+      data = JSON.parse(t.startsWith("MG1:") ? fromB64(t.slice(4)) : t.replace(/^MG0:/, ""));
+    } catch (e) {
+      return "That is not a Mossglen save code.";
+    }
+    if (!data || typeof data != "object" || !data.xp || typeof data.xp != "object" || !data.sp) return "That code does not look like a Mossglen save.";
+    if ((data.v || 1) > SAVE_VERSION) return "That save is from a newer version of Mossglen. Open the newest version first.";
+    try {
+      localStorage.setItem("hollowbrook1_bak", JSON.stringify(gameState));
+      localStorage.setItem("hollowbrook1", JSON.stringify(data));
+    } catch (e) {
+      return "Could not write the save in this browser.";
+    }
+    return null;
+  }
   function migrate() {
+    if (gameState.sp && (gameState.v || 1) < SAVE_VERSION) {
+      try {
+        localStorage.setItem("hollowbrook1_bak", JSON.stringify(gameState));
+      } catch (e) {
+      }
+    }
     ensureDefaults();
     let v = gameState.v || 1;
     for (const m of MIGRATIONS) if (v < m.v) {
@@ -3378,7 +3507,7 @@ nav button.on i{opacity:1}
   document.addEventListener("click", (e) => {
     const t = e.target.closest("button");
     if (!t) return;
-    const d = t.dataset;
+    const d = t.dataset, a0 = gameState.a;
     if (d.sp) {
       gameState.sp = d.sp;
       refreshFx();
@@ -3414,6 +3543,47 @@ nav button.on i{opacity:1}
         if (who == k) set_who("you");
         say(MEMBERS[k].n + " rests at home. They stay on your roster and can train in the barracks.");
       }
+    } else if (d.repx) {
+      delete gameState.rep;
+    } else if (d.savex) {
+      const box = document.getElementById("savebox"), msg = (m) => {
+        set_saveMsg(m);
+        const e2 = document.getElementById("savemsg");
+        if (e2) e2.textContent = m;
+      };
+      if (d.savex == "import") {
+        const err = importSave(box ? box.value : "");
+        if (err) {
+          msg(err);
+        } else {
+          location.reload();
+        }
+        return;
+      }
+      const code = exportSave();
+      if (box) {
+        box.value = code;
+        box.select();
+      }
+      if (d.savex == "copy") {
+        try {
+          navigator.clipboard.writeText(code);
+          msg("Save code copied.");
+        } catch (e2) {
+          msg("Copy did not work here. Select the code and copy it by hand.");
+        }
+      } else if (d.savex == "download") {
+        try {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob([code], { type: "text/plain" }));
+          a.download = "mossglen-save.txt";
+          a.click();
+          msg("Save file downloaded.");
+        } catch (e2) {
+          msg("Download did not work here. Copy the code instead.");
+        }
+      } else msg("Your save code is below. Keep it somewhere safe.");
+      return;
     } else if (d.kit) {
       const k = d.kit;
       if (buyKit(k)) say(MEMBERS[k].n + " is outfitted with " + PRE[kitTier(k)] + " kit.");
@@ -3533,13 +3703,18 @@ nav button.on i{opacity:1}
       const mh = maxhp();
       if (gameState.hp > mh) gameState.hp = mh;
     }
+    trackAcorns(a0);
     save();
     render();
   });
   migrate();
   var away = Math.min(Date.now() - gameState.t, offlineCap());
   if (gameState.sp && (gameState.cur || hasWork()) && away > 2e4) {
+    const snap = () => ({ a: gameState.a, xp: Object.assign({}, gameState.xp), cx: Object.assign({}, gameState.cx), inv: Object.values(gameState.inv).reduce((s, v) => s + v, 0), kc: Object.values(gameState.kc || {}).reduce((s, v) => s + v, 0), pets: Object.keys(gameState.pets).length, own: Object.keys(gameState.own).length, ex: Object.keys(gameState.rc || {}).length }), b0 = snap();
     tick(away / 1e3, true);
+    trackAcorns(b0.a);
+    const b1 = snap(), xp = Object.keys(b1.xp).map((k) => [k, Math.floor(b1.xp[k] - (b0.xp[k] || 0))]).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 4);
+    gameState.rep = { secs: Math.round(away / 1e3), a: Math.round(b1.a - b0.a), xp, items: Math.round(b1.inv - b0.inv), kills: b1.kc - b0.kc, pets: b1.pets - b0.pets, gear: b1.own - b0.own, member: Object.keys(b1.cx).reduce((s, k) => s + Math.max(0, (b1.cx[k] || 0) - (b0.cx[k] || 0)), 0) > 0 };
     say("You were away " + Math.round(away / 6e4) + " min. Your work carried on.");
   }
   gameState.t = Date.now();
@@ -3554,9 +3729,11 @@ nav button.on i{opacity:1}
     const n = Date.now(), dt = (n - last) / 1e3;
     last = n;
     gameState.t = n;
+    if (gameState.sp && gameState.st) gameState.st.t += Math.min(dt, 60);
     if (gameState.sp && (gameState.cur || hasWork())) {
       const lg = gameState.log[0], a = gameState.a, sg = ownSig();
       tick(dt, false);
+      trackAcorns(a);
       if (gameState.log[0] !== lg || gameState.a !== a || ownSig() !== sg) render();
     }
     bars();

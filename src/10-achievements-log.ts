@@ -99,9 +99,9 @@ export const famShare=()=>Math.min(.68,1/3+Math.min(1,LD()/99)/6+.02*buL('larder
 export function famCut(k:string,n:number){let g=0;for(let i=0;i<n;i++)if(Math.random()<famShare())g++;gameState.fam[k]=(gameState.fam[k]||0)+n-g;return g}
 export function memTick(dt:any){
   exs().forEach(e=>Object.keys(gameState.hired).forEach(k=>{if(asg(k).k!='exp'&&e.mem.includes(k))gameState.mt[k]={k:'exp'}}));
-  Object.keys(gameState.bench).forEach(k=>{const t=asg(k);if(t.k=='bar'){if(buL('bar'))mxp(k,dt*BRATE(buL('bar'))*mentor()/3600)}else if(buL('bar'))mxp(k,dt*BRATE(buL('bar'))*mentor()/3600*.25)});
+  Object.keys(gameState.bench).forEach(k=>{if(asg(k).k=='bar'&&buL('bar'))mxp(k,dt*BRATE(buL('bar'))*mentor()/3600)});
   Object.keys(gameState.hired).forEach(k=>{
-    const t=asg(k);if(t.k=='exp')return;if(t.k=='bar'){mxp(k,dt*BRATE(buL('bar'))*mentor()/3600);return}if(t.k=='idle'){if(buL('bar'))mxp(k,dt*BRATE(buL('bar'))*mentor()/3600*.25);return}if(t.k=='war')return;
+    const t=asg(k);if(t.k=='exp')return;if(t.k=='bar'){mxp(k,dt*BRATE(buL('bar'))*mentor()/3600);return}if(t.k=='idle')return;if(t.k=='war')return;
     t.p=(t.p||0)+dt;const d=mdur(k,t);let n=0;
     while(gameState.mt[k]===t&&t.p!>=d&&n<5000){t.p!-=d;memAct(k,t);n++}
   });
