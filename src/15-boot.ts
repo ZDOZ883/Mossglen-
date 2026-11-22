@@ -1,6 +1,6 @@
 import { gameState, save, say, trackAcorns } from './00-state';
-import { FM, MEMBERS, LD, SELL_VALUE, asg, cb, buyKit, joinParty, kitTier, known, maxhp, nsl } from './01-species-pets';
-import { KEEP, PRE } from './02-gear-data';
+import { FM, MEMBERS, LD, asg, buyKit, joinParty, kitTier, known, maxhp, nsl } from './01-species-pets';
+import { PRE } from './02-gear-data';
 import { exRecall, exSel, exStart, openGate, set_exSel, startHR, startRaid } from './03-world-expeditions';
 import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadout';
 import { cycle, shopBuy } from './05-combat';
@@ -9,7 +9,7 @@ import { ACHIEVEMENTS, buy, buyTool, offlineCap, set_skill, set_tab, set_who, sk
 import { assign } from './08-party-state';
 import { buUp, sgBuy } from './09-seasons-burrow';
 import { bars, hasWork, refreshFx, tick } from './11-engine';
-import { CF, render, set_logSub, set_saveMsg } from './13-views';
+import { CF, packAct, render, set_logSub, set_saveMsg } from './13-views';
 import { alchAct, farmAct } from './12-farm-alchemy';
 // Input handling, boot and timers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 document.addEventListener('click',e=>{
@@ -52,7 +52,7 @@ document.addEventListener('click',e=>{
   else if(d.shop)shopBuy(d.shop);
   else if(d.task)taskAct(d.task);
   else if(d.slbuy)slBuy(d.slbuy);
-  else if(d.sellone){const k=d.sellone;gameState.a+=Math.round(gameState.inv[k]*SELL_VALUE[k]*(1+cb('sell')));delete gameState.inv[k]}
+  else if(d.pk){packAct(d.pk,d.pv)}
   else if(d.buy)buy(d.buy);
   else if(d.tier){const [i,t]=d.tier.split(':');gameState.tier[i]=+t}
   else if(d.lead)gameState.lead=d.lead;
@@ -73,7 +73,6 @@ document.addEventListener('click',e=>{
   else if(d.ls)loadoutSl(d.ls);
   else if(d.stop){gameState.cur=null;gameState.ehp=null}
   else if(d.hire){const h=MEMBERS[d.hire];if(!known(d.hire)&&(h.pet?!!gameState.pets[d.hire]:gameState.a>=h.c&&LD()>=h.lt)){if(!h.pet)gameState.a-=h.c;const inParty=joinParty(d.hire);say(h.n+(inParty?' joins your party.':' joins your roster and rests at home. Your party is full.'))}}
-  else if(d.sell){let g=0;for(const k in gameState.inv){if(KEEP(k))continue;g+=gameState.inv[k]*SELL_VALUE[k];delete gameState.inv[k]}g=Math.round(g*(1+cb('sell')));gameState.a+=g;say('Sold your pack for '+g+' acorns.')}
   else if(d.reset){if(typeof prompt=='function'&&prompt('This erases your character, party, gear and every skill, and cannot be undone. Type ERASE to confirm.')==='ERASE'){try{localStorage.removeItem('hollowbrook1')}catch(x){}location.reload();return}}
   else return;
   if(gameState.auto&&(d.raid||d.hraid||d.task=='fight'||(d.do&&!(who!='you'&&gameState.hired[who]&&'skfr'.includes(d.do.split(':')[0]))))){if(d.hraid)optimize({kind:'gather',label:'the harvest'});else autoLoad()}

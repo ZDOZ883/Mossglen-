@@ -1,7 +1,7 @@
-import { gameState, TASKS } from './00-state';
+import { gameState, say, TASKS } from './00-state';
 import { X } from './registry';
 import { COMBAT_SKILLS, DISHES, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, PB, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, KITSIG, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
-import { AF, CE, ZN, dropTier, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
+import { AF, CE, KEEPX, ZN, dropTier, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
 import { GATE, RD, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
 import { combatView, istat } from './05-combat';
@@ -200,6 +200,49 @@ export function guideView(){
   const rates='<b>Zone gear</b>: about 1 in 64 per kill, or 1 in 10 from a boss. A guaranteed drop arrives after 150 kills (40 for bosses).<br><b>Deep zones (8+)</b>: crafting materials about 1 in 40 per kill, 1 in 6 from a boss, guaranteed by 100 kills (18 for bosses). Bosses also have a 1 in 30 chance at gear, guaranteed by 70 kills.<br><b>Trinkets</b>: about 1 in 12 per boss kill, guaranteed by 60.<br>These are base chances. Rare-drop bonuses from gear, pets and blessings multiply them.';
   return '<h2>Guide</h2><p class="sub">Reference notes, kept out of the way.</p>'+dens(gameState.sp+' traits','+15% xp in '+SP[gameState.sp!]+'. '+spTxt(gameState.sp))+dens('Capes','<div style="margin-top:6px">'+capes+'</div>')+memDens+itemDir()+dens('Drop rates',rates)+'<p><button class="btn" data-tut="replay">Replay the quick tour</button></p>';
 }
+// ---------- pack: filters, sell one / some / all, always with confirmation
+export let packF='all';let packSel:{k:string;n:number}|null=null,packBulk=false;
+const MATS=new Set(ZN.map(z=>z[4]));
+export const packCat=(k:string)=>FOOD[k]?'food':KP[k]?'keep':KEEPX[k]?'farm':MATS.has(k)?'mats':'goods';
+export const PACKF:string[][]=[['all','All'],['goods','Goods'],['mats','Materials'],['food','Food'],['farm','Seeds & potions'],['keep','Keepsakes']];
+export const canSell=(k:string)=>!KP[k]&&SELL_VALUE[k]>0;
+const sellVal=(k:string,n:number)=>Math.round(n*SELL_VALUE[k]*(1+cb('sell')));
+const owned=()=>Object.keys(gameState.inv).filter(k=>gameState.inv[k]>0);
+export function packAct(a:string,v?:string){
+  const inv=gameState.inv;
+  if(a=='f'){packF=v||'all';packSel=null;packBulk=false}
+  else if(a=='sel'){packBulk=false;packSel=packSel&&packSel.k==v&&v?null:v&&inv[v]>0?{k:v,n:1}:null}
+  else if(a=='q'&&packSel){const have=inv[packSel.k]||0;let n=packSel.n;
+    if(v=='all')n=have;else if(v=='half')n=Math.ceil(have/2);else n+=parseInt(v||'0',10)||0;
+    packSel.n=Math.max(1,Math.min(have,n))}
+  else if(a=='cancel'){packSel=null;packBulk=false}
+  else if(a=='ok'&&packSel){const k=packSel.k,n=Math.min(packSel.n,inv[k]||0);
+    if(n>0&&canSell(k)){const g=sellVal(k,n);gameState.a+=g;inv[k]-=n;if(inv[k]<=0)delete inv[k];say('Sold '+n+' '+k+' for '+g+' acorns.')}
+    packSel=null}
+  else if(a=='bulk'){packSel=null;packBulk=true}
+  else if(a=='bulkok'){let g=0,n=0;for(const k of owned()){if(KEEP(k)||!canSell(k))continue;if(packF!='all'&&packCat(k)!=packF)continue;g+=sellVal(k,inv[k]);n++;delete inv[k]}
+    gameState.a+=g;say('Sold '+n+' kinds of goods for '+g+' acorns.');packBulk=false}
+}
+export function packView():string{
+  const items=owned(),inF=(k:string)=>packF=='all'||packCat(k)==packF,list=items.filter(inF);
+  const bulk=list.filter(k=>!KEEP(k)&&canSell(k)),tot=bulk.reduce((s,k)=>s+sellVal(k,gameState.inv[k]),0);
+  if(packSel&&!(gameState.inv[packSel.k]>0))packSel=null;
+  let h='<h2>Pack</h2><p class="sub">Crafting uses gathered goods and zone materials, so sell selectively. Every sale asks you to confirm.</p>';
+  if(!items.length)return h+'<p class="sub">Your pack is empty. Gather something first.</p>';
+  h+='<div class="chips">'+PACKF.map(f=>{const n=items.filter(k=>f[0]=='all'||packCat(k)==f[0]).length;return '<button class="'+(packF==f[0]?'on':'')+'" data-pk="f" data-pv="'+f[0]+'">'+f[1]+' '+n+'</button>'}).join('')+'</div>';
+  if(!list.length)h+='<p class="mu">Nothing of that kind in your pack.</p>';
+  h+=list.map(k=>{
+    const sel=packSel&&packSel.k==k?packSel:null,have=gameState.inv[k];
+    let r='<div class="row"><span>'+k+'<small>'+SELL_VALUE[k]+' acorns each'+(FOOD[k]?' · heals '+FOOD[k]:KP[k]?' · keepsake':KEEPX[k]?' · '+KEEPX[k]:'')+'</small></span><b>×'+have+'</b>'+(canSell(k)?'<button class="btn" data-pk="sel" data-pv="'+k+'">'+(sel?'Close':'Sell…')+'</button>':'')+'</div>';
+    if(sel)r+='<div class="arena" style="margin:-2px 0 8px"><div class="nm"><span>Sell how many?</span><span>'+sel.n+' of '+have+'</span></div><div class="chips" style="margin:8px 0">'+[['-10','−10'],['-1','−1'],['1','+1'],['10','+10'],['half','Half'],['all','All']].map(q=>'<button data-pk="q" data-pv="'+q[0]+'">'+q[1]+'</button>').join('')+'</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-pk="ok">Confirm: sell '+sel.n+' for '+sellVal(k,sel.n)+' acorns</button><button class="btn" data-pk="cancel">Cancel</button></div></div>';
+    return r;
+  }).join('');
+  if(bulk.length){
+    h+=packBulk?'<div class="arena"><div class="nm"><span>Sell '+bulk.length+' kinds of goods'+(packF=='all'?'':' ('+PACKF.find(f=>f[0]==packF)![1].toLowerCase()+')')+' for '+tot+' acorns?</span></div><p class="mu" style="margin:4px 0 8px">Food, keepsakes, seeds and potions are never included.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-pk="bulkok">Yes, sell</button><button class="btn" data-pk="cancel">Cancel</button></div></div>'
+      :'<p><button class="btn" data-pk="bulk">Sell all'+(packF=='all'?'':' in this filter')+' (not food or keepsakes) · '+tot+' acorns…</button></p>';
+  }
+  return h;
+}
 export function view(){
   if(tab=='burrow')return burrowView();
   if(tab=='log')return logTabs()+(logSub=='guide'?guideView():logSub=='data'?dataView():logSub=='stats'?statsView():logView());
@@ -208,8 +251,7 @@ export function view(){
   if(tab=='gear')return gearView();
   if(tab=='party')return partyView();
   if(tab=='delve')return '<h2>Expeditions</h2>'+exView()+raidView();
-  const items=Object.keys(gameState.inv).filter(k=>gameState.inv[k]>0),tot=Math.round(items.reduce((s,k)=>s+(KEEP(k)?0:gameState.inv[k]*SELL_VALUE[k]),0)*(1+cb('sell')));
-  return '<h2>Pack</h2><p class="sub">Crafting uses gathered goods and zone materials, so sell selectively.</p>'+(items.length?items.map(k=>'<div class="row"><span>'+k+'<small>'+SELL_VALUE[k]+' acorns each'+(FOOD[k]?' · heals '+FOOD[k]:KP[k]?' · keepsake':'')+'</small></span><b>×'+gameState.inv[k]+'</b>'+(KEEP(k)?'':'<button class="btn" data-sellone="'+k+'">Sell</button>')+'</div>').join('')+'<p><button class="btn" data-sell="1">Sell all but food and keepsakes for '+tot+' acorns</button></p>':'<p class="sub">Your pack is empty. Gather something first.</p>');
+  return packView();
 }
 export function render(){
   set_hitsStr(null);

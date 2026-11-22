@@ -160,9 +160,10 @@ export function raidKill(e:Enemy,quiet?:any){
 export function raidDrops(r:Raid,i:number){
   const L=['Acorns: about '+Math.round(r.rw/1000).toLocaleString()+'k per clear.'];
   if(r.core)L.push(r.core[0]+': '+r.core[1]+' or '+(r.core[1]+1)+' every clear.');
-  L.push(IT[r.tr].n+' (trinket): about 6% per clear, guaranteed by 25 clears.');
+  const tg=!!(gameState.col[r.tr]||gameState.own[r.tr]),pk='p_r'+i,pg=!!gameState.pets[pk];
+  L.push((tg?'<s>':'')+IT[r.tr].n+(tg?'</s>':'')+' (trinket): about 6% per clear, guaranteed by 25 clears.');
   L.push(PRE[Math.min(10,[7,8,9,10][i])]+' gear piece: about 1 in 5 per clear (sometimes one tier higher), guaranteed by 8 clears.');
-  L.push('Raid pet '+PETS[PETS.findIndex(q=>q[0]=='p_r'+i)][1]+': 1 in '+[80,100,120,150][i]+' per clear.');
+  L.push((pg?'<s>':'')+'Raid pet '+PETS[PETS.findIndex(q=>q[0]==pk)][1]+(pg?'</s>':'')+': 1 in '+[80,100,120,150][i]+' per clear.');
   L.push('Leadership pet: 1 in 150 per clear.');
   L.push('Loot only comes at the end of a full clear. Losing a fight pays nothing.');
   return '<details class="chip" style="margin-top:8px"><summary><span>Possible drops</span><em>open</em></summary><div class="mu">'+L.map(l=>'<div>• '+l+'</div>').join('')+'</div></details>';

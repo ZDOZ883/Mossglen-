@@ -1138,6 +1138,51 @@ describe('tutorial and item directory', () => {
     assert.ok(/Possible drops|<span>Drops<\/span>/.test(g.view('combat')));
     g.view('delve');
   });
+  it('drop panels cross out gear you already own but never materials', () => {
+    const g = load({ seed: 4 });
+    g.ev(`gameState.sp='Badger'`);
+    const e = `ENEMIES.find(e=>e.zone==0&&e.boss&&!e.inst)`;
+    const before = g.ev(`dropInfo(${e}).join(' ')`);
+    assert.ok(!/<s>/.test(before));
+    g.ev(`gameState.col['w01d']=1;gameState.col['t0']=1;gameState.pets['p_z0']=1`);
+    const after = g.ev(`dropInfo(${e}).join(' ')`);
+    assert.ok(/<s>[^<]+<\/s>/.test(after), 'owned gear is crossed out');
+    assert.ok(after.includes('<s>' + g.ev(`IT['t0'].n`) + '</s>'), 'owned trinket crossed out');
+    assert.ok(!after.includes('<s>' + g.ev('ZN[0][4]')), 'materials are never crossed out');
+  });
+
+  it('the pack filters by type and sells one, some or all only after confirming', () => {
+    const g = load({ seed: 4 });
+    g.ev(`gameState.sp='Badger';gameState.inv={berries:10,'meadow pelt':20,'Hollow Heart':2};gameState.a=0`);
+    g.ev(`ZN.forEach(z=>{})`);
+    const html = g.view('pack');
+    assert.ok(/Materials 1/.test(html) && /Food 1/.test(html) && /Keepsakes 1/.test(html));
+    g.click({ pk: 'f', pv: 'mats' });
+    assert.ok(!/berries/.test(g.view('pack')), 'filter hides other types');
+    g.click({ pk: 'sel', pv: 'meadow pelt' });
+    assert.equal(g.ev(`gameState.inv['meadow pelt']`), 20, 'choosing an item sells nothing');
+    g.click({ pk: 'q', pv: '10' });
+    g.click({ pk: 'q', pv: '-1' });
+    assert.equal(g.ev('packView().includes("sell 10 for")'), true);
+    g.click({ pk: 'cancel' });
+    assert.equal(g.ev(`gameState.inv['meadow pelt']`), 20, 'cancel sells nothing');
+    g.click({ pk: 'sel', pv: 'meadow pelt' });
+    g.click({ pk: 'q', pv: 'all' });
+    assert.ok(/sell 20 for/.test(g.ev('packView()')));
+    g.click({ pk: 'q', pv: '-10' });
+    g.click({ pk: 'ok' });
+    assert.equal(g.ev(`gameState.inv['meadow pelt']`), 10);
+    assert.ok(g.ev('gameState.a') > 0);
+    g.click({ pk: 'f', pv: 'all' });
+    const a0 = g.ev('gameState.a');
+    g.click({ pk: 'bulk' });
+    assert.equal(g.ev('gameState.a'), a0, 'bulk asks first');
+    g.click({ pk: 'bulkok' });
+    assert.ok(g.ev('gameState.a') > a0);
+    assert.equal(g.ev(`gameState.inv.berries`), 10, 'food kept by bulk sell');
+    assert.equal(g.ev(`gameState.inv['Hollow Heart']`), 2, 'keepsakes kept');
+    assert.equal(g.ev(`gameState.inv['meadow pelt']`), undefined);
+  });
   it('existing saves do not get the tour', () => {
     const g = load({ seed: 4 });
     g.ev(`gameState.sp='Badger'`);

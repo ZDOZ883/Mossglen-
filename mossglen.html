@@ -1159,9 +1159,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   function raidDrops(r, i) {
     const L = ["Acorns: about " + Math.round(r.rw / 1e3).toLocaleString() + "k per clear."];
     if (r.core) L.push(r.core[0] + ": " + r.core[1] + " or " + (r.core[1] + 1) + " every clear.");
-    L.push(IT[r.tr].n + " (trinket): about 6% per clear, guaranteed by 25 clears.");
+    const tg = !!(gameState.col[r.tr] || gameState.own[r.tr]), pk2 = "p_r" + i, pg = !!gameState.pets[pk2];
+    L.push((tg ? "<s>" : "") + IT[r.tr].n + (tg ? "</s>" : "") + " (trinket): about 6% per clear, guaranteed by 25 clears.");
     L.push(PRE[Math.min(10, [7, 8, 9, 10][i])] + " gear piece: about 1 in 5 per clear (sometimes one tier higher), guaranteed by 8 clears.");
-    L.push("Raid pet " + PETS[PETS.findIndex((q) => q[0] == "p_r" + i)][1] + ": 1 in " + [80, 100, 120, 150][i] + " per clear.");
+    L.push((pg ? "<s>" : "") + "Raid pet " + PETS[PETS.findIndex((q) => q[0] == pk2)][1] + (pg ? "</s>" : "") + ": 1 in " + [80, 100, 120, 150][i] + " per clear.");
     L.push("Leadership pet: 1 in 150 per clear.");
     L.push("Loot only comes at the end of a full clear. Losing a fight pays nothing.");
     return '<details class="chip" style="margin-top:8px"><summary><span>Possible drops</span><em>open</em></summary><div class="mu">' + L.map((l) => "<div>\u2022 " + l + "</div>").join("") + "</div></details>";
@@ -1374,11 +1375,11 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       }
     }
     [["neck", ["neck"]], ["ring", ["ring1", "ring2"]]].forEach((q) => {
-      const owned = Object.keys(gameState.own).filter((i) => IT[i] && IT[i].slot == q[0] && X.canEq(IT[i]));
-      const scored = owned.map((i) => [i, accScore(IT[i], c.kind, c.sk)]).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]).map((x) => x[0]);
-      const worn = q[1].map((k) => gameState.eq[k]).filter((i) => i && owned.includes(i));
+      const owned2 = Object.keys(gameState.own).filter((i) => IT[i] && IT[i].slot == q[0] && X.canEq(IT[i]));
+      const scored = owned2.map((i) => [i, accScore(IT[i], c.kind, c.sk)]).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]).map((x) => x[0]);
+      const worn = q[1].map((k) => gameState.eq[k]).filter((i) => i && owned2.includes(i));
       const raw = (i) => itFx(IT[i]).reduce((t, e) => t + Math.abs(e.v), 0);
-      const rest = owned.filter((i) => !scored.includes(i) && !worn.includes(i)).sort((a, b) => raw(b) - raw(a));
+      const rest = owned2.filter((i) => !scored.includes(i) && !worn.includes(i)).sort((a, b) => raw(b) - raw(a));
       const pool = Array.from(new Set(scored.concat(worn, rest))).slice(0, q[1].length);
       q[1].forEach((k, j) => {
         const w = pool[j] || null;
@@ -1538,6 +1539,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     dropPanel: () => dropPanel,
     fight: () => fight,
     gainItem: () => gainItem,
+    gearPoolHtml: () => gearPoolHtml,
     healers: () => healers,
     istat: () => istat,
     loot: () => loot,
@@ -1645,6 +1647,16 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       }
     }
   }
+  function gearPoolHtml(t) {
+    const ids = [];
+    [0, 1, 2].forEach((i) => ids.push("w" + i + t));
+    [0, 1, 2].forEach((i) => ids.push("x" + i + t));
+    [0, 1, 2].forEach((i) => ids.push("o" + i + t));
+    ids.push("y" + t, "b" + t, "h" + t, "g" + t);
+    ["ring", "neck", "cloak"].forEach((sl) => [0, 1, 2, 3].forEach((i) => ids.push(ACCL[sl] + i + "_" + t)));
+    const got = (id) => !!(gameState.col[id] || gameState.own[id]);
+    return ids.map((i) => i + "d").filter((i) => IT[i]).map((i) => got(i) ? "<s>" + IT[i].n + "</s>" : IT[i].n).join(", ");
+  }
   function dropInfo(e) {
     if (e.raid) return ["Raid foes pay nothing on their own. Clear the whole raid for its rewards (see Explore > Raids)."];
     if (e.inst) return ["Delve foes drop nothing in a live fight. Delves pay out through expeditions (see Explore)."];
@@ -1653,13 +1665,14 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     o.push(zz[4] + ": about 3 in 5 kills, 1 or 2 at a time.");
     if (z > 7) {
       o.push(zz[6] + ": " + (e.boss ? "1 in 6" : "1 in 40") + " per kill, guaranteed by " + (e.boss ? 18 : 100) + " kills.");
-      if (e.boss) o.push(PRE[t] + " gear: about 1 in 30, guaranteed by 70 boss kills.");
-    } else o.push(PRE[t] + " gear (weapon, off-hand, armor or accessory): " + (e.boss ? "1 in 10" : "1 in 64") + " per kill, guaranteed by " + (e.boss ? 40 : 150) + " kills.");
+      if (e.boss) o.push(PRE[t] + " gear: about 1 in 30, guaranteed by 70 boss kills. Pool: " + gearPoolHtml(t) + ".");
+    } else o.push(PRE[t] + " gear: " + (e.boss ? "1 in 10" : "1 in 64") + " per kill, guaranteed by " + (e.boss ? 40 : 150) + " kills. Pool: " + gearPoolHtml(t) + ".");
     if (e.boss) {
-      o.push(IT["t" + z].n + " (trinket): about 1 in 12, guaranteed by 60 boss kills.");
-      o.push("Boss pet: 1 in " + (1e3 + 400 * z).toLocaleString() + " per boss kill.");
+      const tg = !!(gameState.col["t" + z] || gameState.own["t" + z]), pg = !!gameState.pets["p_z" + z];
+      o.push((tg ? "<s>" : "") + IT["t" + z].n + (tg ? "</s>" : "") + " (trinket): about 1 in 12, guaranteed by 60 boss kills.");
+      o.push((pg ? "<s>" : "") + "Boss pet" + (pg ? "</s>" : "") + ": 1 in " + (1e3 + 400 * z).toLocaleString() + " per boss kill.");
     }
-    o.push("Rare-drop bonuses from gear, pets, blessings and Slayer tasks raise these chances.");
+    o.push("Crossed out means you already have it. Materials and acorns never run out. Rare-drop bonuses from gear, pets, blessings and Slayer tasks raise these chances.");
     return o;
   }
   var dropPanel = (e) => '<details class="chip" style="margin-top:8px"><summary><span>Drops</span><em>open</em></summary><div class="mu">' + dropInfo(e).map((l) => "<div>\u2022 " + l + "</div>").join("") + "</div></details>";
@@ -3157,8 +3170,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   __export(views_exports, {
     CF: () => CF,
     CGN: () => CGN,
+    PACKF: () => PACKF,
     PKN: () => PKN,
     TUT: () => TUT,
+    canSell: () => canSell,
     cgOf: () => cgOf,
     cookPage: () => cookPage,
     craftPage: () => craftPage,
@@ -3172,6 +3187,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     logSub: () => logSub,
     logTabs: () => logTabs,
     memName: () => memName,
+    packAct: () => packAct,
+    packCat: () => packCat,
+    packF: () => packF,
+    packView: () => packView,
     partyView: () => partyView,
     perkTxt: () => perkTxt,
     petSrc: () => petSrc,
@@ -3409,6 +3428,82 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     const rates = "<b>Zone gear</b>: about 1 in 64 per kill, or 1 in 10 from a boss. A guaranteed drop arrives after 150 kills (40 for bosses).<br><b>Deep zones (8+)</b>: crafting materials about 1 in 40 per kill, 1 in 6 from a boss, guaranteed by 100 kills (18 for bosses). Bosses also have a 1 in 30 chance at gear, guaranteed by 70 kills.<br><b>Trinkets</b>: about 1 in 12 per boss kill, guaranteed by 60.<br>These are base chances. Rare-drop bonuses from gear, pets and blessings multiply them.";
     return '<h2>Guide</h2><p class="sub">Reference notes, kept out of the way.</p>' + dens(gameState.sp + " traits", "+15% xp in " + SP[gameState.sp] + ". " + spTxt(gameState.sp)) + dens("Capes", '<div style="margin-top:6px">' + capes + "</div>") + memDens + itemDir() + dens("Drop rates", rates) + '<p><button class="btn" data-tut="replay">Replay the quick tour</button></p>';
   }
+  var packF = "all";
+  var packSel = null, packBulk = false;
+  var MATS = new Set(ZN.map((z) => z[4]));
+  var packCat = (k) => FOOD[k] ? "food" : KP[k] ? "keep" : KEEPX[k] ? "farm" : MATS.has(k) ? "mats" : "goods";
+  var PACKF = [["all", "All"], ["goods", "Goods"], ["mats", "Materials"], ["food", "Food"], ["farm", "Seeds & potions"], ["keep", "Keepsakes"]];
+  var canSell = (k) => !KP[k] && SELL_VALUE[k] > 0;
+  var sellVal = (k, n) => Math.round(n * SELL_VALUE[k] * (1 + cb("sell")));
+  var owned = () => Object.keys(gameState.inv).filter((k) => gameState.inv[k] > 0);
+  function packAct(a, v) {
+    const inv = gameState.inv;
+    if (a == "f") {
+      packF = v || "all";
+      packSel = null;
+      packBulk = false;
+    } else if (a == "sel") {
+      packBulk = false;
+      packSel = packSel && packSel.k == v && v ? null : v && inv[v] > 0 ? { k: v, n: 1 } : null;
+    } else if (a == "q" && packSel) {
+      const have = inv[packSel.k] || 0;
+      let n = packSel.n;
+      if (v == "all") n = have;
+      else if (v == "half") n = Math.ceil(have / 2);
+      else n += parseInt(v || "0", 10) || 0;
+      packSel.n = Math.max(1, Math.min(have, n));
+    } else if (a == "cancel") {
+      packSel = null;
+      packBulk = false;
+    } else if (a == "ok" && packSel) {
+      const k = packSel.k, n = Math.min(packSel.n, inv[k] || 0);
+      if (n > 0 && canSell(k)) {
+        const g = sellVal(k, n);
+        gameState.a += g;
+        inv[k] -= n;
+        if (inv[k] <= 0) delete inv[k];
+        say("Sold " + n + " " + k + " for " + g + " acorns.");
+      }
+      packSel = null;
+    } else if (a == "bulk") {
+      packSel = null;
+      packBulk = true;
+    } else if (a == "bulkok") {
+      let g = 0, n = 0;
+      for (const k of owned()) {
+        if (KEEP(k) || !canSell(k)) continue;
+        if (packF != "all" && packCat(k) != packF) continue;
+        g += sellVal(k, inv[k]);
+        n++;
+        delete inv[k];
+      }
+      gameState.a += g;
+      say("Sold " + n + " kinds of goods for " + g + " acorns.");
+      packBulk = false;
+    }
+  }
+  function packView() {
+    const items = owned(), inF = (k) => packF == "all" || packCat(k) == packF, list = items.filter(inF);
+    const bulk = list.filter((k) => !KEEP(k) && canSell(k)), tot = bulk.reduce((s, k) => s + sellVal(k, gameState.inv[k]), 0);
+    if (packSel && !(gameState.inv[packSel.k] > 0)) packSel = null;
+    let h = '<h2>Pack</h2><p class="sub">Crafting uses gathered goods and zone materials, so sell selectively. Every sale asks you to confirm.</p>';
+    if (!items.length) return h + '<p class="sub">Your pack is empty. Gather something first.</p>';
+    h += '<div class="chips">' + PACKF.map((f) => {
+      const n = items.filter((k) => f[0] == "all" || packCat(k) == f[0]).length;
+      return '<button class="' + (packF == f[0] ? "on" : "") + '" data-pk="f" data-pv="' + f[0] + '">' + f[1] + " " + n + "</button>";
+    }).join("") + "</div>";
+    if (!list.length) h += '<p class="mu">Nothing of that kind in your pack.</p>';
+    h += list.map((k) => {
+      const sel = packSel && packSel.k == k ? packSel : null, have = gameState.inv[k];
+      let r = '<div class="row"><span>' + k + "<small>" + SELL_VALUE[k] + " acorns each" + (FOOD[k] ? " \xB7 heals " + FOOD[k] : KP[k] ? " \xB7 keepsake" : KEEPX[k] ? " \xB7 " + KEEPX[k] : "") + "</small></span><b>\xD7" + have + "</b>" + (canSell(k) ? '<button class="btn" data-pk="sel" data-pv="' + k + '">' + (sel ? "Close" : "Sell\u2026") + "</button>" : "") + "</div>";
+      if (sel) r += '<div class="arena" style="margin:-2px 0 8px"><div class="nm"><span>Sell how many?</span><span>' + sel.n + " of " + have + '</span></div><div class="chips" style="margin:8px 0">' + [["-10", "\u221210"], ["-1", "\u22121"], ["1", "+1"], ["10", "+10"], ["half", "Half"], ["all", "All"]].map((q) => '<button data-pk="q" data-pv="' + q[0] + '">' + q[1] + "</button>").join("") + '</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-pk="ok">Confirm: sell ' + sel.n + " for " + sellVal(k, sel.n) + ' acorns</button><button class="btn" data-pk="cancel">Cancel</button></div></div>';
+      return r;
+    }).join("");
+    if (bulk.length) {
+      h += packBulk ? '<div class="arena"><div class="nm"><span>Sell ' + bulk.length + " kinds of goods" + (packF == "all" ? "" : " (" + PACKF.find((f) => f[0] == packF)[1].toLowerCase() + ")") + " for " + tot + ' acorns?</span></div><p class="mu" style="margin:4px 0 8px">Food, keepsakes, seeds and potions are never included.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-pk="bulkok">Yes, sell</button><button class="btn" data-pk="cancel">Cancel</button></div></div>' : '<p><button class="btn" data-pk="bulk">Sell all' + (packF == "all" ? "" : " in this filter") + " (not food or keepsakes) \xB7 " + tot + " acorns\u2026</button></p>";
+    }
+    return h;
+  }
   function view() {
     if (tab == "burrow") return burrowView();
     if (tab == "log") return logTabs() + (logSub == "guide" ? guideView() : logSub == "data" ? dataView() : logSub == "stats" ? statsView() : logView());
@@ -3417,8 +3512,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     if (tab == "gear") return gearView();
     if (tab == "party") return partyView();
     if (tab == "delve") return "<h2>Expeditions</h2>" + exView() + raidView();
-    const items = Object.keys(gameState.inv).filter((k) => gameState.inv[k] > 0), tot = Math.round(items.reduce((s, k) => s + (KEEP(k) ? 0 : gameState.inv[k] * SELL_VALUE[k]), 0) * (1 + cb("sell")));
-    return '<h2>Pack</h2><p class="sub">Crafting uses gathered goods and zone materials, so sell selectively.</p>' + (items.length ? items.map((k) => '<div class="row"><span>' + k + "<small>" + SELL_VALUE[k] + " acorns each" + (FOOD[k] ? " \xB7 heals " + FOOD[k] : KP[k] ? " \xB7 keepsake" : "") + "</small></span><b>\xD7" + gameState.inv[k] + "</b>" + (KEEP(k) ? "" : '<button class="btn" data-sellone="' + k + '">Sell</button>') + "</div>").join("") + '<p><button class="btn" data-sell="1">Sell all but food and keepsakes for ' + tot + " acorns</button></p>" : '<p class="sub">Your pack is empty. Gather something first.</p>');
+    return packView();
   }
   function render() {
     set_hitsStr(null);
@@ -3771,10 +3865,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     } else if (d.shop) shopBuy(d.shop);
     else if (d.task) taskAct(d.task);
     else if (d.slbuy) slBuy(d.slbuy);
-    else if (d.sellone) {
-      const k = d.sellone;
-      gameState.a += Math.round(gameState.inv[k] * SELL_VALUE[k] * (1 + cb("sell")));
-      delete gameState.inv[k];
+    else if (d.pk) {
+      packAct(d.pk, d.pv);
     } else if (d.buy) buy(d.buy);
     else if (d.tier) {
       const [i, t2] = d.tier.split(":");
@@ -3815,16 +3907,6 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
         const inParty = joinParty(d.hire);
         say(h.n + (inParty ? " joins your party." : " joins your roster and rests at home. Your party is full."));
       }
-    } else if (d.sell) {
-      let g = 0;
-      for (const k in gameState.inv) {
-        if (KEEP(k)) continue;
-        g += gameState.inv[k] * SELL_VALUE[k];
-        delete gameState.inv[k];
-      }
-      g = Math.round(g * (1 + cb("sell")));
-      gameState.a += g;
-      say("Sold your pack for " + g + " acorns.");
     } else if (d.reset) {
       if (typeof prompt == "function" && prompt("This erases your character, party, gear and every skill, and cannot be undone. Type ERASE to confirm.") === "ERASE") {
         try {

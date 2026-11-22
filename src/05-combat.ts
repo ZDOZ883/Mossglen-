@@ -23,6 +23,13 @@ export function loot(e:Enemy,quiet?:boolean){
   if(e.boss&&z>7){const hk='z'+z+'h';gameState.pity[hk]=(gameState.pity[hk]||0)+1;if(Math.random()<g/30||gameState.pity[hk]>=70){gameState.pity[hk]=0;gainItem(rndGear(z))}}
   if(e.boss){const tk='z'+z+'t';gameState.pity[tk]=(gameState.pity[tk]||0)+1;if(Math.random()<g/12||gameState.pity[tk]>=60){gameState.pity[tk]=0;gainItem('t'+z)}}
 }
+// Gear that can drop at a tier, with items you already have crossed out.
+export function gearPoolHtml(t:number):string{
+  const ids:string[]=[];[0,1,2].forEach(i=>ids.push('w'+i+t));[0,1,2].forEach(i=>ids.push('x'+i+t));[0,1,2].forEach(i=>ids.push('o'+i+t));ids.push('y'+t,'b'+t,'h'+t,'g'+t);
+  ['ring','neck','cloak'].forEach(sl=>[0,1,2,3].forEach(i=>ids.push(ACCL[sl]+i+'_'+t)));
+  const got=(id:string)=>!!(gameState.col[id]||gameState.own[id]);
+  return ids.map(i=>i+'d').filter(i=>IT[i]).map(i=>got(i)?'<s>'+IT[i].n+'</s>':IT[i].n).join(', ');
+}
 // Everything an enemy can drop, as short lines for the "Drops" panel.
 export function dropInfo(e:Enemy):string[]{
   if(e.raid)return ['Raid foes pay nothing on their own. Clear the whole raid for its rewards (see Explore > Raids).'];
@@ -32,13 +39,14 @@ export function dropInfo(e:Enemy):string[]{
   o.push(zz[4]+': about 3 in 5 kills, 1 or 2 at a time.');
   if(z>7){
     o.push(zz[6]+': '+(e.boss?'1 in 6':'1 in 40')+' per kill, guaranteed by '+(e.boss?18:100)+' kills.');
-    if(e.boss)o.push(PRE[t]+' gear: about 1 in 30, guaranteed by 70 boss kills.');
-  }else o.push(PRE[t]+' gear (weapon, off-hand, armor or accessory): '+(e.boss?'1 in 10':'1 in 64')+' per kill, guaranteed by '+(e.boss?40:150)+' kills.');
+    if(e.boss)o.push(PRE[t]+' gear: about 1 in 30, guaranteed by 70 boss kills. Pool: '+gearPoolHtml(t)+'.');
+  }else o.push(PRE[t]+' gear: '+(e.boss?'1 in 10':'1 in 64')+' per kill, guaranteed by '+(e.boss?40:150)+' kills. Pool: '+gearPoolHtml(t)+'.');
   if(e.boss){
-    o.push(IT['t'+z].n+' (trinket): about 1 in 12, guaranteed by 60 boss kills.');
-    o.push('Boss pet: 1 in '+(1000+400*z).toLocaleString()+' per boss kill.');
+    const tg=!!(gameState.col['t'+z]||gameState.own['t'+z]),pg=!!gameState.pets['p_z'+z];
+    o.push((tg?'<s>':'')+IT['t'+z].n+(tg?'</s>':'')+' (trinket): about 1 in 12, guaranteed by 60 boss kills.');
+    o.push((pg?'<s>':'')+'Boss pet'+(pg?'</s>':'')+': 1 in '+(1000+400*z).toLocaleString()+' per boss kill.');
   }
-  o.push('Rare-drop bonuses from gear, pets, blessings and Slayer tasks raise these chances.');
+  o.push('Crossed out means you already have it. Materials and acorns never run out. Rare-drop bonuses from gear, pets, blessings and Slayer tasks raise these chances.');
   return o;
 }
 export const dropPanel=(e:Enemy)=>'<details class="chip" style="margin-top:8px"><summary><span>Drops</span><em>open</em></summary><div class="mu">'+dropInfo(e).map(l=>'<div>• '+l+'</div>').join('')+'</div></details>';
