@@ -57,6 +57,7 @@ document.addEventListener('click',e=>{
   else if(d.buy)buy(d.buy);
   else if(d.tier){const [i,t]=d.tier.split(':');gameState.tier[i]=+t}
   else if(d.lead)gameState.lead=d.lead;
+  else if(d.sic){gameState.sic=gameState.sic==d.sic?null:d.sic;refreshFx()}
   else if(d.exd)set_exSel({d:exSel.d==d.exd?null:d.exd,l:null,m:[],b:null});
   else if(d.exl){exSel.l=exSel.l==d.exl?null:d.exl;exSel.m=exSel.m.filter((k:string)=>k!=d.exl)}
   else if(d.exm){exSel.m=exSel.m.includes(d.exm)?exSel.m.filter((k:string)=>k!=d.exm):exSel.m.concat(d.exm)}

@@ -1335,4 +1335,13 @@ describe('party hp', () => {
     assert.equal(g.ev(`fighters().includes(__k)`), true);
     assert.ok(g.ev(`memFrac(__k)`) > 0.2);
   });
+  it('second in command buffs the party and trims everyone\'s stats', () => {
+    const g = load({ seed: 3 });
+    expectedSetup(g, 6, { members: 3 });
+    g.ev(`(function(){const k=fighters().find(q=>MEMBERS[q].role=='Striker')||fighters()[0];globalThis.__s=k;globalThis.__a0=mst(k).a;globalThis.__p0=cb('pmult')+cb('taken')+cb('regen')+cb('drop')+cb('xpm');gameState.sic=k;refreshFx()})()`);
+    assert.ok(g.ev(`mst(__s).a`) < g.ev(`__a0`));
+    assert.ok(g.ev(`cb('pmult')+cb('taken')+cb('regen')+cb('drop')+cb('xpm')`) > g.ev(`__p0`));
+    g.ev(`gameState.mt[__s]={k:'idle'};refreshFx()`);
+    assert.equal(g.ev(`sicOn()`), false);
+  });
 });

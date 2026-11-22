@@ -1,6 +1,6 @@
-import { gameState, TASKS } from './00-state';
+import { gameState, TASKS, FXSRC } from './00-state';
 import { X } from './registry';
-import { IT, asg, cb, ldx, lv, mxp, pbs, skPet } from './01-species-pets';
+import { IT, asg, cb, cl, MEMBERS, ldx, lv, mxp, pbs, sicOn, skPet } from './01-species-pets';
 import { RFN, ctime, gateOk, refineDone } from './02-gear-data';
 
 import { hrCount } from './03-world-expeditions';
@@ -26,3 +26,11 @@ export function memAct(k:string,t:any){
 }
 
 Object.defineProperties(X,{validTask:{get:()=>validTask,configurable:true}});
+export const SIC:Record<string,{n:string;fx:[string,number][];d:string}>={
+  Tank:{n:'Hold the line',fx:[['taken',.04]],d:'−4% damage taken'},
+  Striker:{n:'Rally the charge',fx:[['pmult',.06]],d:'+6% party damage'},
+  Healer:{n:'Tend the wounded',fx:[['regen',.25]],d:'+25% recovery'},
+  Scout:{n:'Read the field',fx:[['drop',.04],['xpm',.03]],d:'+4% rare drops, +3% combat xp'},
+  Specialist:{n:'Keep the camp',fx:[['xpm',.05]],d:'+5% combat xp'}};
+export const sicBuff=(k:string)=>{const b=SIC[MEMBERS[k].role];return b?{...b,s:1+Math.min(1,cl(k)/100)*.5}:null};
+FXSRC.push(()=>{const k=gameState.sic;if(!k||!sicOn())return[];const b=sicBuff(k);return b?b.fx.map(([q,v])=>({k:q,v:v*b.s,sk:null as any})):[]});
