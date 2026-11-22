@@ -47,8 +47,11 @@ export function craftDone(id:string,mk?:any){
   if(!gameState.own[id]){gameState.own[id]=1;say((mk?MEMBERS[mk].n+' crafted ':'Crafted ')+it.n+'.');autoEq(id)}else gameState.a+=scrap(it.tier);
 }
 export function newTask(){
-  const sl=lv(gameState.xp.Slayer),zm=ZN.reduce((m,z,i)=>zoneOpen(i)?i:m,0);
-  const c=ENEMIES.filter(e=>!e.boss&&e.zone>=zm-2&&zoneOpen(e.zone)&&!e.inst&&Math.floor(ZN[e.zone][1]*.5)<=sl);
+  const sl=lv(gameState.xp.Slayer);
+  // Any zone you can fight whose Slayer requirement you meet; tasks come from the best three of those, so a low Slayer level never leaves you without one.
+  const ok=ENEMIES.filter(e=>!e.boss&&!e.inst&&zoneOpen(e.zone)&&Math.floor(ZN[e.zone][1]*.5)<=sl),zm=ok.reduce((m,e)=>Math.max(m,e.zone),0);
+  const c=ok.filter(e=>e.zone>=zm-2);
+  if(!c.length){say('No task is available yet.');return}
   const e=c[Math.floor(Math.random()*c.length)],n=20+Math.floor(Math.random()*21);
   gameState.task={id:e.id,n,left:n};say('New task: defeat '+n+' × '+e.n+'.');
 }

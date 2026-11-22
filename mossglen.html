@@ -1957,8 +1957,13 @@ nav button.on i{opacity:1}
     } else gameState.a += scrap(it.tier);
   }
   function newTask() {
-    const sl = lv(gameState.xp.Slayer), zm = ZN.reduce((m, z, i) => zoneOpen(i) ? i : m, 0);
-    const c = ENEMIES.filter((e2) => !e2.boss && e2.zone >= zm - 2 && zoneOpen(e2.zone) && !e2.inst && Math.floor(ZN[e2.zone][1] * 0.5) <= sl);
+    const sl = lv(gameState.xp.Slayer);
+    const ok = ENEMIES.filter((e2) => !e2.boss && !e2.inst && zoneOpen(e2.zone) && Math.floor(ZN[e2.zone][1] * 0.5) <= sl), zm = ok.reduce((m, e2) => Math.max(m, e2.zone), 0);
+    const c = ok.filter((e2) => e2.zone >= zm - 2);
+    if (!c.length) {
+      say("No task is available yet.");
+      return;
+    }
     const e = c[Math.floor(Math.random() * c.length)], n = 20 + Math.floor(Math.random() * 21);
     gameState.task = { id: e.id, n, left: n };
     say("New task: defeat " + n + " \xD7 " + e.n + ".");

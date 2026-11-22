@@ -344,6 +344,14 @@ describe('gear slots', () => {
     assert.equal(g.ev('gameState.a'), a);
   });
 
+  it('a Slayer task is always available, even with a high combat level and low Slayer', () => {
+    const g = load({ seed: 2 });
+    for (const [c, sl] of [[1, 1], [30, 1], [70, 1], [100, 20], [120, 120]]) {
+      const id = g.ev(`(function(){['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[${c}]);gameState.xp.Slayer=XT[${sl}];gameState.task=null;g=0;taskAct('new');return gameState.task&&gameState.task.id})()`);
+      assert.ok(id, 'task for combat ' + c + ', slayer ' + sl);
+    }
+  });
+
   it('old saves start Ranged and Magic at their Attack xp', () => {
     const g = load({ seed: 6 });
     g.ev(`gameState.xp.Attack=XT[50];delete gameState.xp.Ranged;delete gameState.xp.Magic;gameState.v=2;migrate()`);
