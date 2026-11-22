@@ -36,13 +36,16 @@ export function recipe(id:string){
   return m;
 }
 export function useMats(r:any,sk:string){if(!Object.keys(r).every(k=>(S.inv[k]||0)>=r[k]))return false;if(sk&&Math.random()<X.cb('save',sk))return true;Object.keys(r).forEach(k=>S.inv[k]-=r[k]);return true}
+// Spare crafts sell as scrap. SCR trims the tiers where crafting out-earned the zone it is made for.
+export const SCR=[1,1,1,1,.6,.8,.7,.55,.9,.7,.4];
+export const scrap=(t:number)=>Math.round(GP[t]*.15*(SCR[t]??1));
 export function craftDone(id:string,mk?:any){
   const it=IT[id],r=recipe(id),sk=CSK(id),x=it.tier>=8?[4300,7800,14000][it.tier-8]:Math.round(25*Math.pow(1.7,it.tier));
   if(it.tier>=8&&!gateOk(it.tier-7)){if(mk)S.mt[mk]={k:'idle'};else S.cur=null;return}
   if(!useMats(r,sk)){if(mk){S.mt[mk]={k:'idle'};say(H[mk].n+' ran out of materials for '+it.n+'.')}else{S.cur=null;say('Out of materials for '+it.n+'.')}return}
   skPet(sk);
   if(mk){X.mxp(mk,x*.6);X.ldx(x*.5)}else{const b=lv(S.xp[sk]);S.xp[sk]+=x*(1+X.cb('xp',sk));if(lv(S.xp[sk])>b)say(sk+' reaches level '+lv(S.xp[sk])+'.')}
-  if(!S.own[id]){S.own[id]=1;say((mk?H[mk].n+' crafted ':'Crafted ')+it.n+'.');autoEq(id)}else S.a+=Math.round(GP[it.tier]*.15);
+  if(!S.own[id]){S.own[id]=1;say((mk?H[mk].n+' crafted ':'Crafted ')+it.n+'.');autoEq(id)}else S.a+=scrap(it.tier);
 }
 export const onTask=(e:Enemy)=>!!S.task&&S.task.id==e.id;
 export function newTask(){

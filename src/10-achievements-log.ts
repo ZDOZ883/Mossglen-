@@ -63,10 +63,13 @@ export const AC:Ach[]=[
 ['m1','Band of Friends','Have 3 party members.',()=>Object.keys(S.hired).length>=3,3000],
 ['m2','Full Party','Have 6 party members.',()=>Object.keys(S.hired).length>=6,100000],
 ['m3','Veteran Squad','Raise a member to level 50.',()=>Object.keys(S.cx).some(k=>lv(S.cx[k])>=50),20000],
+['m5','Grand Company','Have 9 party members.',()=>Object.keys(S.hired).length>=9,1000000],
 ['m4','Elite Companion','Raise a member to level 100.',()=>Object.keys(S.cx).some(k=>lv(S.cx[k])>=100),1000000],
 ['e1','Acorn Collector','Hold 100,000 acorns.',()=>S.a>=1e5,0],
 ['e2','Wealthy','Hold 5,000,000 acorns.',()=>S.a>=5e6,0],
 ['f1','Deepcrafter','Craft a tier 8 or better piece of gear.',()=>Object.keys(S.own).some(i=>IT[i]&&IT[i].tier>=8&&!IT[i].q&&IT[i].slot!='trinket'),100000]];
+// Big one-off acorn rewards were sized for the old economy; compress everything above 100k so one achievement cannot pay for a gate.
+AC.forEach(a=>{if(a[4]&&a[4]>1e5)a[4]=Math.round(1e5+(a[4]-1e5)*.15)});
 export function checkAch(){
   if(!S.ach)return;
   for(let i=0;i<AC.length;i++){const a=AC[i];if(!S.ach[a[0]]&&a[3]()){S.ach[a[0]]=1;S.a+=a[4];say('🏆 Achievement: '+a[1]+(a[4]?' (+'+a[4].toLocaleString()+' acorns)':'')+'.')}}

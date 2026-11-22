@@ -52,7 +52,7 @@ export const ZN:Zone[]=[
 ['Wyrmscale Ridge',110,['Magic','Melee','Ranged','Melee'],['Ember Drake','Scaleguard Hulk','Ridge Stalker','Ashmaw the Wyrm'],'wyrm scale',2,'Wyrm Core'],
 ['Eclipse Sanctum',120,['Ranged','Magic','Melee','Magic'],['Umbral Sentinel','Dusk Oracle','Eclipse Knight','The Hollow Sun'],'eclipse dust',3,'Eclipse Core']];
 export const H0=[200,696,2111,4259,9500,16382,31542,47988,74866,109780,160075],D0=[3.83,6.83,12.5,19.17,28.83,43.83,64.17,91.83,137.83,181.9,332.7],MV=[4,10,22,45,90,170,300,520,900,1500,2600];
-export const XK=[0.04444,0.02682,0.01895,0.01722,0.01368,0.01323,0.01078,0.01056,0.00997,0.00978,0.00937],AK=[0.00333,0.00134,0.00227,0.00459,0.0076,0.01628,0.02994,0.05279,0.1122,0.23279,0.17353];
+export const XK=[0.04444,0.02682,0.01895,0.01722,0.01368,0.01323,0.01078,0.01056,0.00997,0.00978,0.00937],AK=[0.00333,0.00134,0.00227,0.00459,0.0076,0.01628,0.02994,0.05279,0.0774,0.0861,0.0781];
 export const E:Enemy[]=[];ZN.forEach((z,i)=>{[0,1,2,3].forEach(j=>{const hp=Math.round(H0[i]*[.8,1,1.25,6][j]);E.push({id:'z'+i+'m'+j,zone:i,n:z[3][j],type:z[2][j],hp,dps:D0[i]*[1.2,1,.8,1.5][j],xp:Math.round(hp*XK[i]),a:Math.round(hp*AK[i]),boss:j==3})})});
 ZN.forEach((z,i)=>V[z[4]]=MV[i]);
 export const gateOk=(n:any)=>!n||!!(S&&S.gates&&S.gates[n]);

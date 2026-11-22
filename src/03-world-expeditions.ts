@@ -35,7 +35,7 @@ export const RD:Raid[]=[
 {id:'r2',n:'The Gloamwyrm Lair',cl:110,gate:2,party:4,mlv:75,lvl:115,H:752120,D:195.8,ref:3487,rw:540000,core:['Wyrm Core',2],tr:'t13',st:[['Scale Cultists','Magic',1,1],['Ashen Drakelings','Ranged',1.1,1.1],['Gloam Brood Mother','Melee',1.5,1.25],['Twin Wyrmguards','Melee',1.8,1.4],['Ember Oracle','Magic',2,1.5],['Gloamwyrm Vaerath','Ranged',5,2]]},
 {id:'r3',n:'The Eclipse Citadel',cl:118,gate:3,party:5,mlv:100,lvl:125,H:1842473,D:237.6,ref:5873,rw:1800000,core:['Eclipse Core',3],tr:'t14',st:[['Citadel Vanguard','Melee',1,1],['Dusk Archers','Ranged',1.1,1.1],['Umbral Magi','Magic',1.3,1.25],['Eclipse Knight-Commander','Melee',1.7,1.4],['The Hollow Choir','Magic',1.9,1.5],['Warden of the Last Light','Ranged',2.2,1.6],['The Eclipse Sovereign','Melee',5.5,2.1]]}];
 // Acorn payout per raid, tuned so a raid earns about what farming its matching zone does (the first raid used to pay well above that).
-export const RPAY:Record<string,number>={r0:.7,r1:.9,r2:1,r3:1};
+export const RPAY:Record<string,number>={r0:1.15,r1:1.3,r2:1.05,r3:.8};
 RD.forEach(r=>r.st.forEach((st:any,j:number)=>{const hp=Math.round(r.H*st[2]);E.push({id:r.id+'s'+j,zone:7,raid:r.id,inst:1,stage:j,lvl:r.lvl,n:st[0],type:st[1],hp,dps:r.D*st[3],soft:Math.round(hp/r.ref),xp:Math.round(hp*XK[10]*.5),a:Math.round(hp*AK[10]*.3*RPAY[r.id]),boss:j==r.st.length-1})}));
 
 // ---------- delves: short raids with boons
@@ -90,7 +90,7 @@ export function exFinish(quiet:any,e:Expedition){
   const d=D.find(x=>x.id==e.id)!,t=e.tier,win=Math.random()<e.odds;
   const bn=e.boon=='fortune'?.25:0,lead=e.leader,scale=e.dur/600;
   const m=Math.min(1.3,(1+exPk(e.mem,'loot'))*(1+bn)*(1+exLead(lead)/2))*(1+.6*(t-1));// boosters stack, but cap at +30%
-  const full=Math.round(E.filter(x=>x.dv==d.id&&x.tier==t).reduce((q,x)=>q+x.a,0)*.65*m*(2+e.dur/7200));
+  const full=Math.round(E.filter(x=>x.dv==d.id&&x.tier==t).reduce((q,x)=>q+x.a,0)*1*m*(2+e.dur/7200));
   const g=Math.round((win?full:Math.round(full*.25))*(e.par||1));S.a+=g;
   let s=(win?'Expedition to '+d.n+' (tier '+t+') returned in triumph! +':'Expedition to '+d.n+' (tier '+t+') was driven back. +')+g.toLocaleString()+' acorns.';
   if(win){

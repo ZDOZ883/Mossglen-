@@ -811,6 +811,26 @@ describe('economy guards', () => {
     return zr;
   }
 
+  it('top zones follow a gentle curve and stay in the low millions per hour', () => {
+    const g = load({ seed: 1 });
+    const zr = zoneRates(g);
+    for (let z = 5; z < 11; z++) assert.ok(zr[z] / zr[z - 1] < 4, `zone ${z} pays ${(zr[z] / zr[z - 1]).toFixed(1)}x the zone before`);
+    assert.ok(zr[10] < 2.5e6, 'the top zone should stay in the low millions per hour');
+  });
+
+  it('crafting spares for scrap earns about what the matching zone does', () => {
+    const g = load({ seed: 1 });
+    const zr = zoneRates(g), zt = { 4: 5, 5: 6, 6: 7, 7: 8, 8: 8, 9: 9, 10: 10 };
+    const out = JSON.parse(g.ev(`JSON.stringify([4,5,6,7,8,9,10].map(t=>{const GS={};A.forEach(a=>GS[a.item]=a);const ids=Object.keys(IT).filter(id=>IT[id].tier==t&&CSK(id)&&IT[id].req!=null);let best=0;
+      ids.forEach(id=>{const r=recipe(id);let sec=ctime(id);Object.keys(r).forEach(k=>{if(GS[k])sec+=r[k]*tt(GS[k])});best=Math.max(best,scrap(t)/sec*3600)});return [t,best]}))`));
+    out.forEach(([t, v]) => assert.ok(v / zr[zt[t]] < 1.4, `tier ${t} crafting earns ${(v / zr[zt[t]]).toFixed(2)}x its zone`));
+  });
+
+  it('big achievement rewards cannot pay for a gate on their own', () => {
+    const g = load({ seed: 1 });
+    assert.ok(g.ev('Math.max(...AC.map(a=>a[4]||0))') < 12e6);
+  });
+
   it('raids pay about what their matching zone does, never far above it', () => {
     const g = load({ seed: 1 });
     const zr = zoneRates(g), ks = ['mole', 'hare', 'owl', 'otter', 'badger', 'fox'];
@@ -827,7 +847,7 @@ describe('economy guards', () => {
     const g = load({ seed: 1 });
     const zr = zoneRates(g);
     g.ev(`S.hired={mole:1,hare:1,owl:1,otter:1,badger:1,fox:1};S.cx={};Object.keys(S.hired).forEach(k=>S.cx[k]=XT[100])`);
-    const out = JSON.parse(g.ev(`JSON.stringify(D.map(d=>{const t=5,dur=exDur(d,t),m=Math.min(1.3,(1+exPk(['owl'],'loot'))*1.25*(1+exLead('mole')/2))*(1+.6*(t-1)),full=Math.round(E.filter(x=>x.dv==d.id&&x.tier==t).reduce((q,x)=>q+x.a,0)*.65*m*(2+dur/7200));return [d.zb,full/(dur/3600)]}))`));
+    const out = JSON.parse(g.ev(`JSON.stringify(D.map(d=>{const t=5,dur=exDur(d,t),m=Math.min(1.3,(1+exPk(['owl'],'loot'))*1.25*(1+exLead('mole')/2))*(1+.6*(t-1)),full=Math.round(E.filter(x=>x.dv==d.id&&x.tier==t).reduce((q,x)=>q+x.a,0)*1*m*(2+dur/7200));return [d.zb,full/(dur/3600)]}))`));
     out.forEach(([zb, rate]) => assert.ok(rate / zr[zb] <= 1.0, `expedition in zone ${zb} earns ${(rate / zr[zb]).toFixed(2)}x farming`));
   });
 });
