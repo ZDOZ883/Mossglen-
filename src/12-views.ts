@@ -1,4 +1,5 @@
 import { S } from './00-state';
+import { X } from './registry';
 import { CS, FOOD, H, HK, IT, LT, PETS, REQ, SK, SP, SPX, V, lv, nsl, spTxt } from './01-species-pets';
 import { AF, KEEP, KP, RF, RFN, gateOk, refRecipe } from './02-gear-data';
 import { GATE, exFmt, exView, gatesView, hrView, raidView } from './03-world-expeditions';
@@ -13,11 +14,11 @@ import { SKG, actorChips, bars, capeRow, cb, crew, curName, hasWork, isOn, pcx, 
 // Skills, party and top-level views. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 export function skillsView(){
   if(skill)return skillPage(skill);
-  return wxView()+'<details class="chip"><summary><span>'+S.sp+' traits</span><em>tap</em></summary><div class="mu">'+spTxt(S.sp)+'</div></details>'+SKG.map((g:any)=>'<h2>'+g[0]+'</h2><div class="pick">'+g[1].map(tile).join('')+'</div>').join('')+hrView()+gatesView();
+  return wxView()+SKG.map((g:any)=>'<h2>'+g[0]+'</h2><div class="pick">'+g[1].map(tile).join('')+'</div>').join('')+hrView()+gatesView();
 }
 export function skillPage(k:string){
   const body=SK.includes(k)?gatherPage(k):k=='Cooking'?cookPage():CR.includes(k)?craftPage(k):k=='Slayer'?slayerView():leadView();
-  return '<p style="margin:0 0 4px"><button class="btn" data-back="1">← Skills</button></p><h2 style="margin-top:8px">'+k+' · level '+lv(S.xp[k])+(SP[S.sp!]==k?' <span class="mu" style="display:inline">(+15% xp)</span>':'')+'</h2><div class="bar xp"><i style="width:'+pcx(k)+'%"></i></div><p class="mu" style="margin:4px 0 0">'+Math.floor(S.xp[k]).toLocaleString()+' xp</p>'+capeRow(k)+body;
+  return '<p style="margin:0 0 4px"><button class="btn" data-back="1">← Skills</button></p><h2 style="margin-top:8px">'+k+' · level '+lv(S.xp[k])+'</h2><div class="bar xp"><i style="width:'+pcx(k)+'%"></i></div><p class="mu" style="margin:4px 0 0">'+Math.floor(S.xp[k]).toLocaleString()+' xp</p>'+body;
 }
 export function gatherPage(k:string){
   const chips=actorChips(),l=lv(S.xp[k]),sp=who=='you'?1:mspd(who);
@@ -87,9 +88,18 @@ export function partyView(){
   h+='<h2>Pet collection <span class="mu" style="display:inline">· '+Object.keys(S.pets).length+'/'+PETS.length+'</span></h2><p class="mu">Extremely rare drops, found only once each, modelled on RuneScape: skill pets roll about 1 in 100,000 per action (slightly better at higher levels, 15× better at 200M xp), boss pets 1 in 1,000 to 1 in 5,000 per boss kill, raid pets 1 in 80 to 1 in 150 per clear. Skill pets can drop while you or a member trains that skill. Boss pets drop from zone bosses. Raid pets drop when you clear a raid. Pets take a party slot like any member, but fight and work better than the members you can recruit.</p><p class="mu">'+PETS.map(q=>S.pets[q[0]]?'<b>'+q[1]+'</b>':'???').join(' · ')+'</p>';
   return h;
 }
+export let logSub='log';
+export function set_logSub(v:string){logSub=v}
+export const logTabs=()=>'<div class="seg">'+[['log','Collection'],['guide','Guide']].map(t=>'<button data-logsub="'+t[0]+'" class="'+(logSub==t[0]?'on':'')+'">'+t[1]+'</button>').join('')+'</div>';
+const dens=(t:string,b:string)=>'<details class="chip"><summary><span>'+t+'</span><em>open</em></summary><div class="mu">'+b+'</div></details>';
+export function guideView(){
+  const capes=Object.keys(X.CE).map(k=>capeRow(k).replace('<div class="row"><span>','<div class="row"><span><b>'+k+'</b> · ')).join('');
+  const rates='<b>Zone gear</b>: about 1 in 64 per kill, or 1 in 10 from a boss. A guaranteed drop arrives after 150 kills (40 for bosses).<br><b>Deep zones (8+)</b>: crafting materials about 1 in 40 per kill, 1 in 6 from a boss, guaranteed by 100 kills (18 for bosses). Bosses also have a 1 in 30 chance at gear, guaranteed by 70 kills.<br><b>Trinkets</b>: about 1 in 12 per boss kill, guaranteed by 60.<br>These are base chances. Rare-drop bonuses from gear, pets and blessings multiply them.';
+  return '<h2>Guide</h2><p class="sub">Reference notes, kept out of the way.</p>'+dens(S.sp+' traits','+15% xp in '+SP[S.sp!]+'. '+spTxt(S.sp))+dens('Capes','<div style="margin-top:6px">'+capes+'</div>')+dens('Drop rates',rates);
+}
 export function view(){
   if(tab=='burrow')return burrowView();
-  if(tab=='log')return logView();
+  if(tab=='log')return logTabs()+(logSub=='guide'?guideView():logView());
   if(tab=='skills')return skillsView();
   if(tab=='combat')return combatView();
   if(tab=='gear')return gearView();

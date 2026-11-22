@@ -9,7 +9,7 @@ import { LD, asg, buy, buyTool, set_skill, set_tab, set_who, skill, slBuy, slots
 import { assign, validTask } from './08-party-state';
 import { buUp, sgBuy } from './09-seasons-burrow';
 import { bars, cb, clampXp, hasWork, refreshFx, tick } from './11-engine';
-import { CF, render } from './12-views';
+import { CF, render, set_logSub } from './12-views';
 // Input handling, boot and timers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 document.addEventListener('click',e=>{
   const t=(e.target as HTMLElement).closest('button');if(!t)return;const d=t.dataset;
@@ -19,6 +19,7 @@ document.addEventListener('click',e=>{
   else if(d.cmd)S.cmd=!S.cmd;
   else if('cape' in d){S.cape=d.cape||null;refreshFx()}
   else if(d.back)set_skill(null);
+  else if(d.logsub){set_logSub(d.logsub);render();return}
   else if(d.who)set_who(d.who);
   else if(d.assign){const [k,a]=d.assign.split(':');assign(k,a)}
   else if(d.dismiss){const k=d.dismiss;if(asg(k).k=='exp'){say(H[k].n+' is away on an expedition.');}else{delete S.hired[k];delete S.mt[k];if(S.lead==k)S.lead=Object.keys(S.hired)[0]||null;if(who==k)set_who('you');say(H[k].n+' leaves the party.')}}
