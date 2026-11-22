@@ -24,7 +24,8 @@ export function optimize(c:LoadCtx){
     const base:Record<string,string>={};
     SL.forEach(sl=>{const a=by((i:string)=>IT[i].slot==sl&&!IT[i].kind),b=by((i:string)=>IT[i].slot==sl&&IT[i].kind=='2h');const w=a&&b?(IT[b].stat*1.3>IT[a].stat?b:a):a||b;if(w){gameState.eq[sl]=w;base[sl]=w}});
     let bk:any=null,bc=null;
-    SL.forEach(sl=>{
+    // Your combat style is your choice: the loadout only picks the best gear within it.
+    SL.filter(sl=>sl==s0).forEach(sl=>{
       const h1=by((i:string)=>IT[i].slot==sl&&!IT[i].kind),h2=by((i:string)=>IT[i].slot==sl&&IT[i].kind=='2h'),of=by((i:string)=>IT[i].kind=='off'&&IT[i].st==sl),cd=[];
       if(h1){cd.push([h1,shield]);if(of)cd.push([h1,of]);cd.push([h1,null])}
       if(h2)cd.push([h2,null]);
@@ -79,7 +80,7 @@ export function loadoutSl(v:string){
 }
 export function loadoutView(){
   let h='<h2>Loadout</h2><p class="sub">Smart loadout equips the best gear you own for a job: weapon and style against the current enemy, armor and trinket by stats, and the cape whose bonuses suit the work.</p>';
-  h+='<div class="chips"><button class="'+(gameState.auto?'on':'')+'" data-auto="1">Auto-swap: '+(gameState.auto?'on':'off')+'</button></div><p class="mu">With auto-swap on, starting a fight, raid, harvest, gathering or crafting job re-equips for it.</p>';
+  h+='<div class="chips"><button class="'+(gameState.auto?'on':'')+'" data-auto="1">Auto-swap: '+(gameState.auto?'on':'off')+'</button></div><p class="mu">With auto-swap on, starting a fight, raid, harvest, gathering or crafting job re-equips for it. It never changes your combat style, so you can train Melee, Ranged or Magic as you choose.</p>';
   h+='<p class="mu" style="margin:6px 0 4px">Optimize now for:</p><div class="chips"><button data-opt="fight">Fight</button>'+GSK.concat(PSK).map(k=>'<button data-opt="'+k+'">'+k+'</button>').join('')+'</div>';
   h+=[1,2,3].map(n=>{const l=gameState.lo[n];return '<div class="row"><span>Saved loadout '+n+'<small>'+(l?l.style+' · '+(l.cape?capeLabel(l.cape):'no cape')+' · '+FM[l.form].n:'Empty')+'</small></span><span><button class="btn" data-ls="save:'+n+'">Save</button>'+(l?' <button class="btn" data-ls="load:'+n+'">Load</button>':'')+'</span></div>'}).join('');
   return h;

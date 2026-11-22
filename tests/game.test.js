@@ -1183,6 +1183,21 @@ describe('tutorial and item directory', () => {
     assert.equal(g.ev(`gameState.inv['Hollow Heart']`), 2, 'keepsakes kept');
     assert.equal(g.ev(`gameState.inv['meadow pelt']`), undefined);
   });
+  it('the smart loadout and auto-swap never change your combat style', () => {
+    const g = load({ seed: 4 });
+    g.ev(`gameState.sp='Badger';gameState.xp.Attack=XT[40];gameState.xp.Strength=XT[40];gameState.xp.Ranged=XT[40];gameState.xp.Magic=XT[40]`);
+    g.ev(`['w03','w13','w23'].forEach(i=>{if(IT[i]){gameState.own[i]=1}});gameState.own.w03=1;gameState.own.w13=1;gameState.own.w23=1`);
+    for (const st of ['Melee', 'Ranged', 'Magic']) {
+      g.ev(`gameState.style='${st}'`);
+      for (const id of g.ev('ENEMIES.filter(e=>!e.inst&&!e.raid).slice(0,40).map(e=>e.id)')) {
+        g.ev(`optimize({kind:'combat',enemy:ENEMIES.find(e=>e.id=='${id}'),label:'x'})`);
+        assert.equal(g.ev('gameState.style'), st, 'style changed from ' + st + ' against ' + id);
+      }
+    }
+    g.ev(`gameState.style='Magic';gameState.auto=true`);
+    g.click({ do: 'c:' + g.ev(`ENEMIES.find(e=>!e.inst&&!e.raid&&e.type=='Magic').id`) });
+    assert.equal(g.ev('gameState.style'), 'Magic', 'starting a fight keeps the chosen style');
+  });
   it('existing saves do not get the tour', () => {
     const g = load({ seed: 4 });
     g.ev(`gameState.sp='Badger'`);

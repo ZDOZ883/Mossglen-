@@ -1323,7 +1323,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
         }
       });
       let bk = null, bc = null;
-      SL.forEach((sl) => {
+      SL.filter((sl) => sl == s0).forEach((sl) => {
         const h1 = by((i) => IT[i].slot == sl && !IT[i].kind), h2 = by((i) => IT[i].slot == sl && IT[i].kind == "2h"), of = by((i) => IT[i].kind == "off" && IT[i].st == sl), cd = [];
         if (h1) {
           cd.push([h1, shield]);
@@ -1444,7 +1444,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   }
   function loadoutView() {
     let h = '<h2>Loadout</h2><p class="sub">Smart loadout equips the best gear you own for a job: weapon and style against the current enemy, armor and trinket by stats, and the cape whose bonuses suit the work.</p>';
-    h += '<div class="chips"><button class="' + (gameState.auto ? "on" : "") + '" data-auto="1">Auto-swap: ' + (gameState.auto ? "on" : "off") + '</button></div><p class="mu">With auto-swap on, starting a fight, raid, harvest, gathering or crafting job re-equips for it.</p>';
+    h += '<div class="chips"><button class="' + (gameState.auto ? "on" : "") + '" data-auto="1">Auto-swap: ' + (gameState.auto ? "on" : "off") + '</button></div><p class="mu">With auto-swap on, starting a fight, raid, harvest, gathering or crafting job re-equips for it. It never changes your combat style, so you can train Melee, Ranged or Magic as you choose.</p>';
     h += '<p class="mu" style="margin:6px 0 4px">Optimize now for:</p><div class="chips"><button data-opt="fight">Fight</button>' + GSK.concat(PSK).map((k) => '<button data-opt="' + k + '">' + k + "</button>").join("") + "</div>";
     h += [1, 2, 3].map((n) => {
       const l = gameState.lo[n];
