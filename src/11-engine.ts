@@ -30,9 +30,9 @@ function curName(){
   const c=S.cur;if(!c)return null;
   return c.k=='s'?A.find(a=>a.id==c.id).n:c.k=='k'?'Cooking: '+DISH[c.id].n:c.k=='f'?'Crafting: '+IT[c.id].n:c.k=='r'?'Refining: '+RFN[c.id].n:c.k=='c'?'Fighting: '+E.find(e=>e.id==c.id).n:'Delving: '+D.find(d=>d.id==c.id).n;
 }
-const CAPN:Record<string,any>={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
+const CAPN:Record<string,string>={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
 const TNAME=['','Skill Cape','120 Cape','Sub-master Cape','Master Cape'];
-const CE:any={
+const CE:Record<string,any[][][]>={
 Foraging:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['heal',.25]]],
 Woodcutting:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['sell',.15]]],
 Fishing:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['regen',.5]]],
@@ -49,8 +49,8 @@ Defense:[[['taken',.08]],[['xpm',.1]],[['ls',1]],[['taken',.08]]],
 Vitality:[[['hpm',.1]],[['xpm',.1]],[['regen',.5]],[['hpm',.1],['heal',.15]]],
 Slayer:[[['tdmg',.1]],[['pts',.25]],[['tdrop',.15]],[['tdmg',.15]]],
 Leadership:[[['mspd',.15]],[['pmult',.15]],[['mspd',.15]],[['pmult',.15],['mspd',.15]]]};
-const GRP:any={Combat:['Attack','Strength','Defense','Vitality'],Gathering:SK,Production:['Cooking','Smithing','Fletching','Enchanting','Tailoring']};
-const GE:any={
+const GRP:Record<string,string[]>={Combat:['Attack','Strength','Defense','Vitality'],Gathering:SK,Production:['Cooking','Smithing','Fletching','Enchanting','Tailoring']};
+const GE:Record<string,any[][][]>={
 Combat:[[['xpm',.05],['taken',.04]],[['dmgm',.05],['acc',.04]],[['crit',.05],['regen',.25]],[['dmgm',.1],['taken',.1],['drop',.1]]],
 Gathering:[[['yld',.1]],[['xp',.05]],[['spd',.05]],[['yld',.1],['sell',.1]]],
 Production:[[['save',.1]],[['xp',.05]],[['spd',.05]],[['save',.1],['burn',.25],['sell',.1]]]};
@@ -58,7 +58,7 @@ GRP.Max=Object.keys(CE);GE.Max=[[['xp',.05],['xpm',.05]],[['yld',.05],['save',.0
 const gw=(g:any)=>g=='Max'?'skill':g.toLowerCase();
 const CTX=['yld','xp','spd','save','burn'];
 const pc=(v:any)=>Math.round(v*100);
-const FXT:Record<string,any>={yld:(v:any)=>pc(v)+'% chance of a double yield',xp:(v:any)=>'+'+pc(v)+'% xp',spd:(v:any)=>pc(v)+'% faster work',save:(v:any)=>pc(v)+'% chance to save materials',burn:(v:any)=>pc(v)+'% less burning',heal:(v:any)=>'+'+pc(v)+'% food healing',sell:(v:any)=>'+'+pc(v)+'% acorns from sales',drop:(v:any)=>'+'+pc(v)+'% rare drops',regen:(v:any)=>'+'+pc(v)+'% health regeneration',taken:(v:any)=>'−'+pc(v)+'% damage taken',acc:(v:any)=>'+'+pc(v)+'% hit chance',dmgm:(v:any)=>'+'+pc(v)+'% max hit',crit:(v:any)=>pc(v)+'% chance to hit twice as hard',lsteal:(v:any)=>'heal '+pc(v)+'% of damage dealt',ls:(v:any)=>'survive one lethal hit per fight',hpm:(v:any)=>'+'+pc(v)+'% max health',xpm:(v:any)=>'+'+pc(v)+'% combat xp',ttaken:(v:any)=>'−'+pc(v)+'% damage taken on task',txp:(v:any)=>'+'+pc(v)+'% Slayer xp',tdmg:(v:any)=>'+'+pc(v)+'% damage on Slayer tasks',tdrop:(v:any)=>'+'+pc(v)+'% rare drops on task',pts:(v:any)=>'+'+pc(v)+'% slayer points',mspd:(v:any)=>'+'+pc(v)+'% member work speed',pmult:(v:any)=>'+'+pc(v)+'% member perks'};
+const FXT:Record<string,(v:number)=>string>={yld:(v:any)=>pc(v)+'% chance of a double yield',xp:(v:any)=>'+'+pc(v)+'% xp',spd:(v:any)=>pc(v)+'% faster work',save:(v:any)=>pc(v)+'% chance to save materials',burn:(v:any)=>pc(v)+'% less burning',heal:(v:any)=>'+'+pc(v)+'% food healing',sell:(v:any)=>'+'+pc(v)+'% acorns from sales',drop:(v:any)=>'+'+pc(v)+'% rare drops',regen:(v:any)=>'+'+pc(v)+'% health regeneration',taken:(v:any)=>'−'+pc(v)+'% damage taken',acc:(v:any)=>'+'+pc(v)+'% hit chance',dmgm:(v:any)=>'+'+pc(v)+'% max hit',crit:(v:any)=>pc(v)+'% chance to hit twice as hard',lsteal:(v:any)=>'heal '+pc(v)+'% of damage dealt',ls:(v:any)=>'survive one lethal hit per fight',hpm:(v:any)=>'+'+pc(v)+'% max health',xpm:(v:any)=>'+'+pc(v)+'% combat xp',ttaken:(v:any)=>'−'+pc(v)+'% damage taken on task',txp:(v:any)=>'+'+pc(v)+'% Slayer xp',tdmg:(v:any)=>'+'+pc(v)+'% damage on Slayer tasks',tdrop:(v:any)=>'+'+pc(v)+'% rare drops on task',pts:(v:any)=>'+'+pc(v)+'% slayer points',mspd:(v:any)=>'+'+pc(v)+'% member work speed',pmult:(v:any)=>'+'+pc(v)+'% member perks'};
 const fxTxt=(arr:any)=>{const m:Record<string,any>={},o:any=[];arr.forEach((e:Enemy)=>{if(!(e[0] in m)){m[e[0]]=0;o.push(e[0])}m[e[0]]+=e[1]});return o.map((k:string)=>FXT[k](m[k])).join(', ')};
 const cumFx=(k:string,t:any)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(CE[k][i]);return fxTxt(a)};
 const gcumFx=(g:any,t:any)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(GE[g][i]);return fxTxt(a)};

@@ -23,7 +23,7 @@ function gatesView(){
 }
 
 // ---------- combat raids
-const RD:any[]=[
+const RD:Raid[]=[
 {id:'r0',n:'The Hollow Warren',cl:85,gate:0,party:2,mlv:25,lvl:90,H:112740,D:91.3,ref:1278,rw:36000,core:null,tr:'t11',st:[['Warren Sentries','Melee',1,1],['Burrow Alchemist','Magic',1.2,1.1],['Tunnel Behemoth','Melee',1.6,1.3],['Matriarch Brindlemaw','Ranged',4,1.7]]},
 {id:'r1',n:'Thornspire Keep',cl:100,gate:1,party:3,mlv:50,lvl:105,H:310720,D:101.5,ref:2113,rw:150000,core:['Deepwood Core',2],tr:'t12',st:[['Thorn Wardens','Melee',1,1],['Keep Sappers','Ranged',1.1,1.1],['Spire Hexcaller','Magic',1.4,1.2],['Barbfang the Gatekeeper','Melee',1.8,1.4],['Queen Bramblethorn','Ranged',4.5,1.8]]},
 {id:'r2',n:'The Gloamwyrm Lair',cl:110,gate:2,party:4,mlv:75,lvl:115,H:752120,D:195.8,ref:3487,rw:540000,core:['Wyrm Core',2],tr:'t13',st:[['Scale Cultists','Magic',1,1],['Ashen Drakelings','Ranged',1.1,1.1],['Gloam Brood Mother','Melee',1.5,1.25],['Twin Wyrmguards','Melee',1.8,1.4],['Ember Oracle','Magic',2,1.5],['Gloamwyrm Vaerath','Ranged',5,2]]},
@@ -31,7 +31,7 @@ const RD:any[]=[
 RD.forEach(r=>r.st.forEach((st:any,j:any)=>{const hp=Math.round(r.H*st[2]);E.push({id:r.id+'s'+j,zone:7,raid:r.id,inst:1,stage:j,lvl:r.lvl,n:st[0],type:st[1],hp,dps:r.D*st[3],soft:Math.round(hp/r.ref),xp:Math.round(hp*XK[10]*.5),a:Math.round(hp*AK[10]*.3),boss:j==r.st.length-1})}));
 
 // ---------- delves: short raids with boons
-const DX:Record<string,any>={hollow:{cl:10,party:0,mlv:0,zb:1,st:[['Oak Gnawers','Melee'],['Rot Sprites','Magic'],['The Hollow Heart','Magic']]},
+const DX:Record<string,Partial<Delve>>={hollow:{cl:10,party:0,mlv:0,zb:1,st:[['Oak Gnawers','Melee'],['Rot Sprites','Magic'],['The Hollow Heart','Magic']]},
 sett:{cl:30,party:1,mlv:12,zb:3,st:[['Sett Guards','Melee'],['Tunnel Diggers','Ranged'],['Badger Chieftain','Melee']]},
 roost:{cl:58,party:2,mlv:30,zb:5,st:[['Roost Scouts','Ranged'],['Carrion Mystics','Magic'],['The Crow King','Ranged']]},
 root:{cl:92,party:3,mlv:60,zb:8,st:[['Rootbound Wardens','Melee'],['Gloom Weavers','Magic'],['The Rootgate Keeper','Ranged']]},
@@ -41,7 +41,7 @@ const DHM=[1.5,2,4],DDM=[1.2,1.3,1.8],dvTm=(t:any)=>[1,1.4,1.9,2.5,3.2][t-1],dvT
 D.forEach(d=>{const x=DX[d.id];Object.assign(d,x);for(let t=1;t<=5;t++)x.st.forEach((st:any,j:any)=>{const hp=Math.round(H0[x.zb]*DHM[j]*dvTm(t));E.push({id:'d_'+d.id+'_'+t+'_'+j,zone:x.zb,inst:1,dv:d.id,tier:t,stage:j,lvl:ZN[x.zb][1],n:st[0],type:st[1],hp,dps:D0[x.zb]*DDM[j]*dvTd(t),xp:Math.round(hp*XK[x.zb]*1.2),a:Math.round(hp*AK[x.zb]*.8),boss:j==2})})});
 // ---------- expeditions (delves sent out on a timer)
 let exSel:Record<string,any>={d:null,l:null,m:[],b:null};
-const EXB:Record<string,any>={might:['Might','+12% party damage'],stone:['Stone Skin','−10% damage taken'],focus:['Keen Eye','+8% party damage'],vigor:['Vigor','+10% party health'],crit:['Killer Instinct','+10% party damage'],fortune:['Fortune','+25% rewards'],wind:['Second Wind','+10% party health']};
+const EXB:Record<string,string[]>={might:['Might','+12% party damage'],stone:['Stone Skin','−10% damage taken'],focus:['Keen Eye','+8% party damage'],vigor:['Vigor','+10% party health'],crit:['Killer Instinct','+10% party damage'],fortune:['Fortune','+25% rewards'],wind:['Second Wind','+10% party health']};
 const exDur=(d:any,t:any)=>Math.min(7*3600,Math.round([2400,4500,7200,10800,16200][t-1]*(1+d.zb*.06)));
 const exFmt=(sec:any)=>{sec=Math.max(0,Math.round(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return (h?h+'h ':'')+m+'m'};
 const EXK=12;
@@ -141,7 +141,7 @@ function raidView(){
 }
 
 // ---------- harvest raids (non-combat)
-const HR:any[]=[
+const HR:Harvest[]=[
 {id:'h0',n:'The Bramble Harvest',gate:0,tier:3,q:150,fx:[['xp',.06]]},
 {id:'h1',n:'The Moonlit Gathering',gate:1,tier:7,q:200,fx:[['yld',.08],['spd',.04]]},
 {id:'h2',n:'The Wyrmwood Tithe',gate:2,tier:8,q:250,fx:[['yld',.1],['spd',.06],['xp',.06],['sell',.1]]},

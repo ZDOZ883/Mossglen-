@@ -10,7 +10,7 @@ const logItems=()=>{const o:any[]=[];for(let t=1;t<=10;t++){SL.forEach((x,i)=>o.
 const logFound=(id:string)=>!!(S.col[id]||S.own[id]);
 const nLog=()=>logItems().filter(logFound).length;
 const allBu=(n:any)=>BU.every(b=>buL(b.id)>=n);
-const AC:any[]=[
+const AC:Ach[]=[
 ['t1','Getting Hands Dirty','Reach total level 100.',()=>totLv()>=100,500],
 ['t2','Valley Worker','Reach total level 500.',()=>totLv()>=500,5000],
 ['t3','Seasoned','Reach total level 1,000.',()=>totLv()>=1000,50000],

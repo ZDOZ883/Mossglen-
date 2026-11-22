@@ -1,6 +1,6 @@
 // Smart loadout optimizer. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- loadouts
-const CW:Record<string,any>={combat:{dmgm:3,acc:2,crit:1.5,taken:3,hpm:2,regen:.6,heal:.6,lsteal:2,ls:.4,xpm:.8,drop:.6,tdmg:1.5,tdrop:.5},gather:{yld:3,xp:2,spd:3,sell:.4,mspd:.8},craft:{save:3,xp:2,spd:3,burn:2,sell:.3,mspd:.8}};
+const CW:Record<string,Record<string,number>>={combat:{dmgm:3,acc:2,crit:1.5,taken:3,hpm:2,regen:.6,heal:.6,lsteal:2,ls:.4,xpm:.8,drop:.6,tdmg:1.5,tdrop:.5},gather:{yld:3,xp:2,spd:3,sell:.4,mspd:.8},craft:{save:3,xp:2,spd:3,burn:2,sell:.3,mspd:.8}};
 function capeScore(id:string,kind:string,sk:string){
   const s0=S.cape;S.cape=id;const fx=capeFx();S.cape=s0;let v=0;
   fx.forEach((e:any)=>{const w=CW[kind][e.k];if(!w)return;let m=1;if(e.sk&&e.sk!='*'){if(sk){if(e.sk!=sk)return}else m=.2}v+=w*e.v*m});

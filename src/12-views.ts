@@ -24,7 +24,7 @@ function cookPage(){
   }).join('');
   return h;
 }
-const CGN:Record<string,any>={w0:'Melee weapons',w1:'Ranged weapons',w2:'Magic weapons',x0:'Melee two-handers',x1:'Ranged two-handers',x2:'Magic two-handers',o0:'Melee off-hands',o1:'Ranged off-hands',o2:'Magic off-hands',y:'Shields',b:'Chest armor',h:'Helms',g:'Legs',r:'Rings',n:'Necklaces',c:'Cloaks'};
+const CGN:Record<string,string>={w0:'Melee weapons',w1:'Ranged weapons',w2:'Magic weapons',x0:'Melee two-handers',x1:'Ranged two-handers',x2:'Magic two-handers',o0:'Melee off-hands',o1:'Ranged off-hands',o2:'Magic off-hands',y:'Shields',b:'Chest armor',h:'Helms',g:'Legs',r:'Rings',n:'Necklaces',c:'Cloaks'};
 const cgOf=(id:string)=>'wxo'.includes(id[0])?id.slice(0,2):id[0];
 const CF:Record<string,any>={g:{},f:{}};
 const famLab=(sl:string)=>AF[sl].map((f:any)=>f.n.replace(/^(Band|Pendant|Cloak) of (the )?/,''));
@@ -52,7 +52,7 @@ function leadView(){
   '<div class="row"><span>Fast ways to train<small>Turn on Command in Fight with members beside you, or keep members busy on skills.</small></span></div>'+
   '<p><button class="btn" data-tab="party">Manage party</button></p>';
 }
-const PKN:Record<string,any>={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['delves ','% faster'],loot:['+','% delve loot'],succ:['+','% delve odds']};
+const PKN:Record<string,string[]>={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['delves ','% faster'],loot:['+','% delve loot'],succ:['+','% delve odds']};
 function perkTxt(k:string){return Object.keys(H[k].pk).map(n=>{const v=H[k].pk[n]*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),x=n=='succ'?Math.round(v):Math.round(v*100);return PKN[n][0]+x+PKN[n][1]}).join(', ')}
 function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(S.ex?S.ex.dur-S.ex.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+BRATE(buL('bar')).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id].n:t.k=='f'?'Crafting: '+IT[t.id].n:t.k=='r'?'Refining: '+RFN[t.id].n:'Resting. Send them to work from a skill page.'}
 function partyView(){

@@ -1,6 +1,6 @@
 // Hand-drawn SVG icons. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- hand-drawn fantasy icons (32x32, line art)
-const ICN:Record<string,any>={
+const ICN:Record<string,string>={
 sword:'<path class="f" d="M23 5H27V9L13 23L9 19Z"/><path d="M7 17L15 25"/><path d="M10 22L5.5 26.5"/><circle cx="4.5" cy="27.5" r="1.6" class="f"/>',
 axe:'<path d="M6 27L23 10"/><path class="f" d="M17 4Q29 5 28 17Q22 15 14 11Z"/><path d="M5 28l2-2"/>',
 dagger:'<path class="f" d="M22 6L26 10L16 20L12 16Z"/><path d="M9 14L18 23"/><path d="M12 19L7 24"/><circle cx="6" cy="25" r="1.5" class="f"/>',
@@ -34,9 +34,9 @@ function iconOf(it:Item){
   if(sl=='off')return it.kind=='shield'?'shield':it.st=='Melee'?'dagger':it.st=='Ranged'?'crossbow':'tome';
   return {head:'helm',body:'chest',legs:'legs',neck:'amulet',ring:'ring',cloak:'cape',trinket:'charm'}[sl]||'charm';
 }
-const SLIC:Record<string,any>={Melee:'sword',Ranged:'shortbow',Magic:'wand',head:'helm',body:'chest',legs:'legs',neck:'amulet',ring1:'ring',ring2:'ring',trinket:'charm',off:'shield',cape:'cape'};
+const SLIC:Record<string,string>={Melee:'sword',Ranged:'shortbow',Magic:'wand',head:'helm',body:'chest',legs:'legs',neck:'amulet',ring1:'ring',ring2:'ring',trinket:'charm',off:'shield',cape:'cape'};
 let gtab='eq',gsel:any=null;
-const SLI:Record<string,any>={off:['🛡️','Off-hand'],Melee:['🗡️','Melee'],Ranged:['🏹','Ranged'],Magic:['🪄','Magic'],head:['⛑️','Helm'],body:['🦺','Chest'],legs:['👖','Legs'],neck:['📿','Necklace'],ring1:['💍','Ring'],ring2:['💍','Ring'],trinket:['🔮','Trinket'],cape:['🧣','Cape']};
+const SLI:Record<string,string[]>={off:['🛡️','Off-hand'],Melee:['🗡️','Melee'],Ranged:['🏹','Ranged'],Magic:['🪄','Magic'],head:['⛑️','Helm'],body:['🦺','Chest'],legs:['👖','Legs'],neck:['📿','Necklace'],ring1:['💍','Ring'],ring2:['💍','Ring'],trinket:['🔮','Trinket'],cape:['🧣','Cape']};
 const grade=(it:Item)=>it.slot=='trinket'?['u','Unique']:it.q=='d'?['d','Heirloom']:it.q=='s'?['s','Plain']:['c','Crafted'];
 function equipSlot(k:string,id:string){
   if(!id){S.eq[k]=null}
