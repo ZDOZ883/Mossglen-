@@ -163,9 +163,19 @@ export const TUT:string[][]=[
   ['Explore and Burrow','Explore sends expeditions and raids. Burrow has buildings and the seasons. Seasons help gathering, farming and alchemy but never touch combat.'],
   ['Log, Guide and saves','Log holds your Collection, a Guide with every drop source, Stats, and Data where you can copy a save code. Do that now and then to keep a backup.']
 ];
+// What to do to move forward at each step, and whether it is already done.
+export function tutGoal(n:number):[string,boolean]{
+  const g=gameState,kills=Object.keys(g.kc||{}).reduce((q,k)=>q+g.kc[k],0);
+  if(n==0)return ['Start a gathering skill. Try Foraging.',GATHER_SKILLS.some(k=>lv(g.xp[k])>1)];
+  if(n==1)return ['Sell something in Pack to earn your first acorns.',(g.st&&g.st.earn>0)||g.a>0];
+  if(n==2)return ['Win a fight: pick an enemy in the Fight tab.',kills>0];
+  if(n==3)return ['Raise Leadership to level '+LT[1]+' by fighting, then recruit your first member.',lv(g.xp.Leadership)>=LT[1]||roster().length>0];
+  if(n==4)return ['Reach combat level '+ZN[1][1]+' to open '+ZN[1][0]+', your next zone.',X.CL()>=ZN[1][1]];
+  return ['Open Data and tap Export to copy a save code.',false];
+}
 export const tutCard=()=>{
   const n=gameState.tut;if(typeof n!='number'||n<0||n>=TUT.length)return '';
-  return '<div class="stat sans" style="position:static"><div class="mu now">Quick tour · '+(n+1)+' of '+TUT.length+'</div><div><b>'+TUT[n][0]+'</b></div><div class="mu" style="margin-top:4px">'+TUT[n][1]+'</div><div style="margin-top:8px;display:flex;gap:8px"><button class="btn" data-tut="next" style="font-size:14px">'+(n==TUT.length-1?'Done':'Next')+'</button><button class="btn" data-tut="skip" style="font-size:14px">Skip</button></div></div>';
+  return '<div class="stat sans" style="position:static"><div class="mu now">Quick tour · '+(n+1)+' of '+TUT.length+'</div><div><b>'+TUT[n][0]+'</b></div><div class="mu" style="margin-top:4px">'+TUT[n][1]+'</div><div style="margin-top:6px"><b>Goal:</b> '+tutGoal(n)[0]+(tutGoal(n)[1]?' <span class="good">✓ done</span>':'')+'</div><div style="margin-top:8px;display:flex;gap:8px"><button class="btn" data-tut="next" style="font-size:14px">'+(n==TUT.length-1?'Done':'Next')+'</button><button class="btn" data-tut="skip" style="font-size:14px">Skip tutorial</button></div></div>';
 };
 // ---------- item directory
 export function itemDir():string{

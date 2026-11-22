@@ -1112,6 +1112,17 @@ describe('tutorial and item directory', () => {
     for (let i = 0; i < 6; i++) g.click({ tut: 'next' });
     assert.equal(g.ev('gameState.tut'), undefined, 'finishing the tour clears it');
   });
+  it('each tour step shows a goal that ticks off when done', () => {
+    const g = load({ seed: 4 });
+    g.click({ sp: 'Hedgehog' });
+    assert.ok(/Goal:<\/b> Start a gathering skill/.test(g.ev('tutCard()')));
+    assert.equal(g.ev('tutGoal(0)[1]'), false);
+    g.ev(`gameState.xp.Foraging=XT[5]`);
+    assert.equal(g.ev('tutGoal(0)[1]'), true);
+    assert.ok(/done/.test(g.ev('tutCard()')));
+    for (let n = 0; n < 6; n++) assert.ok(g.ev(`tutGoal(${n})[0].length>10`));
+    assert.ok(/Skip tutorial/.test(g.ev('tutCard()')));
+  });
   it('existing saves do not get the tour', () => {
     const g = load({ seed: 4 });
     g.ev(`gameState.sp='Badger'`);
