@@ -1,7 +1,7 @@
 import { gameState, say } from './00-state';
 import { X } from './registry';
 import { FM, FOOD, GP, MEMBERS, IT, SL, XS, adv, cb, fighters, ldx, lv, maxhp, mxp, onTask, petRoll, pk, skPet, weak , OFF } from './01-species-pets';
-import { ACCL, ENEMIES, ZN, dropTier, elv, fxTxt, gearSync, qrank, rsLv, scopeTxt, skey, zoneOpen } from './02-gear-data';
+import { ACCL, ENEMIES, PRE, ZN, dropTier, elv, fxTxt, gearSync, qrank, rsLv, scopeTxt, skey, zoneOpen } from './02-gear-data';
 import { RD, raidKill, raidOk } from './03-world-expeditions';
 import { CL, RT, armor, dwf, eHitP, ef, emax, hit, hitP, maxHit, memDpr, set_hits, shT } from './04-loadout';
 // Fight maths, loot, combat rounds, combat view. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
@@ -23,6 +23,25 @@ export function loot(e:Enemy,quiet?:boolean){
   if(e.boss&&z>7){const hk='z'+z+'h';gameState.pity[hk]=(gameState.pity[hk]||0)+1;if(Math.random()<g/30||gameState.pity[hk]>=70){gameState.pity[hk]=0;gainItem(rndGear(z))}}
   if(e.boss){const tk='z'+z+'t';gameState.pity[tk]=(gameState.pity[tk]||0)+1;if(Math.random()<g/12||gameState.pity[tk]>=60){gameState.pity[tk]=0;gainItem('t'+z)}}
 }
+// Everything an enemy can drop, as short lines for the "Drops" panel.
+export function dropInfo(e:Enemy):string[]{
+  if(e.raid)return ['Raid foes pay nothing on their own. Clear the whole raid for its rewards (see Explore > Raids).'];
+  if(e.inst)return ['Delve foes drop nothing in a live fight. Delves pay out through expeditions (see Explore).'];
+  const z=e.zone,zz=ZN[z],t=dropTier(z),o:string[]=[];
+  o.push('Acorns every kill (about '+e.a+').');
+  o.push(zz[4]+': about 3 in 5 kills, 1 or 2 at a time.');
+  if(z>7){
+    o.push(zz[6]+': '+(e.boss?'1 in 6':'1 in 40')+' per kill, guaranteed by '+(e.boss?18:100)+' kills.');
+    if(e.boss)o.push(PRE[t]+' gear: about 1 in 30, guaranteed by 70 boss kills.');
+  }else o.push(PRE[t]+' gear (weapon, off-hand, armor or accessory): '+(e.boss?'1 in 10':'1 in 64')+' per kill, guaranteed by '+(e.boss?40:150)+' kills.');
+  if(e.boss){
+    o.push(IT['t'+z].n+' (trinket): about 1 in 12, guaranteed by 60 boss kills.');
+    o.push('Boss pet: 1 in '+(1000+400*z).toLocaleString()+' per boss kill.');
+  }
+  o.push('Rare-drop bonuses from gear, pets, blessings and Slayer tasks raise these chances.');
+  return o;
+}
+export const dropPanel=(e:Enemy)=>'<details class="chip" style="margin-top:8px"><summary><span>Drops</span><em>open</em></summary><div class="mu">'+dropInfo(e).map(l=>'<div>• '+l+'</div>').join('')+'</div></details>';
 export function onKill(e:Enemy,quiet?:boolean){
   gameState.lsu=false;
   const xs=XS[gameState.stance],xm=1+ef('xp')+cb('xpm'),c0=CL(),ks=['Attack','Strength','Ranged','Magic','Defense','Vitality'],b=ks.map(k=>lv(gameState.xp[k]));
@@ -65,7 +84,7 @@ export function reqText(it:Item){if(it.rs)return ({gath:'any gathering skill',pr
 export function arenaView(){
   const c=gameState.cur&&gameState.cur.k=='c'?ENEMIES.find(e=>e.id==gameState.cur.id):null,food=Object.keys(FOOD).reduce((s,k)=>s+(gameState.inv[k]||0),0);
   let h='<div class="arena"><div class="nm"><b>You</b><span id="ph" class="mu"></span></div><div class="bar"><i id="hp"></i></div><small class="mu">'+gameState.style+(c?' · hit '+Math.round(hitP(c)*100)+'% · max hit '+maxHit(c)+(adv(gameState.style,c.type)>0?' · type advantage':adv(gameState.style,c.type)<0?' · type disadvantage':''):'')+' · food '+food+' (eaten below 55% hp)</small>';
-  if(c)h+='<div class="nm" style="margin-top:12px"><b>'+(c.boss?'Boss: ':'')+c.n+'</b><span id="eh" class="mu"></span></div><div class="bar hp"><i id="ehb"></i></div><small class="mu">'+c.type+' · weak to '+weak(c.type)+' · hit '+Math.round(eHitP(c)*100)+'% · max hit '+emax(c)+(c.raid?' · enrages after '+c.soft+' rounds (round '+(gameState.rr||0)+')':'')+'</small>';
+  if(c)h+='<div class="nm" style="margin-top:12px"><b>'+(c.boss?'Boss: ':'')+c.n+'</b><span id="eh" class="mu"></span></div><div class="bar hp"><i id="ehb"></i></div><small class="mu">'+c.type+' · weak to '+weak(c.type)+' · hit '+Math.round(eHitP(c)*100)+'% · max hit '+emax(c)+(c.raid?' · enrages after '+c.soft+' rounds (round '+(gameState.rr||0)+')':'')+'</small>'+dropPanel(c);
   else h+='<p class="mu" style="margin:12px 0 0">Not fighting. Pick an enemy below.</p>';
   return h+'<div id="hits" class="hits"></div></div>';
 }
@@ -95,6 +114,7 @@ export function combatView(){
     return '<button class="row'+(on?' on':'')+'" data-do="c:'+e.id+'"'+(lock?' disabled':'')+'><span>'+(e.boss?'Boss: ':'')+e.n+'<small>'+(onTask(e)?'On task · ':'')+e.type+' · '+e.hp+' hp · weak to '+weak(e.type)+' · '+(lock?'defeat '+kills+'/30 foes here first':'kills '+(gameState.kc[e.id]||0))+'</small></span><small class="'+(f.dmg>m*.7?'bad':'')+'">~'+Math.round(f.ttk)+'s<br>−'+Math.round(f.dmg/m*100)+'% hp</small></button>'}).join('');
   const t=dropTier(z);
   h+=z>7?'<h2>Loot</h2><p class="mu">Every kill pays acorns and sometimes '+zz[4]+'. Foes here drop '+zz[6]+' (1/40, or 1/6 from the boss, with bad-luck protection). Cores go into tier '+z+' gear and the next gate. No gear drops here: it is all crafted. The boss also drops '+IT['t'+z].n+' (1/12).</p>':'<h2>Loot</h2><p class="mu">Every kill pays acorns and sometimes '+zz[4]+'. Rare gear roll: 1/64 per kill, 1/10 from the boss, with bad-luck protection. Pool: '+[0,1,2].map(i=>IT['w'+i+t].n).concat([IT['b'+t].n,IT['h'+t].n]).join(', ')+'. The boss also drops '+IT['t'+z].n+' (1/12).</p>';
+  {const nf=ENEMIES.find(e=>e.zone==z&&!e.boss&&!e.inst),bf=ENEMIES.find(e=>e.zone==z&&e.boss&&!e.inst);if(nf)h+='<p class="mu" style="margin:0">Drops by foe:</p>'+dropPanel(nf).replace('<span>Drops</span>','<span>Regular foes here</span>')+(bf?dropPanel(bf).replace('<span>Drops</span>','<span>The boss</span>'):'')}
   return h;
 }
 

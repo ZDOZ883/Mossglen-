@@ -1,7 +1,7 @@
 import { gameState, say } from './00-state';
 import { X } from './registry';
-import { DISHES, FM, GL, MEMBERS, IT, T, asg, cb, cl, fighters, known, ldx, lv, maxhp, mxp, petRoll, pm, roster, sigPk } from './01-species-pets';
-import { AK, CTX, D0, ENEMIES, GSK, H0, PSK, XK, ZN, fxTxt, gateOk } from './02-gear-data';
+import { DISHES, FM, PETS, GL, MEMBERS, IT, T, asg, cb, cl, fighters, known, ldx, lv, maxhp, mxp, petRoll, pm, roster, sigPk } from './01-species-pets';
+import { AK, CTX, D0, ENEMIES, GSK, H0, PRE, PSK, XK, ZN, fxTxt, gateOk } from './02-gear-data';
 // Gates, raids, expeditions, harvest raids. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- ancient gates
 export const GATE=[
@@ -104,6 +104,15 @@ export function exFinish(quiet:any,e:Expedition){
   ldx(30*t*e.mem.length*(scale/2)*(win?1:.4));
   say(s);exRestore(e);exs().splice(exs().indexOf(e),1);
 }
+export function exDrops(d:Delve,t:number){
+  const m=ZN[d.zb],L=['Acorns: depends on the foes, tier, length and your leader. A failed run pays a quarter.'];
+  L.push(m[4]+': '+(3+t*2)+' to '+(3+t*2+t)+' on a win.');
+  if(d.zb>=8)L.push(m[6]+': '+Math.round(Math.min(1,.2*t)*100)+'% chance of 1 on a win.');
+  L.push(d.tr+' (trophy): about 40% on a win, higher with a good leader and Fortune.');
+  if(t>=4)L.push('A random '+PRE[Math.min(10,d.zb)]+' gear piece: about '+Math.round(.04*(t-3)*100)+'% on a win.');
+  L.push('XP for every member who goes, and Leadership xp for you. Winning a tier unlocks the next.');
+  return '<details class="chip" style="margin:8px 0"><summary><span>Possible drops at tier '+t+'</span><em>open</em></summary><div class="mu">'+L.map(l=>'<div>• '+l+'</div>').join('')+'</div></details>';
+}
 export function exView(){
   let run='';
   exs().forEach((e,i)=>{
@@ -123,7 +132,7 @@ export function exView(){
     const t=T(sel),av=hs.filter(k=>asg(k).k!='exp'),el=av.filter(k=>exEligible(sel,k));
     exSel.m=exSel.m.filter((k:string)=>el.includes(k));if(exSel.l&&!el.includes(exSel.l))exSel.l=null;
     const team=(exSel.l?[exSel.l]:[]).concat(exSel.m.filter((k:string)=>k!=exSel.l)),o=exOdds(sel,t,exSel.l,team.filter(k=>k!=exSel.l),exSel.b);
-    h+='<h2>'+sel.n+'</h2><p class="mu" style="margin-top:0">Tier</p><div class="chips">'+X.tierChips(sel)+'</div>';
+    h+='<h2>'+sel.n+'</h2><p class="mu" style="margin-top:0">Tier</p><div class="chips">'+X.tierChips(sel)+'</div>'+exDrops(sel,t);
     h+='<p class="mu" style="margin:6px 0 4px">Leader (gives the group a bonus based on level)</p><div class="chips">'+(el.length?el.map(k=>'<button class="'+(exSel.l==k?'on':'')+'" data-exl="'+k+'">'+MEMBERS[k].n.split(" ")[0]+' L'+cl(k)+'</button>').join(''):'<span class="mu">No one is ready.</span>')+'</div>';
     h+='<p class="mu" style="margin:6px 0 4px">Members</p><div class="chips">'+el.filter(k=>k!=exSel.l).map(k=>'<button class="'+(exSel.m.includes(k)?'on':'')+'" data-exm="'+k+'">'+MEMBERS[k].n.split(" ")[0]+' L'+cl(k)+'</button>').join('')+'</div>';
     h+='<p class="mu" style="margin:6px 0 4px">Provision (optional)</p><div class="chips">'+Object.keys(EXB).map(b=>'<button class="'+(exSel.b==b?'on':'')+'" data-exb="'+b+'" title="'+EXB[b][1]+'">'+EXB[b][0]+'</button>').join('')+'</div>'+(exSel.b?'<p class="mu" style="margin-top:0">'+EXB[exSel.b][1]+'.</p>':'');
@@ -148,12 +157,22 @@ export function raidKill(e:Enemy,quiet?:any){
   const fg=fighters();fg.forEach(q=>mxp(q,r.rw*.01));if(fg.length)ldx(r.rw*.004*fg.length);
   gameState.cur={k:'c',id:r.id+'s0'};gameState.ehp=null;
 }
+export function raidDrops(r:Raid,i:number){
+  const L=['Acorns: about '+Math.round(r.rw/1000).toLocaleString()+'k per clear.'];
+  if(r.core)L.push(r.core[0]+': '+r.core[1]+' or '+(r.core[1]+1)+' every clear.');
+  L.push(IT[r.tr].n+' (trinket): about 6% per clear, guaranteed by 25 clears.');
+  L.push(PRE[Math.min(10,[7,8,9,10][i])]+' gear piece: about 1 in 5 per clear (sometimes one tier higher), guaranteed by 8 clears.');
+  L.push('Raid pet '+PETS[PETS.findIndex(q=>q[0]=='p_r'+i)][1]+': 1 in '+[80,100,120,150][i]+' per clear.');
+  L.push('Leadership pet: 1 in 150 per clear.');
+  L.push('Loot only comes at the end of a full clear. Losing a fight pays nothing.');
+  return '<details class="chip" style="margin-top:8px"><summary><span>Possible drops</span><em>open</em></summary><div class="mu">'+L.map(l=>'<div>• '+l+'</div>').join('')+'</div></details>';
+}
 export function raidView(){
   const fg=fighters();
   return '<h2>Raids</h2><p class="sub">Raids are chains of hard fights with no breaks. Lose once and the run ends. They need several strong members set to “Fight with me”, good gear and plenty of food. Bosses enrage if a fight drags on. A cleared raid restarts on its own while you are away.</p>'+RD.map(r=>{
     const act=gameState.cur&&gameState.cur.k=='c'&&ENEMIES.find(e=>e.id==gameState.cur.id&&e.raid==r.id),rdy=fg.filter(k=>cl(k)>=r.mlv).length;
     const ck=[['Combat level '+r.cl,X.CL()>=r.cl],[r.party+' members fighting beside you, each level '+r.mlv+' ('+rdy+' ready)',rdy>=r.party]].concat(r.gate?[[GATE[r.gate!-1].n+' open',gateOk(r.gate)]]:[]);
-    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+r.n+(gameState.rc[r.id]?' · cleared ×'+gameState.rc[r.id]:'')+'<small>'+ENEMIES.filter(e=>e.raid==r.id).map(e=>e.n+' ('+e.type+', '+e.hp.toLocaleString()+' hp)').join(' → ')+'</small></span><small>'+ck.map(c=>(c[1]?'✓ ':'✗ ')+c[0]).join('<br>')+'<br>Reward: '+Math.round(r.rw/1000).toLocaleString()+'k acorns'+(r.core?', '+r.core[0]+'s':'')+', and a rare '+IT[r.tr].n+'.</small>'+(act?'<div style="margin-top:8px"><span class="good">In progress: '+act.n+'</span> <button class="btn" data-stop="1">Retreat</button></div>':'<div style="margin-top:8px"><button class="btn" data-raid="'+r.id+'"'+(raidOk(r)?'':' disabled')+'>Enter the raid</button></div>')+'</div>'}).join('');
+    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+r.n+(gameState.rc[r.id]?' · cleared ×'+gameState.rc[r.id]:'')+'<small>'+ENEMIES.filter(e=>e.raid==r.id).map(e=>e.n+' ('+e.type+', '+e.hp.toLocaleString()+' hp)').join(' → ')+'</small></span><small>'+ck.map(c=>(c[1]?'✓ ':'✗ ')+c[0]).join('<br>')+'<br>Reward: '+Math.round(r.rw/1000).toLocaleString()+'k acorns'+(r.core?', '+r.core[0]+'s':'')+', and a rare '+IT[r.tr].n+'.</small>'+raidDrops(r,RD.indexOf(r))+(act?'<div style="margin-top:8px"><span class="good">In progress: '+act.n+'</span> <button class="btn" data-stop="1">Retreat</button></div>':'<div style="margin-top:8px"><button class="btn" data-raid="'+r.id+'"'+(raidOk(r)?'':' disabled')+'>Enter the raid</button></div>')+'</div>'}).join('');
 }
 
 // ---------- harvest raids (non-combat)

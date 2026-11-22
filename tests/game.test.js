@@ -1123,6 +1123,21 @@ describe('tutorial and item directory', () => {
     for (let n = 0; n < 6; n++) assert.ok(g.ev(`tutGoal(${n})[0].length>10`));
     assert.ok(/Skip tutorial/.test(g.ev('tutCard()')));
   });
+  it('enemies, raids and expeditions list their possible drops', () => {
+    const g = load({ seed: 4 });
+    g.ev(`gameState.sp='Badger';gameState.hired={mole:1};gameState.mt={mole:{k:'war'}}`);
+    const bad = (h) => /undefined|NaN|\[object/.test(h);
+    for (const id of g.ev(`ENEMIES.map(e=>e.id)`)) {
+      const h = g.ev(`dropInfo(ENEMIES.find(e=>e.id=='${id}')).join(' ')`);
+      assert.ok(h.length > 20 && !bad(h), 'bad drop info for ' + id + ': ' + h);
+    }
+    assert.ok(/Boss pet/.test(g.ev(`dropInfo(ENEMIES.find(e=>e.boss&&!e.inst&&!e.raid)).join(' ')`)));
+    for (let i = 0; i < 4; i++) { const h = g.ev(`raidDrops(RD[${i}],${i})`); assert.ok(/Raid pet/.test(h) && !bad(h)); }
+    for (const d of g.ev('DISHES.map(d=>d.id)')) for (let t = 1; t <= 5; t++) { const h = g.ev(`exDrops(DISHES.find(d=>d.id=='${d}'),${t})`); assert.ok(!bad(h) && /trophy/.test(h)); }
+    g.ev(`gameState.cur={k:'c',id:ENEMIES.find(e=>!e.boss&&!e.inst&&!e.raid).id}`);
+    assert.ok(/Possible drops|<span>Drops<\/span>/.test(g.view('combat')));
+    g.view('delve');
+  });
   it('existing saves do not get the tour', () => {
     const g = load({ seed: 4 });
     g.ev(`gameState.sp='Badger'`);
