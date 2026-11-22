@@ -6,7 +6,8 @@
     "build": "node scripts/build.js",
     "typecheck": "tsc --noEmit",
     "test": "node scripts/build.js && node --test tests/game.test.js",
-    "check": "npm run typecheck && npm test"
+    "check": "npm run typecheck && npm test",
+    "soak": "node scripts/build.js && node scripts/soak.js 8 1500"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",

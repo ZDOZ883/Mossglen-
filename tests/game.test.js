@@ -372,6 +372,17 @@ describe('gear slots', () => {
     assert.ok(g.ev('gameState.hp') >= h0 - g.ev('maxhp()') * 0.3, 'healing offsets damage during the fight');
   });
 
+  it('health never stays above the maximum after gear or party changes', () => {
+    const g = load({ seed: 12 });
+    g.ev(`gameState.sp='Badger';gameState.xp.Leadership=XT[40];gameState.a=1e9;gameState.hired={};gameState.bench={};gameState.mt={};gameState.lead=null`);
+    g.click({ hire: 'mole' }); g.click({ hire: 'badger' });
+    g.ev('gameState.hp=maxhp()');
+    g.click({ dismiss: 'mole' }); g.click({ dismiss: 'badger' });
+    assert.ok(g.ev('gameState.hp<=maxhp()'), 'hp is clamped when a party perk to health goes away');
+    g.ev('gameState.hp=maxhp()*5;tick(1,true)');
+    assert.ok(g.ev('gameState.hp<=maxhp()'));
+  });
+
   it('old saves start Ranged and Magic at their Attack xp', () => {
     const g = load({ seed: 6 });
     g.ev(`gameState.xp.Attack=XT[50];delete gameState.xp.Ranged;delete gameState.xp.Magic;gameState.v=2;migrate()`);

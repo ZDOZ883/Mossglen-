@@ -2642,6 +2642,10 @@ nav button.on i{opacity:1}
     TICKS.forEach((f) => f(dt, quiet));
     memTick(dt);
     clampXp();
+    {
+      const mh = maxhp();
+      if (gameState.hp > mh) gameState.hp = mh;
+    }
     checkCapes();
     checkAch();
     wxCheck();
@@ -3493,6 +3497,10 @@ nav button.on i{opacity:1}
     if (gameState.auto && (d.raid || d.hraid || d.task == "fight" || d.do && !(who != "you" && gameState.hired[who] && "skfr".includes(d.do.split(":")[0])))) {
       if (d.hraid) optimize({ kind: "gather", label: "the harvest" });
       else autoLoad();
+    }
+    {
+      const mh = maxhp();
+      if (gameState.hp > mh) gameState.hp = mh;
     }
     save();
     render();

@@ -14,7 +14,7 @@ export function tick(dt:any,quiet:any){
   if(dt<=0)return;
   if(gameState.cur){gameState.p+=dt;const d=dur();let n=0;while(gameState.cur&&gameState.p>=d&&n<20000){gameState.p-=d;finish(quiet);n++}}
   for(const e of exs().slice()){e.p+=dt;if(e.p>=e.dur)exFinish(quiet,e)}
-  TICKS.forEach(f=>f(dt,quiet));memTick(dt);clampXp();checkCapes();checkAch();wxCheck();gearSync();
+  TICKS.forEach(f=>f(dt,quiet));memTick(dt);clampXp();{const mh=maxhp();if(gameState.hp>mh)gameState.hp=mh}checkCapes();checkAch();wxCheck();gearSync();
 }
 export function bars(){
   const c=gameState.cur&&gameState.cur.k=='c'?ENEMIES.find(e=>e.id==gameState.cur.id):null;

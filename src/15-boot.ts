@@ -1,5 +1,5 @@
 import { gameState, save, say } from './00-state';
-import { FM, MEMBERS, LD, SELL_VALUE, asg, cb, joinParty, known, nsl } from './01-species-pets';
+import { FM, MEMBERS, LD, SELL_VALUE, asg, cb, joinParty, known, maxhp, nsl } from './01-species-pets';
 import { KEEP } from './02-gear-data';
 import { exRecall, exSel, exStart, openGate, set_exSel, startHR, startRaid } from './03-world-expeditions';
 import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadout';
@@ -65,6 +65,7 @@ document.addEventListener('click',e=>{
   else if(d.reset){if(confirm('Erase your progress?')){try{localStorage.removeItem('hollowbrook1')}catch(x){}location.reload();return}}
   else return;
   if(gameState.auto&&(d.raid||d.hraid||d.task=='fight'||(d.do&&!(who!='you'&&gameState.hired[who]&&'skfr'.includes(d.do.split(':')[0]))))){if(d.hraid)optimize({kind:'gather',label:'the harvest'});else autoLoad()}
+  {const mh=maxhp();if(gameState.hp>mh)gameState.hp=mh}
   save();render();
 });
 import { OPEN } from './03-world-expeditions';

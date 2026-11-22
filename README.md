@@ -8,7 +8,7 @@ A woodland idle game. Single-file HTML output, written in TypeScript.
 - `src/main.ts`   entry point; also a test-only hook (`__MG_TEST`) so tests can read and set any name
 - `src/index.html` page shell and CSS
 - `scripts/build.js` transpiles TS (esbuild) and inlines it -> `mossglen.html`
-- `tests/`        harness + 82 tests (data integrity, grips, expeditions, saves, rendering, balance and economy guards, performance)
+- `tests/`        harness + 83 tests (data integrity, grips, expeditions, saves, rendering, balance and economy guards, performance)
 
 ## Commands
 - `npm ci`            install
@@ -32,3 +32,7 @@ Modules may import only from earlier-numbered modules, so load order is safe. Wh
 
 ## Adding a skill or system
 `src/00-state.ts` exposes hook tables so new systems plug in without touching every file: `TASKS` (a new kind of action, including how party members run it), `FXSRC` (extra effect sources), `TICKS` (per-tick work) and `GATHERED` (reacting to a gather). `src/12-farm-alchemy.ts` is the worked example: Farming and Alchemy use all four. Shared helpers every module needs (`cb`, `cl`, `asg`, `pk`, ...) live in `src/01-species-pets.ts` so they import directly; the registry only covers genuine cycles.
+
+## Soak test
+
+`npm run soak` plays randomly through the real screens (clicks, long ticks, offline stretches, save and reload) for several characters and checks the saved state after every few steps. Run it before releases; it prints `NO PROBLEMS` when clean.
