@@ -56,7 +56,7 @@ export function farmAct(arg: string) {
   else if (k == 'mulch') { const p = a[+v]; if (p && !p.mulch && (gameState.inv.twigs || 0) >= 3 && Date.now() < p.ready) { gameState.inv.twigs -= 3; p.mulch = true; p.ready = Date.now() + Math.round((p.ready - Date.now()) * .75); } }
 }
 // Foraging turns up seeds: the higher your level, the better the seeds you can find.
-GATHERED.push((a: any) => {
+GATHERED.push((a) => {
   if (a.sk != 'Foraging' || Math.random() >= .04) return;
   const ok = CROPS.map((_, i) => i).filter(i => GL[i] <= lv(gameState.xp.Foraging) && !cropGate(i)), top = ok.length - 1;
   const i = ok[Math.max(0, top - Math.floor(Math.random() * 3))], c = CROPS[i];
@@ -106,7 +106,7 @@ export const POTSECS = 1800, POTMAX = 3;
 export const buffs = () => (gameState.buffs = gameState.buffs || {}) as Record<string, number>;
 export const activeBuffs = () => { const now = Date.now(), b = buffs(); return Object.keys(b).filter(k => b[k] > now && POT[k]); };
 
-function alchDone(c: any) {
+function alchDone(c:any) {
   const p = POT[c.id], b = lv(gameState.xp.Alchemy);
   if (!gateOk(p.gate) || !useMats(p.needs, 'Alchemy')) { gameState.cur = null; say('Out of ingredients for ' + p.n + '.'); return; }
   gameState.inv[p.n] = (gameState.inv[p.n] || 0) + 1; skPet('Alchemy');
@@ -114,11 +114,11 @@ function alchDone(c: any) {
   const a = lv(gameState.xp.Alchemy);
   if (a > b) say('Alchemy reaches level ' + a + '.' + POTS.filter(q => q.lv == a).map(q => ' Unlocked: ' + q.n + '.').join(''));
 }
-TASKS.a = { sk: 'Alchemy', dur: () => 5 * Math.max(.3, 1 - cb('spd', 'Alchemy')), done: alchDone, name: (c: any) => 'Brewing ' + POT[c.id].n, valid: (c: any) => !!POT[c.id] };
+TASKS.a = { sk: 'Alchemy', dur: () => 5 * Math.max(.3, 1 - cb('spd', 'Alchemy')), done: alchDone, name: (c) => 'Brewing ' + POT[c.id].n, valid: (c) => !!POT[c.id] };
 
 FXSRC.push(() => {
   const o: FxEntry[] = [], b = buffs(), now = Date.now();
-  Object.keys(b).forEach(id => { if (b[id] > now && POT[id]) POT[id].fx.forEach((e: any) => (e[2] == null ? [null] : e[2]).forEach((sk: string | null) => o.push({ k: e[0], v: e[1], sk }))); });
+  Object.keys(b).forEach(id => { if (b[id] > now && POT[id]) POT[id].fx.forEach((e) => (e[2] == null ? [null] : e[2]).forEach((sk: string | null) => o.push({ k: e[0], v: e[1], sk }))); });
   return o;
 });
 TICKS.push((dt, quiet) => {

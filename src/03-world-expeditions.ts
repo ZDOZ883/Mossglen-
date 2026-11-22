@@ -36,7 +36,7 @@ export const RD:Raid[]=[
 {id:'r3',n:'The Eclipse Citadel',cl:118,gate:3,party:5,mlv:100,lvl:125,H:1842473,D:237.6,ref:5873,rw:1800000,core:['Eclipse Core',3],tr:'t14',st:[['Citadel Vanguard','Melee',1,1],['Dusk Archers','Ranged',1.1,1.1],['Umbral Magi','Magic',1.3,1.25],['Eclipse Knight-Commander','Melee',1.7,1.4],['The Hollow Choir','Magic',1.9,1.5],['Warden of the Last Light','Ranged',2.2,1.6],['The Eclipse Sovereign','Melee',5.5,2.1]]}];
 // Acorn payout per raid, tuned so a raid earns about what farming its matching zone does (the first raid used to pay well above that).
 export const RPAY:Record<string,number>={r0:1.15,r1:1.3,r2:1.05,r3:.8};
-RD.forEach(r=>r.st.forEach((st:any,j:number)=>{const hp=Math.round(r.H*st[2]);ENEMIES.push({id:r.id+'s'+j,zone:7,raid:r.id,inst:1,stage:j,lvl:r.lvl,n:st[0],type:st[1],hp,dps:r.D*st[3],soft:Math.round(hp/r.ref),xp:Math.round(hp*XK[10]*.5),a:Math.round(hp*AK[10]*.3*RPAY[r.id]),boss:j==r.st.length-1})}));
+RD.forEach(r=>r.st.forEach((st,j:number)=>{const hp=Math.round(r.H*st[2]);ENEMIES.push({id:r.id+'s'+j,zone:7,raid:r.id,inst:1,stage:j,lvl:r.lvl,n:st[0],type:st[1],hp,dps:r.D*st[3],soft:Math.round(hp/r.ref),xp:Math.round(hp*XK[10]*.5),a:Math.round(hp*AK[10]*.3*RPAY[r.id]),boss:j==r.st.length-1})}));
 
 // ---------- delves: short raids with boons
 export const DX:Record<string,Partial<Delve>>={hollow:{cl:10,party:0,mlv:0,zb:1,st:[['Oak Gnawers','Melee'],['Rot Sprites','Magic'],['The Hollow Heart','Magic']]},

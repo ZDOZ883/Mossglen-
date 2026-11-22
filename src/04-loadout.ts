@@ -99,4 +99,4 @@ export function armor(){const d=['body','head','legs'].reduce((s,k)=>s+(gameStat
 
 export function set_hits(v:any){hits=v}
 export function set_hitsStr(v:any){hitsStr=v}
-Object.defineProperties(X,{is2h:{get:()=>is2h,configurable:true},dwf:{get:()=>dwf,configurable:true},shieldOn:{get:()=>shieldOn,configurable:true},ef:{get:()=>ef,configurable:true},CW:{get:()=>CW,configurable:true},CL:{get:()=>CL,configurable:true},mdmg:{get:()=>mdmg,configurable:true},hits:{get:()=>hits,set:(v:any)=>{hits=v},configurable:true}});
+Object.defineProperties(X,{is2h:{get:()=>is2h,configurable:true},dwf:{get:()=>dwf,configurable:true},shieldOn:{get:()=>shieldOn,configurable:true},ef:{get:()=>ef,configurable:true},CW:{get:()=>CW,configurable:true},CL:{get:()=>CL,configurable:true},mdmg:{get:()=>mdmg,configurable:true},hits:{get:()=>hits,set:(v)=>{hits=v},configurable:true}});

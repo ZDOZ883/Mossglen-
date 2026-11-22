@@ -32,7 +32,7 @@ for(let t=0;t<11;t++){
 export const qrank=(it:Item)=>it.q=='s'?0:it.q=='d'?2:1;
 export const rsLv=(rs:string)=>rs=='gath'?Math.max(...GSK.map(k=>lv(gameState.xp[k]))):rs=='prod'?Math.max(...PSK.map(k=>lv(gameState.xp[k]))):lv(gameState.xp[rs]);
 export const skey=(k:string)=>k.replace(/\d$/,'');
-export function itFx(it:Item){const o:any[]=[];(it.fx||[]).forEach((e:any)=>{const sc=e[2];if(sc==null)o.push({k:e[0],v:e[1],sk:null});else{const L=sc=='G'?GSK:sc=='P'?CRS.concat('Cooking'):sc=='A'?GSK.concat(CRS,'Cooking'):[sc];L.forEach(sk=>o.push({k:e[0],v:e[1],sk}))}});return o}
+export function itFx(it:Item){const o:any[]=[];(it.fx||[]).forEach((e)=>{const sc=e[2];if(sc==null)o.push({k:e[0],v:e[1],sk:null});else{const L=sc=='G'?GSK:sc=='P'?CRS.concat('Cooking'):sc=='A'?GSK.concat(CRS,'Cooking'):[sc];L.forEach(sk=>o.push({k:e[0],v:e[1],sk}))}});return o}
 export function gearFx(){const o:any[]=[];['neck','ring1','ring2'].forEach(k=>{const id=gameState.eq&&gameState.eq[k];if(id&&IT[id])o.push(...itFx(IT[id]))});return o}
 export let GSIG='';
 export function gearSync(){if(!gameState||!gameState.eq)return;const g=[gameState.eq.neck,gameState.eq.ring1,gameState.eq.ring2,gameState.cape].join('|');if(g!==GSIG){GSIG=g;X.refreshFx()}}
