@@ -872,7 +872,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   BWEAPONS.forEach((w) => {
     IT[w.id] = { n: w.n, slot: w.st, tier: w.t, stat: Math.round(WA[w.t] * 1.4), req: REQ[w.t], q: "u" };
   });
-  var UNIQ_RATE = (w) => w.z != null ? 2e3 + 300 * w.z : 300;
+  var UNIQ_RATE = (w) => w.z != null ? 3e3 + 450 * w.z : 600;
   var UNIQ_PITY = 4;
   function uniqTry(w, mult) {
     if (gameState.own[w.id]) return false;

@@ -147,7 +147,7 @@ export const BWEAPONS:{id:string;n:string;st:string;boss:string;z?:number;raid?:
 ].map((w:any,i:number)=>{const t=w.z!=null?(w.z<=7?Math.min(7,w.z+1):w.z):[7,8,9,10][w.raid];return Object.assign(w,{id:'u'+i,t,boss:w.z!=null?ZN[w.z][3][3]:''})});
 BWEAPONS.forEach(w=>{IT[w.id]={n:w.n,slot:w.st,tier:w.t,stat:Math.round(WA[w.t]*1.4),req:REQ[w.t],q:'u'}});
 // One in this many boss kills (zone bosses rise with depth) or raid clears. No pity until four times that.
-export const UNIQ_RATE=(w:{z?:number;raid?:number})=>w.z!=null?2000+300*w.z:300;
+export const UNIQ_RATE=(w:{z?:number;raid?:number})=>w.z!=null?3000+450*w.z:600;
 export const UNIQ_PITY=4;
 // Roll for a boss's signature weapon once per kill or clear. Skips it once you own it. Returns true on a drop.
 export function uniqTry(w:{id:string;z?:number;raid?:number},mult:number):boolean{

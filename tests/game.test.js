@@ -1280,7 +1280,7 @@ describe('tutorial and item directory', () => {
       const u = g.ev(`IT['${w.id}'].stat`);
       assert.ok(u > heir && u < heir * 1.25, w.n + ' is a bit better than an Heirloom (' + u + ' vs ' + heir + ')');
     }
-    assert.ok(g.ev(`UNIQ_RATE(BWEAPONS[0])`) >= 2000 && g.ev(`UNIQ_RATE(BWEAPONS[12])`) >= 300, 'rates are very low');
+    assert.ok(g.ev(`UNIQ_RATE(BWEAPONS[0])`) >= 3000 && g.ev(`UNIQ_RATE(BWEAPONS[12])`) >= 600, 'rates are very low');
     // Over 400 boss kills the chance of finding the first boss weapon by luck is under 20%: it essentially needs the long pity.
     let found = 0;
     for (let n = 0; n < 40; n++) {
