@@ -26,7 +26,7 @@ function optimize(c:any){
         S.style=sl;S.eq[sl]=q[0];S.eq.off=q[1];
         let key;
         if(e){const f=fight(e);key=f.dmg<=m0*.55?[0,f.ttk]:[1,f.dmg]}
-        else key=[0,-(IT[q[0]].stat*(IT[q[0]].kind=='2h'?1.3:1)+(q[1]&&(q[1] as any).kind=='shield'?IT[q[0]].stat*.4:q[1]?(q[1] as any).stat*.5:0))];
+        else key=[0,-(IT[(q[0] as string)].stat*(IT[(q[0] as string)].kind=='2h'?1.3:1)+(q[1]&&(q[1] as any).kind=='shield'?IT[(q[0] as string)].stat*.4:q[1]?(q[1] as any).stat*.5:0))];
         if(!bk||key[0]<bk[0]||(key[0]==bk[0]&&key[1]<bk[1]-1e-9)){bk=key;bc=[sl,q[0],q[1]]}
       });
     });
@@ -83,7 +83,7 @@ const offIt=()=>{const o=S.eq.off?IT[S.eq.off]:null;if(!o||is2h())return null;if
 const shieldOn=()=>{const o=offIt();return !!o&&o.kind=='shield'};
 const dwf=()=>{const o=offIt(),w=wst();return o&&o.kind=='off'&&w?Math.min(.46,.46*o.stat/w):0};
 const shT=()=>shieldOn()?.08:0;
-const maxHit=(e:Enemy)=>Math.max(1,Math.floor((1+lv(S.xp.Strength)*1+wst()*3.2)*3*(1+FM[S.form].dmg)*(is2h()?1.3:1)*(1+spAff())*(1+.25*adv(S.style,e.type))*(1+pk('dmg'))*(1+ef('dmg'))*(1+cb('dmgm'))*(onTask(e)?1.1+(S.su.keen?.15:0)+cb('tdmg'):1)));
+const maxHit=(e:Enemy)=>Math.max(1,Math.floor((1+lv(S.xp.Strength)*1+wst()*3.2)*3*(1+FM![S.form].dmg)*(is2h()?1.3:1)*(1+spAff())*(1+.25*adv(S.style,e.type))*(1+pk('dmg'))*(1+ef('dmg'))*(1+cb('dmgm'))*(onTask(e)?1.1+(S.su.keen?.15:0)+cb('tdmg'):1)));
 const eDef=(e:Enemy)=>elv(e)*.9+5+(e.boss?10:0);
 const eAtk=(e:Enemy)=>elv(e)*.8+5+(e.boss?10:0);
 const mdmg=(k:string,e:Enemy)=>{const c=cl(k);return c*(1.5+c/60)*(H[k].pet?1.25:1)*(1+.25*adv(H[k].st,e.type))};
@@ -91,4 +91,4 @@ const memDpr=(e:Enemy)=>fighters().reduce((q,k)=>q+mdmg(k,e),0)*pm()*.9;
 const emax=(e:Enemy)=>Math.max(1,Math.round(e.dps*3*enr(e)));
 const hitP=(e:Enemy)=>{const A=(lv(S.xp.Attack)+8)*(1+wst()/45),D=eDef(e);return clampH(1.5*A/(A+D)+(dwf()>0?.03:0)+cb('acc')+pk('acc'))};
 const eHitP=(e:Enemy)=>{const A=eAtk(e),D=lv(S.xp.Defense)+8;return clampH(1.5*A/(A+D))};
-function armor(){const d=['body','head','legs'].reduce((s,k)=>s+(S.eq[k]?IT[S.eq[k]].stat:0),0)+(shieldOn()?offIt().stat:0);return d/(d+103)}
+function armor(){const d=['body','head','legs'].reduce((s,k)=>s+(S.eq[k]?IT[S.eq[k]].stat:0),0)+(shieldOn()?offIt()!.stat:0);return d/(d+103)}

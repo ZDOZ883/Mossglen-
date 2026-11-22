@@ -5,7 +5,7 @@ function skillsView(){
 }
 function skillPage(k:string){
   const body=SK.includes(k)?gatherPage(k):k=='Cooking'?cookPage():CR.includes(k)?craftPage(k):k=='Slayer'?slayerView():leadView();
-  return '<p style="margin:0 0 4px"><button class="btn" data-back="1">← Skills</button></p><h2 style="margin-top:8px">'+k+' · level '+lv(S.xp[k])+(SP[S.sp]==k?' <span class="mu" style="display:inline">(+15% xp)</span>':'')+'</h2><div class="bar xp"><i style="width:'+pcx(k)+'%"></i></div><p class="mu" style="margin:4px 0 0">'+Math.floor(S.xp[k]).toLocaleString()+' xp</p>'+capeRow(k)+body;
+  return '<p style="margin:0 0 4px"><button class="btn" data-back="1">← Skills</button></p><h2 style="margin-top:8px">'+k+' · level '+lv(S.xp[k])+(SP[S.sp!]==k?' <span class="mu" style="display:inline">(+15% xp)</span>':'')+'</h2><div class="bar xp"><i style="width:'+pcx(k)+'%"></i></div><p class="mu" style="margin:4px 0 0">'+Math.floor(S.xp[k]).toLocaleString()+' xp</p>'+capeRow(k)+body;
 }
 function gatherPage(k:string){
   const chips=actorChips(),l=lv(S.xp[k]),sp=who=='you'?1:mspd(who);
@@ -20,7 +20,7 @@ function cookPage(){
   h+=Object.keys(DISH).sort((a,b)=>DISH[a].lv-DISH[b].lv).map(id=>{
     const d=DISH[id];if(l<GL[Math.max(0,GL.indexOf(d.lv)-1)])return '';
     const ok=l>=d.lv&&gateOk(d.gate),on=isOn('k',id);
-    return '<button class="row'+(on?' on':'')+'" data-do="k:'+id+'"'+(ok?'':' disabled')+'><span>'+d.n+'<small>Heals '+d.heal+' · '+d.raw+' '+(S.inv[d.raw]||0)+'/'+d.q+(d.side?', '+d.side+' '+(S.inv[d.side]||0)+'/1':'')+' · in pack '+(S.inv[d.n]||0)+'</small></span><small>'+(ok?Math.round(burn(d)*100)+'% burn':(l>=d.lv?'Needs '+GATE[d.gate-1].n:'Level '+d.lv))+crew('k',id)+'</small></button>';
+    return '<button class="row'+(on?' on':'')+'" data-do="k:'+id+'"'+(ok?'':' disabled')+'><span>'+d.n+'<small>Heals '+d.heal+' · '+d.raw+' '+(S.inv[d.raw]||0)+'/'+d.q+(d.side?', '+d.side+' '+(S.inv[d.side]||0)+'/1':'')+' · in pack '+(S.inv[d.n]||0)+'</small></span><small>'+(ok?Math.round(burn(d)*100)+'% burn':(l>=d.lv?'Needs '+GATE[d.gate!-1].n:'Level '+d.lv))+crew('k',id)+'</small></button>';
   }).join('');
   return h;
 }
@@ -54,7 +54,7 @@ function leadView(){
 }
 const PKN:Record<string,string[]>={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['delves ','% faster'],loot:['+','% delve loot'],succ:['+','% delve odds']};
 function perkTxt(k:string){return Object.keys(H[k].pk).map(n=>{const v=H[k].pk[n]*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),x=n=='succ'?Math.round(v):Math.round(v*100);return PKN[n][0]+x+PKN[n][1]}).join(', ')}
-function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(S.ex?S.ex.dur-S.ex.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+BRATE(buL('bar')).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id].n:t.k=='f'?'Crafting: '+IT[t.id].n:t.k=='r'?'Refining: '+RFN[t.id].n:'Resting. Send them to work from a skill page.'}
+function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(S.ex?S.ex.dur-S.ex.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+BRATE(buL('bar')).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id!].n:t.k=='f'?'Crafting: '+IT[t.id!].n:t.k=='r'?'Refining: '+RFN[t.id!].n:'Resting. Send them to work from a skill page.'}
 function partyView(){
   const hs=Object.keys(S.hired),l=LD(),sl=slots();
   let h='<h2>Your party</h2><p class="sub">Leadership '+l+' · '+nsl()+' of '+sl+' slots · members work at '+Math.round(bspd()*100)+'% of your speed. Raise Leadership for more slots and faster work.</p>';
@@ -90,11 +90,11 @@ function render(){
   hitsStr=null;
   const app=document.getElementById('app');
   if(!S.sp){
-    app.innerHTML='<div class="hero"><span class="leaf">🍃</span><h1>Mossglen</h1></div><p class="sub" style="text-align:center">A quiet valley where small folk work, delve, and nap. Who are you?</p><div class="pick">'+
+    app!.innerHTML='<div class="hero"><span class="leaf">🍃</span><h1>Mossglen</h1></div><p class="sub" style="text-align:center">A quiet valley where small folk work, delve, and nap. Who are you?</p><div class="pick">'+
     Object.keys(SP).map(s=>'<button class="row" data-sp="'+s+'">'+s+'<small>+15% '+SP[s]+' xp</small><small>'+SPX[s].t+'</small><small>'+SPX[s].w+' '+SPX[s].st+' style +4% damage.</small></button>').join('')+'</div>';return;
   }
   const cn=curName();
-  app.innerHTML='<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">'+S.sp+' of the valley · total level '+SK.concat(CS).reduce((s,k)=>s+lv(S.xp[k]),0)+'</p>'+
+  app!.innerHTML='<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">'+S.sp+' of the valley · total level '+SK.concat(CS).reduce((s,k)=>s+lv(S.xp[k]),0)+'</p>'+
   '<div class="stat sans">'+(cn?'<div style="display:flex;justify-content:space-between"><span>'+cn+(S.cur.k=='c'?' <small class="mu" id="se"></small>':'')+'</span><button class="btn" data-stop="1">Rest</button></div><div class="bar'+(S.cur.k=='c'?' hp':'')+'"><i id="pb"></i></div>':'<span class="mu">Resting. Pick something to do.</span>')+(hasWork()?'<div class="mu" style="font-size:14px;margin-top:4px">At work: '+workNames()+'</div>':'')+'</div>'+
   '<nav>'+[['skills','Skills','leaf'],['combat','Fight','swords'],['gear','Gear','shield'],['party','Party','paw'],['delve','Delve','lantern'],['burrow','Burrow','burrow'],['log','Log','tome'],['pack','Pack','satchel']].map(t=>'<button data-tab="'+t[0]+'" class="'+(tab==t[0]?'on':'')+'"><i>'+icon(t[2],25)+'</i>'+t[1]+'</button>').join('')+'</nav>'+
   view()+'<div id="log">'+S.log.map((l:any)=>'<p>'+l+'</p>').join('')+'</div>'+

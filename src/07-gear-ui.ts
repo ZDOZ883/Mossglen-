@@ -25,7 +25,7 @@ function recipe(id:string){
   else{add(g('Foraging'),4+t);add(g('Hunting'),2+t)}
   if(t>=1)add(ZN[t-1][4],2+t);
   if(it.cmb||it.kind=='2h')Object.keys(m).forEach(k=>(m as any)[k]=Math.ceil((m as any)[k]*1.4));
-  if(t>=8){Object.keys(m).forEach(k=>(m as any)[k]=Math.ceil((m as any)[k]*2.5));const mq=t>=9?2:1;(m as any)[RF[s][t-8]]=(id[0]=='b'?12:8)*mq;(m as any)[ZN[t][6]]=(id[0]=='b'?3:2)*mq}
+  if(t>=8){Object.keys(m).forEach(k=>(m as any)[k]=Math.ceil((m as any)[k]*2.5));const mq=t>=9?2:1;(m as any)[RF[s][t-8]]=(id[0]=='b'?12:8)*mq;(m as any)[ZN[t][6]!]=(id[0]=='b'?3:2)*mq}
   return m;
 }
 function useMats(r:any,sk:string){if(!Object.keys(r).every(k=>(S.inv[k]||0)>=r[k]))return false;if(sk&&Math.random()<cb('save',sk))return true;Object.keys(r).forEach(k=>S.inv[k]-=r[k]);return true}
@@ -53,7 +53,7 @@ function slayKill(e:Enemy){
 function taskAct(a:any){
   if(a=='new'&&!S.task)newTask();
   else if(a=='reroll'&&S.task&&S.pt>=10){S.pt-=10;newTask()}
-  else if(a=='fight'&&S.task){const e=E.find(q=>q.id==S.task.id);S.zone=e.zone;S.ehp=null;S.cur={k:'c',id:e.id};S.p=0}
+  else if(a=='fight'&&S.task){const e=E.find(q=>q.id==S.task.id)!;S.zone=e.zone;S.ehp=null;S.cur={k:'c',id:e.id};S.p=0}
 }
 function slBuy(k:string){const c=({keen:60,fort:100} as Record<string,number>)[k];if(!S.su[k]&&S.pt>=c){S.pt-=c;S.su[k]=1;say('Unlocked '+(k=='keen'?'Keen Instinct':'Hunter’s Fortune')+'.')}}
 function slayerView(){
@@ -76,7 +76,7 @@ function cookDone(id:string,mk?:any){
   if(burnt){if(!mk&&Math.random()<.2)say('You burn the '+d.n.toLowerCase()+'.');return}
   S.inv[d.n]=(S.inv[d.n]||0)+(mk?famCut(mk,1):1);skPet('Cooking');
   if(mk){mxp(mk,d.xp*.6);ldx(d.xp*.5);return}
-  S.xp.Cooking+=d.xp*(SP[S.sp]=='Cooking'?1.15:1)*(b>=99?1.1:1)*(1+cb('xp','Cooking'));
+  S.xp.Cooking+=d.xp*(SP[S.sp!]=='Cooking'?1.15:1)*(b>=99?1.1:1)*(1+cb('xp','Cooking'));
   const a=lv(S.xp.Cooking);if(a>b)say('Cooking reaches level '+a+'.'+Object.keys(DISH).filter(k=>DISH[k].lv==a).map(k=>' Unlocked: '+DISH[k].n+'.').join(''));
 }
 function buy(k:string){const t=S.gear[k],c=(k=='arm'?[100,400,1000]:[80,300,900])[t];if(t<3&&S.a>=c){S.a-=c;S.gear[k]++;say('Equipped '+(k=='arm'?AR[t]:W[k][t])+'.')}}
@@ -89,8 +89,8 @@ const tt=(a:any)=>a.t*TM[S.tool[a.sk]]*Math.max(.3,1-cb('spd',a.sk));
 function unlockText(sk:string,n:any){const u=A.filter(a=>a.sk==sk&&a.lv==n&&!a.gate).map(a=>a.item);TL.forEach((l,i)=>{if(l==n&&i>0)u.push(TN[i]+' '+(TK as any)[sk])});return u.length?' Unlocked: '+u.join(', ')+'.':''}
 function buyTool(sk:string){const t=S.tool[sk]+1;if(t<5&&lv(S.xp[sk])>=TL[t]&&S.a>=TC[t]){S.a-=TC[t];S.tool[sk]=t;say('Equipped '+TN[t]+' '+(TK as any)[sk]+'.')}}
 function toolRow(k:string){const t=S.tool[k],n=t+1;return '<div class="row"><span>'+TN[t]+' '+(TK as any)[k]+'<small>Bonus yield '+Math.round(lv(S.xp[k])*.4)+'% · '+(t<4?'Next: '+TN[n]+' (level '+TL[n]+', '+TM[n]+'× time)':'Best tool')+'</small></span>'+(t<4?'<button class="btn" data-tool="'+k+'"'+(lv(S.xp[k])<TL[n]||S.a<TC[n]?' disabled':'')+'>'+TC[n]+'</button>':'')+'</div>'}
-let S:SaveState=null,tab='skills',who='you',skill:any=null;
-try{S=JSON.parse(localStorage.getItem('hollowbrook1'))}catch(e){}
+let S:SaveState=null as any,tab='skills',who='you',skill:any=null;
+try{S=JSON.parse(localStorage.getItem('hollowbrook1')!)}catch(e){}
 if(!S)S={sp:null,xp:{Foraging:0,Woodcutting:0,Fishing:0,Mining:0},inv:{},a:0,cur:null,p:0,hired:{},t:Date.now(),log:[]} as unknown as SaveState;
 S.tier=S.tier||{};S.best=S.best||{};S.cx=S.cx||{};S.lead=S.lead||null;S.style=S.style||'Melee';S.gear=S.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(S.xp.Attack==null&&(S.xp.Melee||S.xp.Ranged||S.xp.Magic)){const b0=Math.max(S.xp.Melee||0,S.xp.Ranged||0,S.xp.Magic||0);S.xp.Attack=S.xp.Strength=S.xp.Defense=b0}
 CS.forEach(k=>S.xp[k]=S.xp[k]||(k=='Vitality'?XT[10]:0));S.tool=S.tool||{Foraging:0,Woodcutting:0,Fishing:0,Mining:0};if(S.cur&&S.cur.k=='s'&&!A.find(a=>a.id==S.cur.id))S.cur=null;

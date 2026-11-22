@@ -38,7 +38,7 @@ root:{cl:92,party:3,mlv:60,zb:8,st:[['Rootbound Wardens','Melee'],['Gloom Weaver
 wyrmc:{cl:104,party:3,mlv:80,zb:9,st:[['Cellar Drakes','Magic'],['Scale Brutes','Melee'],['The Wyrm Warden','Melee']]},
 vault:{cl:114,party:4,mlv:100,zb:10,st:[['Vault Sentinels','Melee'],['Umbral Casters','Magic'],['The Eclipse Curator','Ranged']]}};
 const DHM=[1.5,2,4],DDM=[1.2,1.3,1.8],dvTm=(t:any)=>[1,1.4,1.9,2.5,3.2][t-1],dvTd=(t:any)=>[1,1.25,1.55,1.9,2.3][t-1];
-D.forEach(d=>{const x=DX[d.id];Object.assign(d,x);for(let t=1;t<=5;t++)x.st.forEach((st:any,j:any)=>{const hp=Math.round(H0[x.zb]*DHM[j]*dvTm(t));E.push({id:'d_'+d.id+'_'+t+'_'+j,zone:x.zb,inst:1,dv:d.id,tier:t,stage:j,lvl:ZN[x.zb][1],n:st[0],type:st[1],hp,dps:D0[x.zb]*DDM[j]*dvTd(t),xp:Math.round(hp*XK[x.zb]*1.2),a:Math.round(hp*AK[x.zb]*.8),boss:j==2})})});
+D.forEach(d=>{const x=DX[d.id];Object.assign(d,x);for(let t=1;t<=5;t++)x.st.forEach((st:any,j:any)=>{const hp=Math.round(H0[x.zb!]*DHM[j]*dvTm(t));E.push({id:'d_'+d.id+'_'+t+'_'+j,zone:x.zb!,inst:1,dv:d.id,tier:t,stage:j,lvl:ZN[x.zb!][1],n:st[0],type:st[1],hp,dps:D0[x.zb!]*DDM[j]*dvTd(t),xp:Math.round(hp*XK[x.zb!]*1.2),a:Math.round(hp*AK[x.zb!]*.8),boss:j==2})})});
 // ---------- expeditions (delves sent out on a timer)
 let exSel:Record<string,any>={d:null,l:null,m:[],b:null};
 const EXB:Record<string,string[]>={might:['Might','+12% party damage'],stone:['Stone Skin','−10% damage taken'],focus:['Keen Eye','+8% party damage'],vigor:['Vigor','+10% party health'],crit:['Killer Instinct','+10% party damage'],fortune:['Fortune','+25% rewards'],wind:['Second Wind','+10% party health']};
@@ -55,7 +55,7 @@ function exOdds(d:any,t:any,lead:any,mem:any,boon:any){
   const es=[0,1,2].map(j=>E.find(e=>e.id=='d_'+d.id+'_'+t+'_'+j));
   const PH=all.reduce((q,k)=>q+mhpx(k),0)*(1+lb/2)*hm;
   let dmg=0;
-  if(all.length){es.forEach(e=>{const dpr=Math.max(.01,all.reduce((q,k)=>q+mdmg(k,e),0)*.9*(1+lb)*dm*EXK);dmg+=e.hp/dpr*.65*e.dps*dt})}
+  if(all.length){es.forEach(e=>{const dpr=Math.max(.01,all.reduce((q,k)=>q+mdmg(k,e!),0)*.9*(1+lb)*dm*EXK);dmg+=e!.hp/dpr*.65*e!.dps*dt})}
   const ok=all.length>=need&&CL()>=d.cl&&gateOk(d.gate)&&all.every(k=>cl(k)>=d.mlv);
   const rho=all.length?PH*1.5/Math.max(1,dmg):0;
   const p=!all.length?0:Math.max(.03,Math.min(.97,.5+.55*(rho-1)));
@@ -71,9 +71,9 @@ function exStart(){
   exSel={d:null,l:null,m:[],b:null};
 }
 function exRestore(){const e=S.ex;if(!e)return;e.mem.forEach(k=>{if(!S.hired[k])return;const pv=e.prev&&e.prev[k];S.mt[k]=pv&&validTask(pv)&&pv.k!='exp'?pv:{k:'war'}});}
-function exRecall(){const e=S.ex;if(!e)return;const d=D.find(x=>x.id==e.id);exRestore();S.ex=null;say('The expedition to '+d.n+' is called home early. Nothing was gained.')}
+function exRecall(){const e=S.ex;if(!e)return;const d=D.find(x=>x.id==e.id)!;exRestore();S.ex=null;say('The expedition to '+d.n+' is called home early. Nothing was gained.')}
 function exFinish(quiet:any){
-  const e=S.ex;if(!e)return;const d=D.find(x=>x.id==e.id),t=e.tier,win=Math.random()<e.odds;
+  const e=S.ex;if(!e)return;const d=D.find(x=>x.id==e.id)!,t=e.tier,win=Math.random()<e.odds;
   const bn=e.boon=='fortune'?.25:0,lead=e.leader,scale=e.dur/600;
   const m=(1+pk('loot'))*(1+bn)*(1+.6*(t-1))*(1+exLead(lead)/2);
   const full=Math.round(E.filter(x=>x.dv==d.id&&x.tier==t).reduce((q,x)=>q+x.a,0)*.8*m*(2+e.dur/7200));
@@ -81,7 +81,7 @@ function exFinish(quiet:any){
   let s=(win?'Expedition to '+d.n+' (tier '+t+') returned in triumph! +':'Expedition to '+d.n+' (tier '+t+') was driven back. +')+g.toLocaleString()+' acorns.';
   if(win){
     const mat=ZN[d.zb][4],q=3+t*2+Math.floor(Math.random()*(t+1));S.inv[mat]=(S.inv[mat]||0)+q;s+=' +'+q+' '+mat+'.';
-    if(d.zb>=8&&Math.random()<.2*t){const c=ZN[d.zb][6];S.inv[c]=(S.inv[c]||0)+1;s+=' +1 '+c+'.'}
+    if(d.zb>=8&&Math.random()<.2*t){const c=ZN[d.zb][6];S.inv[c!]=(S.inv[c!]||0)+1;s+=' +1 '+c+'.'}
     if(Math.random()<(.4+exLead(lead))*(1+ef('drop')+cb('drop'))){S.seen[d.tr]=1;S.inv[d.tr]=(S.inv[d.tr]||0)+1;s+=' Trophy: '+d.tr+'.'}
     if(t>=4&&Math.random()<.04*(t-3)*(1+cb('drop'))){gainItem(rndGear(Math.min(10,d.zb)))}
     const prev=S.best[d.id]||0;S.best[d.id]=Math.max(prev,t);if(t>prev&&t<5)say('Tier '+(t+1)+' of '+d.n+' unlocked.');
@@ -93,7 +93,7 @@ function exFinish(quiet:any){
 function exView(){
   if(S.ex){
     const e=S.ex,d=D.find(x=>x.id==e.id),left=e.dur-e.p;
-    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+d.n+' · tier '+e.tier+'<small>Led by '+H[e.leader].n+' with '+e.mem.filter(k=>k!=e.leader).map(k=>H[k].n.split(" ")[0]).join(', ')+(e.mem.length==1?' (alone)':'')+(e.boon?' · '+EXB[e.boon][0]:'')+'</small></span><small>Odds when they set out: '+Math.round(e.odds*100)+'%. They return in '+exFmt(left)+', and these members are away until then.</small><div class="bar"><i id="exb"></i></div><div style="margin-top:8px"><button class="btn" data-exrecall="1">Recall party</button></div></div>';
+    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+d!.n+' · tier '+e.tier+'<small>Led by '+H[e.leader].n+' with '+e.mem.filter(k=>k!=e.leader).map(k=>H[k].n.split(" ")[0]).join(', ')+(e.mem.length==1?' (alone)':'')+(e.boon?' · '+EXB[e.boon][0]:'')+'</small></span><small>Odds when they set out: '+Math.round(e.odds*100)+'%. They return in '+exFmt(left)+', and these members are away until then.</small><div class="bar"><i id="exb"></i></div><div style="margin-top:8px"><button class="btn" data-exrecall="1">Recall party</button></div></div>';
   }
   const hs=Object.keys(S.hired);
   let h='<p class="sub">Send your party into a delve without you. A leader gives the group a bonus. Everyone who goes is away until they return, so they cannot fight, work or train meanwhile. You stay free to do anything else, even while you are offline.</p>';
@@ -120,8 +120,8 @@ const enr=(e:Enemy)=>e.raid&&S.ehid==e.id&&(S.rr||0)>e.soft?1+((S.rr||0)-e.soft)
 function raidOk(r:any){const fg=fighters();return CL()>=r.cl&&gateOk(r.gate)&&fg.filter(k=>cl(k)>=r.mlv).length>=r.party}
 function startRaid(id:string){const r=RD.find(x=>x.id==id);if(!r||!raidOk(r))return;S.hp=maxhp();S.ehp=null;S.rr=0;hits=[];S.cur={k:'c',id:id+'s0'};S.p=0;say('You lead your party into '+r.n+'.')}
 function raidKill(e:Enemy,quiet?:any){
-  const r=RD.find(x=>x.id==e.raid),n=r.st.length;
-  if(e.stage<n-1){S.cur={k:'c',id:r.id+'s'+(e.stage+1)};S.ehp=null;say(r.n+': '+e.n+' falls. '+r.st[e.stage+1][0]+' steps forward.');return}
+  const r=RD.find(x=>x.id==e.raid)!,n=r.st.length;
+  if(e.stage!<n-1){S.cur={k:'c',id:r.id+'s'+(e.stage!+1)};S.ehp=null;say(r.n+': '+e.n+' falls. '+r.st[e.stage!+1][0]+' steps forward.');return}
   S.rc[r.id]=(S.rc[r.id]||0)+1;petRoll('p_r'+RD.indexOf(r),[80,100,120,150][RD.indexOf(r)]);petRoll('p_Leadership',150);
   const g=Math.round(r.rw*(1+ef('gold')+FM[S.form].gold));S.a+=g;let m=r.n+' cleared! +'+g.toLocaleString()+' acorns.';
   if(r.core){const q=r.core[1]+(Math.random()<.5?1:0);S.inv[r.core[0]]=(S.inv[r.core[0]]||0)+q;m+=' +'+q+' '+r.core[0]+'.'}
@@ -136,7 +136,7 @@ function raidView(){
   const fg=fighters();
   return '<h2>Raids</h2><p class="sub">Raids are chains of hard fights with no breaks. Lose once and the run ends. They need several strong members set to “Fight with me”, good gear and plenty of food. Bosses enrage if a fight drags on. A cleared raid restarts on its own while you are away.</p>'+RD.map(r=>{
     const act=S.cur&&S.cur.k=='c'&&E.find(e=>e.id==S.cur.id&&e.raid==r.id),rdy=fg.filter(k=>cl(k)>=r.mlv).length;
-    const ck=[['Combat level '+r.cl,CL()>=r.cl],[r.party+' members fighting beside you, each level '+r.mlv+' ('+rdy+' ready)',rdy>=r.party]].concat(r.gate?[[GATE[r.gate-1].n+' open',gateOk(r.gate)]]:[]);
+    const ck=[['Combat level '+r.cl,CL()>=r.cl],[r.party+' members fighting beside you, each level '+r.mlv+' ('+rdy+' ready)',rdy>=r.party]].concat(r.gate?[[GATE[r.gate!-1].n+' open',gateOk(r.gate)]]:[]);
     return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+r.n+(S.rc[r.id]?' · cleared ×'+S.rc[r.id]:'')+'<small>'+E.filter(e=>e.raid==r.id).map(e=>e.n+' ('+e.type+', '+e.hp.toLocaleString()+' hp)').join(' → ')+'</small></span><small>'+ck.map(c=>(c[1]?'✓ ':'✗ ')+c[0]).join('<br>')+'<br>Reward: '+Math.round(r.rw/1000).toLocaleString()+'k acorns'+(r.core?', '+r.core[0]+'s':'')+', and a rare '+IT[r.tr].n+'.</small>'+(act?'<div style="margin-top:8px"><span class="good">In progress: '+act.n+'</span> <button class="btn" data-stop="1">Retreat</button></div>':'<div style="margin-top:8px"><button class="btn" data-raid="'+r.id+'"'+(raidOk(r)?'':' disabled')+'>Enter the raid</button></div>')+'</div>'}).join('');
 }
 
@@ -162,7 +162,7 @@ function hrView(){
   return '<h2>Harvest raids</h2><p class="sub">A raid for gatherers. Collect a quota from every gathering skill, at or above the stated tier. You and your party members all count. The first clear of each grants a permanent blessing.</p>'+HR.map(r=>{
     const on=S.hr&&S.hr.id==r.id,ok=hrOk(r),n=S.hrc[r.id]||0,it=GN.Foraging[r.tier][1];
     return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+r.n+(n?' · cleared ×'+n:'')+'<small>'+r.q+' from each gathering skill at tier '+(r.tier+1)+' ('+GL[r.tier]+'+) or better. Blessing: '+hrTxt(r)+'.</small></span>'+
-    (on?'<small>'+GSK.map(k=>k+' '+(S.hr.q[k]||0)+'/'+r.q).join(' · ')+'</small>':(ok?'':'<small>'+(gateOk(r.gate)?'':'✗ '+GATE[r.gate-1].n+' open<br>')+(GSK.every(k=>lv(S.xp[k])>=GL[r.tier])?'':'✗ Every gathering skill at '+GL[r.tier])+'</small>'))+
+    (on?'<small>'+GSK.map(k=>k+' '+(S.hr.q[k]||0)+'/'+r.q).join(' · ')+'</small>':(ok?'':'<small>'+(gateOk(r.gate)?'':'✗ '+GATE[r.gate!-1].n+' open<br>')+(GSK.every(k=>lv(S.xp[k])>=GL[r.tier])?'':'✗ Every gathering skill at '+GL[r.tier])+'</small>'))+
     '<div style="margin-top:8px"><button class="btn" data-hraid="'+r.id+'"'+(ok||on?'':' disabled')+'>'+(on?'Abandon':'Begin')+'</button></div></div>'}).join('');
 }
 

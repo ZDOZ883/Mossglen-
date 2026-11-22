@@ -56,7 +56,7 @@ if(S.stance=='ldr'){S.stance='bal';S.cmd=true}
 if(!XS[S.stance])S.stance='bal';
 S.cmd=!!S.cmd;
 if(S.ehp===undefined||!(S.cur&&S.cur.k=='c'))S.ehp=null;
-{const np=Object.keys(S.hired).filter(k=>!H[k].pet).length;if(np>slots())S.xp.Leadership=XT[LT[Math.min(np,LT.length)-1]];const ps=Object.keys(S.hired).filter(k=>H[k].pet);while(Object.keys(S.hired).length>slots()&&ps.length){const k=ps.pop();delete S.hired[k];delete S.mt[k]}}
+{const np=Object.keys(S.hired).filter(k=>!H[k].pet).length;if(np>slots())S.xp.Leadership=XT[LT[Math.min(np,LT.length)-1]];const ps=Object.keys(S.hired).filter(k=>H[k].pet);while(Object.keys(S.hired).length>slots()&&ps.length){const k=ps.pop();delete S.hired[k!];delete S.mt[k!]}}
 Object.keys(S.mt).forEach(k=>{if(!S.hired[k])delete S.mt[k];else if(!validTask(S.mt[k]))S.mt[k]={k:'idle'}});
 const away=Math.min(Date.now()-S.t,8*3600e3);
 if(S.sp&&(S.cur||hasWork())&&away>20000){const a0=S.a;tick(away/1000,true);say('You were away '+Math.round(away/60000)+' min. Your work carried on.')}

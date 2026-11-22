@@ -28,7 +28,7 @@ function bars(){
 }
 function curName(){
   const c=S.cur;if(!c)return null;
-  return c.k=='s'?A.find(a=>a.id==c.id).n:c.k=='k'?'Cooking: '+DISH[c.id].n:c.k=='f'?'Crafting: '+IT[c.id].n:c.k=='r'?'Refining: '+RFN[c.id].n:c.k=='c'?'Fighting: '+E.find(e=>e.id==c.id).n:'Delving: '+D.find(d=>d.id==c.id).n;
+  return c.k=='s'?A.find(a=>a.id==c.id).n:c.k=='k'?'Cooking: '+DISH[c.id].n:c.k=='f'?'Crafting: '+IT[c.id].n:c.k=='r'?'Refining: '+RFN[c.id].n:c.k=='c'?'Fighting: '+E.find(e=>e.id==c.id)!.n:'Delving: '+D.find(d=>d.id==c.id)!.n;
 }
 const CAPN:Record<string,string>={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
 const TNAME=['','Skill Cape','120 Cape','Sub-master Cape','Master Cape'];

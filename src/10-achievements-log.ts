@@ -85,11 +85,11 @@ function logView(){
 const famShare=()=>Math.min(.6,1/3+Math.min(1,LD()/99)/6+.02*buL('larder'));
 function famCut(k:string,n:any){let g=0;for(let i=0;i<n;i++)if(Math.random()<famShare())g++;S.fam[k]=(S.fam[k]||0)+n-g;return g}
 function memTick(dt:any){
-  if(S.ex)Object.keys(S.hired).forEach(k=>{if(asg(k).k!='exp'&&S.ex.mem.includes(k))S.mt[k]={k:'exp'}});
+  if(S.ex)Object.keys(S.hired).forEach(k=>{if(asg(k).k!='exp'&&S.ex!.mem.includes(k))S.mt[k]={k:'exp'}});
   Object.keys(S.hired).forEach(k=>{
     const t=asg(k);if(t.k=='exp')return;if(t.k=='bar'){mxp(k,dt*BRATE(buL('bar'))/3600);return}if(t.k=='idle'){if(buL('bar'))mxp(k,dt*BRATE(buL('bar'))/3600*.25);return}if(t.k=='war')return;
     t.p=(t.p||0)+dt;const d=mdur(k,t);let n=0;
-    while(S.mt[k]===t&&t.p>=d&&n<5000){t.p-=d;memAct(k,t);n++}
+    while(S.mt[k]===t&&t.p!>=d&&n<5000){t.p!-=d;memAct(k,t);n++}
   });
 }
 const T=(d:any)=>S.tier[d.id]||1;
@@ -98,7 +98,7 @@ const dur=()=>{const c=S.cur;if(!c)return 1;if(c.k=='s')return tt(A.find(a=>a.id
 function finish(quiet:any){
   const c=S.cur;
   if(c.k=='s'){
-    const a=A.find(x=>x.id==c.id);if(!gateOk(a.gate)){S.cur=null;return}skPet(a.sk);const b=(SP[S.sp]==a.sk?1.15:1)*(lv(S.xp[a.sk])>=99?1.1:1)*(1+cb('xp',a.sk)),before=lv(S.xp[a.sk]);
+    const a=A.find(x=>x.id==c.id);if(!gateOk(a.gate)){S.cur=null;return}skPet(a.sk);const b=(SP[S.sp!]==a.sk?1.15:1)*(lv(S.xp[a.sk])>=99?1.1:1)*(1+cb('xp',a.sk)),before=lv(S.xp[a.sk]);
     S.xp[a.sk]+=a.xp*b;const yn=1+(Math.random()<lv(S.xp[a.sk])*.004+cb('yld',a.sk)?1:0);S.inv[a.item]=(S.inv[a.item]||0)+yn;hrCount(a,yn);
     if(lv(S.xp[a.sk])>before)say(a.sk+' reaches level '+lv(S.xp[a.sk])+'.'+unlockText(a.sk,lv(S.xp[a.sk]))+(lv(S.xp[a.sk])>=99?' Mastery: +10% xp.':''));
     else if(!quiet&&Math.random()<.12)say('You '+a.n.toLowerCase()+'. '+['A breeze rustles the ferns.','Somewhere, a woodpecker approves.','The brook chatters along.'][Math.floor(Math.random()*3)]);
@@ -106,7 +106,7 @@ function finish(quiet:any){
     if(c.k=='k'){cookDone(c.id);return}
     if(c.k=='f'){craftDone(c.id);return}
     if(c.k=='r'){refineDone(c.id);return}
-    if(c.k=='c'){cround(E.find(e=>e.id==c.id),quiet);return}
+    if(c.k=='c'){cround(E.find(e=>e.id==c.id)!,quiet);return}
     S.cur=null;
   }
 }

@@ -6,7 +6,7 @@ interface Item {
   q?: 's' | 'd'; fx?: [string, number, any?][]; [k: string]: any;
 }
 interface Enemy {
-  id: string; n: string; zone?: number; type: string; hp: number; dps: number;
+  id: string; n: string; zone: number; type: string; hp: number; dps: number;
   xp: number; a: number; lvl?: number; raid?: string; dv?: string; tier?: number; stage?: number;
   [k: string]: any;
 }
@@ -17,7 +17,7 @@ interface Expedition {
 }
 interface SaveState {
   sp: string | null; a: number; hp: number; xp: Record<string, number>; inv: Record<string, number>;
-  own: Record<string, number>; eq: Record<string, string | undefined>; cur: any; hired: Record<string, number>;
+  own: Record<string, number>; eq: Record<string, string | null | undefined | any>; cur: any; hired: Record<string, number>;
   mt: Record<string, Task>; cx: Record<string, number>; ex: Expedition | null; t: number;
   [k: string]: any;
 }
@@ -27,7 +27,7 @@ interface Member {
 }
 interface Formation { n: string; cl: number; d: string; dmg?: number; taken?: number; regen?: number; [k: string]: any }
 type Zone = [string, number, string[], string[], string, number?, string?];
-interface Delve { id: string; n: string; cl?: number; party?: number; mlv?: number; zb?: number; gate?: number; st?: any; [k: string]: any }
+interface Delve { id: string; n: string; cl: number; party: number; mlv: number; zb: number; gate: number; st?: any; [k: string]: any }
 interface Raid { id: string; n: string; cl: number; party: number; mlv: number; lvl: number; H: number; D: number; ref: number; gate?: number; core?: any; tr: string; st: any[]; [k: string]: any }
 interface Harvest { id: string; n: string; gate?: number; tier: number; q?: any; fx: any[]; [k: string]: any }
 type Ach = [string, string, string, () => boolean, number];

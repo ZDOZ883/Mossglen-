@@ -12,8 +12,8 @@ Badger:{t:'Stout: 3% more max health.',fx:[['hpm',.03,null]],w:'Fishing 4% slowe
 Fox:{t:'Sharp eyes: 3% more rare drops.',fx:[['drop',.03,null]],w:'Woodcutting 4% slower.',wf:[['spd',-.04,['Woodcutting']]],st:'Magic',gp:'dw',gt:'dual wield'},
 Mouse:{t:'Light fingers: 5% less burning when cooking.',fx:[['burn',.05,['Cooking']]],w:'Mining 4% slower.',wf:[['spd',-.04,['Mining']]],st:'Magic',gp:'sh',gt:'shield'}};
 const spTxt=(n:any)=>{const x=SPX[n];return x.t+' '+x.w+' '+x.st+' style +4% damage, and +3% more with a '+x.gt+'.'};
-function spFx(){const o:any[]=[];const x=SPX[S&&S.sp];if(!x)return o;x.fx.concat(x.wf).forEach((e:Enemy)=>{const L=e[2]==null?[null]:e[2]=='P'?['Smithing','Fletching','Enchanting','Tailoring']:e[2];L.forEach((sk:string)=>o.push({k:e[0],v:e[1],sk}))});return o}
-const spAff=()=>{const x=SPX[S.sp];if(!x)return 0;let v=S.style==x.st?.04:0;const gp=is2h()?'2h':dwf()>0?'dw':shieldOn()?'sh':'';if(gp&&gp==x.gp)v+=.03;return v};
+function spFx(){const o:any[]=[];const x=SPX[(S&&S.sp)!];if(!x)return o;x.fx.concat(x.wf).forEach((e:Enemy)=>{const L=e[2]==null?[null]:e[2]=='P'?['Smithing','Fletching','Enchanting','Tailoring']:e[2];L.forEach((sk:string)=>o.push({k:e[0],v:e[1],sk}))});return o}
+const spAff=()=>{const x=SPX[S.sp!];if(!x)return 0;let v=S.style==x.st?.04:0;const gp=is2h()?'2h':dwf()>0?'dw':shieldOn()?'sh':'';if(gp&&gp==x.gp)v+=.03;return v};
 const LT=[1,10,25,40,55,70];
 const H:Record<string,Member>={mole:{n:'Mole Sapper',c:100,p:6,st:'Melee',role:'Tank',pk:{dmg:.03,taken:.06},d:'Tunnels past traps and soaks up hits.'},hare:{n:'Hare Courier',c:400,p:3,st:'Ranged',role:'Striker',pk:{dmg:.08,speed:.15},d:'Quick paws. Delves run faster.'},owl:{n:'Owl Scout',c:1500,p:2,st:'Magic',role:'Scout',pk:{dmg:.05,loot:.25},d:'Spots hidden stashes in delves.'},otter:{n:'Otter Medic',c:5000,p:4,st:'Magic',role:'Healer',pk:{dmg:.02,heal:.02,succ:5},d:'Patches you up after every kill.'},badger:{n:'Badger Warden',c:15000,p:8,st:'Melee',role:'Tank',pk:{dmg:.04,taken:.1,succ:3},d:'Holds the line against anything.'},fox:{n:'Fox Skirmisher',c:40000,p:6,st:'Ranged',role:'Striker',pk:{dmg:.12},d:'Strikes hard from the flank.'}};
 const HK=Object.keys(H);HK.forEach((k,i)=>H[k].lt=LT[i]);
@@ -38,13 +38,13 @@ const PB:Record<string,number>={Attack:40000,Strength:40000,Defense:40000,Vitali
 function skPet(sk:string){if(typeof sk!='string')return;let r=PB[sk]-25*lv(S.xp[sk]);if(S.xp[sk]>=2e8)r/=15;petRoll('p_'+sk,r)}
 function petRoll(id:string,rate:number){if(S.pets[id])return;if(Math.random()*rate<1+Math.max(0,cb('drop'))+ef('drop'))gainPet(id)}
 
-const D:Delve[]=[
+const D=[
 {id:'hollow',n:'The Hollow Oak',req:12,t:30,a:[15,30],tr:'Hollow Heart',type:'Magic'},
 {id:'sett',n:'The Old Sett',req:30,t:60,a:[50,100],tr:'Badger Claw',type:'Melee'},
 {id:'roost',n:'The Crow’s Roost',req:70,t:120,a:[150,280],tr:'Crow Feather',type:'Ranged'},
 {id:'root',n:'The Rootgate Descent',req:600,t:150,a:[700,1200],tr:'Root Relic',type:'Ranged',gate:1},
 {id:'wyrmc',n:'The Wyrm’s Cellar',req:1000,t:200,a:[2000,3500],tr:'Wyrm Relic',type:'Melee',gate:2},
-{id:'vault',n:'The Eclipse Vault',req:1500,t:260,a:[5500,9500],tr:'Eclipse Relic',type:'Magic',gate:3}];
+{id:'vault',n:'The Eclipse Vault',req:1500,t:260,a:[5500,9500],tr:'Eclipse Relic',type:'Magic',gate:3}] as unknown as Delve[];
 const XT=[0,0];(()=>{let p=0;for(let x=1;x<127;x++){p+=Math.floor(x+300*Math.pow(2,x/7));XT[x+1]=Math.floor(p/4)}})();
 const lv=(x:any)=>{let a=1,b=120;while(a<b){const m=(a+b+1)>>1;if(x>=XT[m])a=m;else b=m-1}return a};
 const CS=['Attack','Strength','Defense','Vitality'];
@@ -56,7 +56,7 @@ const AR=['Bark Vest','Mossweave Coat','Amber Mail'];
 const maxhp=()=>Math.round((30+lv(S.xp.Vitality)*10)*(1+cb('hpm')+pk('hp')));
 const SL=['Melee','Ranged','Magic'];
 const XS:Record<string,any[]>={bal:['Balanced',2,2,2,2,.3,'Shares xp evenly between Attack, Strength and Defense, with a little for Leadership when members fight beside you.'],acc:['Accurate',6,0,0,2,0,'Trains Attack: you land more of your hits.'],agg:['Aggressive',0,6,0,2,0,'Trains Strength: your hits land harder.'],def:['Defensive',0,0,6,2,0,'Trains Defense: enemies land fewer hits on you.']};
-const FM:Record<string,Formation>={steady:{n:'Steady',cl:1,d:'No bonuses or penalties.'},fury:{n:'Fury',cl:10,dmg:.2,taken:.25,d:'+20% damage, +25% damage taken.'},bulwark:{n:'Bulwark',cl:20,dmg:-.1,taken:-.2,d:'−10% damage, −20% damage taken.'},mender:{n:'Mender',cl:35,dmg:-.05,regen:1,d:'−5% damage, double regeneration between fights.'},fortune:{n:'Fortune',cl:50,dmg:-.1,drop:.15,gold:.1,d:'−10% damage, +15% rare drops, +10% acorns.'},warband:{n:'Warband',cl:65,dmg:-.1,party:1.5,d:'−10% damage. Perks of members fighting beside you are 1.5× stronger.'}};
+const FM:Record<string,any>={steady:{n:'Steady',cl:1,d:'No bonuses or penalties.'},fury:{n:'Fury',cl:10,dmg:.2,taken:.25,d:'+20% damage, +25% damage taken.'},bulwark:{n:'Bulwark',cl:20,dmg:-.1,taken:-.2,d:'−10% damage, −20% damage taken.'},mender:{n:'Mender',cl:35,dmg:-.05,regen:1,d:'−5% damage, double regeneration between fights.'},fortune:{n:'Fortune',cl:50,dmg:-.1,drop:.15,gold:.1,d:'−10% damage, +15% rare drops, +10% acorns.'},warband:{n:'Warband',cl:65,dmg:-.1,party:1.5,d:'−10% damage. Perks of members fighting beside you are 1.5× stronger.'}};
 Object.keys(FM).forEach(k=>FM[k]=Object.assign({dmg:0,taken:0,regen:0,drop:0,gold:0,party:1},FM[k]));
 const FOOD:Record<string,number>={berries:8,mushrooms:12,trout:25,pike:40,eels:65,'silver carp':100,moonfish:150,glassfin:220};
 const REQ=[1,5,15,30,45,60,75,90,100,110,120],GP=[20,150,600,2400,8000,25000,80000,250000,600000,1800000,5000000],WA=[3,8,16,28,45,70,100,140,190,260,340],BD=[4,8,14,22,32,44,58,74,92,120,155],HD=[2,4,8,12,18,26,34,44,56,74,96];

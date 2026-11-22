@@ -50,7 +50,7 @@ function tileHtml(k:string){
   const lab=SLI[k][1],w3=false;let ic;
   if(k=='cape'){const c=S.cape;ic=icon('cape');return '<button class="gt'+(w3?' w3':'')+(c?' q-c':' empty')+'" data-gt="capes"><span class="ic">'+ic+'</span><span class="sl">'+lab+'</span><span class="nm">'+(c?capeLabel(c):'None')+'</span><span class="st">'+(c?'Tap to change':'Skill capes and cloaks')+'</span></button>'}
   const id=S.eq[k],it=id?IT[id]:null,g=it?grade(it):null;ic=icon(it?iconOf(it):SLIC[k]);
-  return '<button class="gt'+(w3?' w3':'')+(it?' q-'+g[0]:' empty')+(gsel==k?' sel':'')+'" data-gs="'+k+'"><span class="ic">'+ic+'</span><span class="sl">'+lab+(SL.includes(k)&&S.style==k?' · style':'')+(it&&it.kind=='2h'?' · 2H':'')+'</span><span class="nm">'+(it?it.n:'Empty')+'</span>'+(it?'<span class="st">'+(k=='off'&&!offIt()?(is2h()?'Hands full (two-hander)':'Inactive: wrong style'):istat(it))+'</span><span class="badge '+g[0]+'">'+g[1]+'</span>':'<span class="st">Nothing equipped</span>')+'</button>';
+  return '<button class="gt'+(w3?' w3':'')+(it?' q-'+g![0]:' empty')+(gsel==k?' sel':'')+'" data-gs="'+k+'"><span class="ic">'+ic+'</span><span class="sl">'+lab+(SL.includes(k)&&S.style==k?' · style':'')+(it&&it.kind=='2h'?' · 2H':'')+'</span><span class="nm">'+(it?it.n:'Empty')+'</span>'+(it?'<span class="st">'+(k=='off'&&!offIt()?(is2h()?'Hands full (two-hander)':'Inactive: wrong style'):istat(it))+'</span><span class="badge '+g![0]+'">'+g![1]+'</span>':'<span class="st">Nothing equipped</span>')+'</button>';
 }
 function pickerHtml(k:string){
   const ot=k=='ring1'?S.eq.ring2:k=='ring2'?S.eq.ring1:null,cur=S.eq[k];

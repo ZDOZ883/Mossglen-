@@ -1,7 +1,7 @@
 // Fight maths, loot, combat rounds, combat view. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 function fight(e:Enemy){
   const Ep=hitP(e)*(maxHit(e)+1)/2*(1+dwf())+memDpr(e),rounds=Math.max(1,e.hp/Math.max(.01,Ep));
-  const Ee=eHitP(e)*(emax(e)+1)/2*(1-armor())*(1+FM[S.form].taken)*(1-Math.min(.6,pk('taken')+cb('taken')+shT()+(onTask(e)?cb('ttaken'):0))),reg=maxhp()*.01*RT*(1+FM[S.form].regen+cb('regen'));
+  const Ee=eHitP(e)*(emax(e)+1)/2*(1-armor())*(1+FM![S.form].taken)*(1-Math.min(.6,pk('taken')+cb('taken')+shT()+(onTask(e)?cb('ttaken'):0))),reg=maxhp()*.01*RT*(1+FM![S.form].regen+cb('regen'));
   return{ttk:rounds*RT,dmg:Math.max(0,(Ee-reg)*rounds-maxhp()*pk('heal'))};
 }
 function canEq(it:Item){if(it.rs)return rsLv(it.rs)>=it.req;return lv(S.xp[SL.includes(it.slot)?'Attack':it.slot=='trinket'?'Vitality':'Defense'])>=it.req}
@@ -12,7 +12,7 @@ function loot(e:Enemy,quiet?:any){
   const z=e.zone,g=1+ef('drop')+cb('drop')+FM[S.form].drop+(onTask(e)?.1+(S.su.fort?.25:0)+cb('tdrop'):0),t=dropTier(z),k='z'+z+(e.boss?'b':'m');
   if(Math.random()<.6){const m=ZN[z][4];S.inv[m]=(S.inv[m]||0)+1+(Math.random()<.4?1:0)}
   S.pity[k]=(S.pity[k]||0)+1;
-  if(z>7){const ck=k+'c',cn=ZN[z][6];S.pity[ck]=(S.pity[ck]||0)+1;if(Math.random()<(e.boss?1/6:1/40)*g||S.pity[ck]>=(e.boss?18:100)){S.pity[ck]=0;S.inv[cn]=(S.inv[cn]||0)+1}}
+  if(z>7){const ck=k+'c',cn=ZN[z][6];S.pity[ck]=(S.pity[ck]||0)+1;if(Math.random()<(e.boss?1/6:1/40)*g||S.pity[ck]>=(e.boss?18:100)){S.pity[ck]=0;S.inv[cn!]=(S.inv[cn!]||0)+1}}
   if(z<8&&(Math.random()<(e.boss?.1:1/64)*g||S.pity[k]>=(e.boss?40:150))){S.pity[k]=0;gainItem(rndGear(t))}
   if(e.boss&&z>7){const hk='z'+z+'h';S.pity[hk]=(S.pity[hk]||0)+1;if(Math.random()<g/30||S.pity[hk]>=70){S.pity[hk]=0;gainItem(rndGear(z))}}
   if(e.boss){const tk='z'+z+'t';S.pity[tk]=(S.pity[tk]||0)+1;if(Math.random()<g/12||S.pity[tk]>=60){S.pity[tk]=0;gainItem('t'+z)}}
@@ -35,7 +35,7 @@ function onKill(e:Enemy,quiet:any){
 }
 function cround(e:Enemy,quiet:any){
   const m=maxhp();
-  if(e.raid){const r=RD.find(x=>x.id==e.raid);if(!raidOk(r)){S.cur=null;S.ehp=null;say('The raid party broke up. You pull out of '+r.n+'.');return}S.rr=(S.rr||0)+1}
+  if(e.raid){const r=RD.find(x=>x.id==e.raid)!;if(!raidOk(r)){S.cur=null;S.ehp=null;say('The raid party broke up. You pull out of '+r.n+'.');return}S.rr=(S.rr||0)+1}
   if(S.ehid!==e.id||S.ehp==null){S.ehid=e.id;S.ehp=e.hp;S.rr=0;if(!quiet)hits=[]}
   if(S.hp<m*.55){
     const hl=1+ef('heal')+cb('heal')+lv(S.xp.Cooking)*.004,fk=Object.keys(FOOD).filter(k=>S.inv[k]>0).sort((a,b)=>FOOD[a]-FOOD[b]),k=fk.find(q=>FOOD[q]*hl>=m*.15)||fk[fk.length-1];
@@ -44,10 +44,10 @@ function cround(e:Enemy,quiet:any){
   if(Math.random()<hitP(e)){let d=1+Math.floor(Math.random()*maxHit(e));const cr=Math.random()<cb('crit');if(cr)d*=2;S.ehp-=d+Math.round(memDpr(e)*(.75+Math.random()*.5));if(cb('lsteal'))S.hp=Math.min(m,S.hp+d*cb('lsteal'));if(!quiet)hit('You '+(cr?'crit for ':'hit ')+d+'.')}else if(!quiet)hit('You miss.');
   if(S.ehp>0&&dwf()>0&&Math.random()<hitP(e)){const od=1+Math.floor(Math.random()*Math.max(1,Math.floor(maxHit(e)*dwf())));S.ehp-=od;if(!quiet)hit('Your off-hand hits for '+od+'.')}
   if(S.ehp<=0){S.ehp=null;onKill(e,quiet);return}
-  if(Math.random()<eHitP(e)){const d=Math.max(1,Math.round((1+Math.floor(Math.random()*emax(e)))*(1-armor())*(1+FM[S.form].taken)*(1-Math.min(.6,pk('taken')+cb('taken')+shT()+(onTask(e)?cb('ttaken'):0)))));S.hp-=d;if(!quiet)hit(e.n+' hits you for '+d+'.')}else if(!quiet)hit(e.n+' misses.');
+  if(Math.random()<eHitP(e)){const d=Math.max(1,Math.round((1+Math.floor(Math.random()*emax(e)))*(1-armor())*(1+FM![S.form].taken)*(1-Math.min(.6,pk('taken')+cb('taken')+shT()+(onTask(e)?cb('ttaken'):0)))));S.hp-=d;if(!quiet)hit(e.n+' hits you for '+d+'.')}else if(!quiet)hit(e.n+' misses.');
   if(S.hp<=0&&cb('ls')>0&&!S.lsu){S.lsu=true;S.hp=1;if(!quiet)hit('Last stand! You hold on with 1 hp.')}
   if(S.hp<=0){S.lsu=false;S.hp=m/2;S.p=-15;S.ehp=null;say(e.n+' overpowers you. You limp off to rest a while.');if(e.raid){S.cur=null;say('The raid is lost. Resupply, then try again.')}if(!quiet)hit('You are knocked out.');return}
-  S.hp=Math.min(m,S.hp+m*.01*RT*(1+FM[S.form].regen+cb('regen')));
+  S.hp=Math.min(m,S.hp+m*.01*RT*(1+FM![S.form].regen+cb('regen')));
 }
 function cycle(k:string){const ot=k=='ring1'?S.eq.ring2:k=='ring2'?S.eq.ring1:null;const o=Object.keys(S.own).filter(i=>IT[i].slot==skey(k)&&canEq(IT[i])&&i!=ot).sort((a,b)=>IT[a].tier-IT[b].tier||qrank(IT[a])-qrank(IT[b])||(IT[a].fam||0)-(IT[b].fam||0));if(!o.length)return;S.eq[k]=o[(o.indexOf(S.eq[k])+1)%o.length];gearSync()}
 const price=(it:Item)=>Math.round(GP[it.tier]*(it.cmb?1.3:1)*(it.q=='s'?.6:1));
