@@ -1,4 +1,4 @@
-import { S, say } from './00-state';
+import { S, TASKS, say } from './00-state';
 import { X } from './registry';
 import { FM, H, HK, IT, LT, lv, pbs, skPet } from './01-species-pets';
 import { RFN, ctime, gateOk, refineDone } from './02-gear-data';
@@ -10,7 +10,7 @@ export const pm=()=>(FM[S.form]||FM.steady).party+X.cb('pmult');
 export const pk=(n:string)=>Math.min(({taken:.45,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+(H[k].pk[n]||0)*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),0));
 export function mxp(k:string,x:number){const b=cl(k);S.cx[k]=(S.cx[k]||0)+x*(H[k].pet?1.5:1);if(cl(k)>b)say(H[k].n+' reaches level '+cl(k)+'.')}
 export function ldx(x:number){const b=LD();S.xp.Leadership+=x;const a=LD();if(a>b){const u=HK.filter(k=>H[k].lt>b&&H[k].lt<=a).map(k=>H[k].n);say('Leadership reaches level '+a+'.'+(LT.some(l=>l>b&&l<=a)?' New party slot.':'')+(u.length?' Now available: '+u.join(', ')+'.':''))}}
-export function validTask(t:any){return !!t&&(t.k=='war'||t.k=='idle'||t.k=='bar'||t.k=='exp'||(t.k=='s'&&!!A.find(a=>a.id==t.id))||(t.k=='k'&&!!DISH[t.id])||(t.k=='f'&&!!IT[t.id]&&t.id[0]!='t')||(t.k=='r'&&!!RFN[t.id]))}
+export function validTask(t:any){return !!t&&((!!TASKS[t.k]&&TASKS[t.k].valid(t))||t.k=='war'||t.k=='idle'||t.k=='bar'||t.k=='exp'||(t.k=='s'&&!!A.find(a=>a.id==t.id))||(t.k=='k'&&!!DISH[t.id])||(t.k=='f'&&!!IT[t.id]&&t.id[0]!='t')||(t.k=='r'&&!!RFN[t.id]))}
 export function assign(k:string,kind:string,id?:any){
   if(!S.hired[k]||asg(k).k=='exp')return;
   const t=S.mt[k];

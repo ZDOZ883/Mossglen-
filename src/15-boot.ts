@@ -9,7 +9,8 @@ import { LD, asg, buy, buyTool, set_skill, set_tab, set_who, skill, slBuy, slots
 import { assign, validTask } from './08-party-state';
 import { buUp, sgBuy } from './09-seasons-burrow';
 import { bars, cb, clampXp, hasWork, refreshFx, tick } from './11-engine';
-import { CF, render, set_logSub } from './12-views';
+import { CF, render, set_logSub } from './13-views';
+import { alchAct, farmAct } from './12-farm-alchemy';
 // Input handling, boot and timers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 document.addEventListener('click',e=>{
   const t=(e.target as HTMLElement).closest('button');if(!t)return;const d=t.dataset;
@@ -19,6 +20,8 @@ document.addEventListener('click',e=>{
   else if(d.cmd)S.cmd=!S.cmd;
   else if('cape' in d){S.cape=d.cape||null;refreshFx()}
   else if(d.back)set_skill(null);
+  else if(d.farm)farmAct(d.farm);
+  else if(d.alch)alchAct(d.alch);
   else if(d.logsub){set_logSub(d.logsub);render();return}
   else if(d.who)set_who(d.who);
   else if(d.assign){const [k,a]=d.assign.split(':');assign(k,a)}
@@ -64,7 +67,7 @@ document.addEventListener('click',e=>{
   save();render();
 });
 import { OPEN } from './03-world-expeditions';
-import { migrate } from './13-migrate';
+import { migrate } from './14-migrate';
 migrate();
 export const away=Math.min(Date.now()-S.t,8*3600e3);
 if(S.sp&&(S.cur||hasWork())&&away>20000){const a0=S.a;tick(away/1000,true);say('You were away '+Math.round(away/60000)+' min. Your work carried on.')}

@@ -1,4 +1,4 @@
-import { S, save, say } from './00-state';
+import { FXSRC, S, TASKS, TICKS, save, say } from './00-state';
 import { X } from './registry';
 import { D, FXC, H, IT, SK, XT, lv, maxhp, nsl, set_FXC, spFx } from './01-species-pets';
 import { E, RFN, gearFx, gearSync, itFx, qrank } from './02-gear-data';
@@ -14,7 +14,7 @@ export function tick(dt:any,quiet:any){
   if(dt<=0)return;
   if(S.cur){S.p+=dt;const d=dur();let n=0;while(S.cur&&S.p>=d&&n<20000){S.p-=d;finish(quiet);n++}}
   if(S.ex){S.ex.p+=dt;if(S.ex.p>=S.ex.dur)exFinish(quiet)}
-  memTick(dt);clampXp();checkCapes();checkAch();wxCheck();gearSync();
+  TICKS.forEach(f=>f(dt,quiet));memTick(dt);clampXp();checkCapes();checkAch();wxCheck();gearSync();
 }
 export function bars(){
   const c=S.cur&&S.cur.k=='c'?E.find(e=>e.id==S.cur.id):null;
@@ -38,7 +38,7 @@ export function bars(){
   const o=document.getElementById('ac');if(o)o.textContent='🌰 '+Math.floor(S.a).toLocaleString();
 }
 export function curName(){return S.cur?taskName(S.cur):null}
-export const CAPN:Record<string,string>={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
+export const CAPN:Record<string,string>={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Farming:'Gardener',Alchemy:'Alchemist',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
 export const TNAME=['','Skill Cape','120 Cape','Sub-master Cape','Master Cape'];
 export const CE:Record<string,any[][][]>={
 Foraging:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['heal',.25]]],
@@ -56,17 +56,20 @@ Strength:[[['dmgm',.08]],[['xpm',.1]],[['lsteal',.05]],[['dmgm',.1]]],
 Defense:[[['taken',.08]],[['xpm',.1]],[['ls',1]],[['taken',.08]]],
 Vitality:[[['hpm',.1]],[['xpm',.1]],[['regen',.5]],[['hpm',.1],['heal',.15]]],
 Slayer:[[['tdmg',.1]],[['pts',.25]],[['tdrop',.15]],[['tdmg',.15]]],
+Farming:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['sell',.15]]],
+Alchemy:[[['save',.15]],[['xp',.1]],[['spd',.1]],[['pot',.25]]],
 Leadership:[[['mspd',.15]],[['pmult',.15]],[['mspd',.15]],[['pmult',.15],['mspd',.15]]]};
-export const GRP:Record<string,string[]>={Combat:['Attack','Strength','Defense','Vitality'],Gathering:SK,Production:['Cooking','Smithing','Fletching','Enchanting','Tailoring']};
+export const GRP:Record<string,string[]>={Combat:['Attack','Strength','Defense','Vitality'],Gathering:SK,Production:['Cooking','Smithing','Fletching','Enchanting','Tailoring'],Cultivation:['Farming','Alchemy']};
 export const GE:Record<string,any[][][]>={
 Combat:[[['xpm',.05],['taken',.04]],[['dmgm',.05],['acc',.04]],[['crit',.05],['regen',.25]],[['dmgm',.1],['taken',.1],['drop',.1]]],
 Gathering:[[['yld',.1]],[['xp',.05]],[['spd',.05]],[['yld',.1],['sell',.1]]],
-Production:[[['save',.1]],[['xp',.05]],[['spd',.05]],[['save',.1],['burn',.25],['sell',.1]]]};
+Production:[[['save',.1]],[['xp',.05]],[['spd',.05]],[['save',.1],['burn',.25],['sell',.1]]],
+Cultivation:[[['yld',.1]],[['xp',.05]],[['spd',.05]],[['pot',.15],['sell',.1]]]};
 GRP.Max=Object.keys(CE);GE.Max=[[['xp',.05],['xpm',.05]],[['yld',.05],['save',.05],['drop',.05]],[['spd',.05],['crit',.05]],[['xp',.1],['xpm',.1],['sell',.1],['mspd',.1]]];
 export const gw=(g:string)=>g=='Max'?'skill':g.toLowerCase();
 export const CTX=['yld','xp','spd','save','burn'];
 export const pc=(v:number)=>Math.round(v*100);
-export const FXT:Record<string,(v:number)=>string>={yld:(v:number)=>pc(v)+'% chance of a double yield',xp:(v:number)=>'+'+pc(v)+'% xp',spd:(v:number)=>pc(v)+'% faster work',save:(v:number)=>pc(v)+'% chance to save materials',burn:(v:number)=>pc(v)+'% less burning',heal:(v:number)=>'+'+pc(v)+'% food healing',sell:(v:number)=>'+'+pc(v)+'% acorns from sales',drop:(v:number)=>'+'+pc(v)+'% rare drops',regen:(v:number)=>'+'+pc(v)+'% health regeneration',taken:(v:number)=>'−'+pc(v)+'% damage taken',acc:(v:number)=>'+'+pc(v)+'% hit chance',dmgm:(v:number)=>'+'+pc(v)+'% max hit',crit:(v:number)=>pc(v)+'% chance to hit twice as hard',lsteal:(v:number)=>'heal '+pc(v)+'% of damage dealt',ls:(v:number)=>'survive one lethal hit per fight',hpm:(v:number)=>'+'+pc(v)+'% max health',xpm:(v:number)=>'+'+pc(v)+'% combat xp',ttaken:(v:number)=>'−'+pc(v)+'% damage taken on task',txp:(v:number)=>'+'+pc(v)+'% Slayer xp',tdmg:(v:number)=>'+'+pc(v)+'% damage on Slayer tasks',tdrop:(v:number)=>'+'+pc(v)+'% rare drops on task',pts:(v:number)=>'+'+pc(v)+'% slayer points',mspd:(v:number)=>'+'+pc(v)+'% member work speed',pmult:(v:number)=>'+'+pc(v)+'% member perks'};
+export const FXT:Record<string,(v:number)=>string>={pot:(v:number)=>'+'+pc(v)+'% potion duration',yld:(v:number)=>pc(v)+'% chance of a double yield',xp:(v:number)=>'+'+pc(v)+'% xp',spd:(v:number)=>pc(v)+'% faster work',save:(v:number)=>pc(v)+'% chance to save materials',burn:(v:number)=>pc(v)+'% less burning',heal:(v:number)=>'+'+pc(v)+'% food healing',sell:(v:number)=>'+'+pc(v)+'% acorns from sales',drop:(v:number)=>'+'+pc(v)+'% rare drops',regen:(v:number)=>'+'+pc(v)+'% health regeneration',taken:(v:number)=>'−'+pc(v)+'% damage taken',acc:(v:number)=>'+'+pc(v)+'% hit chance',dmgm:(v:number)=>'+'+pc(v)+'% max hit',crit:(v:number)=>pc(v)+'% chance to hit twice as hard',lsteal:(v:number)=>'heal '+pc(v)+'% of damage dealt',ls:(v:number)=>'survive one lethal hit per fight',hpm:(v:number)=>'+'+pc(v)+'% max health',xpm:(v:number)=>'+'+pc(v)+'% combat xp',ttaken:(v:number)=>'−'+pc(v)+'% damage taken on task',txp:(v:number)=>'+'+pc(v)+'% Slayer xp',tdmg:(v:number)=>'+'+pc(v)+'% damage on Slayer tasks',tdrop:(v:number)=>'+'+pc(v)+'% rare drops on task',pts:(v:number)=>'+'+pc(v)+'% slayer points',mspd:(v:number)=>'+'+pc(v)+'% member work speed',pmult:(v:number)=>'+'+pc(v)+'% member perks'};
 export const fxTxt=(arr:any)=>{const m:Record<string,any>={},o:any=[];arr.forEach((e:Enemy)=>{if(!(e[0] in m)){m[e[0]]=0;o.push(e[0])}m[e[0]]+=e[1]});return o.map((k:string)=>FXT[k](m[k])).join(', ')};
 export const cumFx=(k:string,t:number)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(CE[k][i]);return fxTxt(a)};
 export const gcumFx=(g:string,t:number)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(GE[g][i]);return fxTxt(a)};
@@ -80,12 +83,12 @@ export function capeFx(){
   const id=S.cape,out:any=[];if(!id)return out;
   if(id.indexOf('I:')==0)return itFx(IT[id.slice(2)]);
   const add=(arr:any,sk:string)=>arr.forEach((e:Enemy)=>out.push({k:e[0],v:e[1],sk:CTX.includes(e[0])?sk:null}));
-  if(id.indexOf('G:')==0){const g=id.slice(2),t=grpTier(g);for(let i=0;i<t;i++){GRP[g].forEach((sk:string)=>add(CE[sk][i],sk));add(GE[g][i],'*');if(g=='Max')['Combat','Gathering','Production'].forEach(q=>add(GE[q][i],'*'))}}
+  if(id.indexOf('G:')==0){const g=id.slice(2),t=grpTier(g);for(let i=0;i<t;i++){GRP[g].forEach((sk:string)=>add(CE[sk][i],sk));add(GE[g][i],'*');if(g=='Max')['Combat','Gathering','Production','Cultivation'].forEach(q=>add(GE[q][i],'*'))}}
   else{const t=capeTier(id);for(let i=0;i<t;i++)add(CE[id][i],id)}
   return out;
 }
 export function cb(k:string,sk?:string){let v=0;for(let i=0;i<FXC.length;i++){const e=FXC[i];if(e.k==k&&(e.sk==null||e.sk=='*'||e.sk==sk))v+=e.v}return v}
-export function refreshFx(){if(S.cape&&!capeOk(S.cape))S.cape=null;set_FXC(capeFx().concat(hrFx(),buFx(),sgFx(),wxFx(),gearFx(),spFx()))}
+export function refreshFx(){if(S.cape&&!capeOk(S.cape))S.cape=null;set_FXC(capeFx().concat(hrFx(),buFx(),sgFx(),wxFx(),gearFx(),spFx(),...FXSRC.map(f=>f())))}
 export function clampXp(){for(const k in S.xp)if(S.xp[k]>2e8)S.xp[k]=2e8}
 export function checkCapes(){
   let ch=false;
@@ -108,8 +111,8 @@ export function capesView(){
   if(cl.length){h+='<h2>Crafted cloaks</h2>';h+=cl.map(i=>{const it=IT[i],id='I:'+i,ok=canEq(it);return '<div class="row'+(S.cape==id?' on':'')+'"><span>'+it.n+'<small>'+istat(it)+(ok?'':' · needs '+reqText(it))+'</small></span>'+(S.cape==id?'<span class="good">Worn</span>':ok?'<button class="btn" data-cape="'+id+'">Wear</button>':'')+'</div>'}).join('')}
   return h;
 }
-export const SKG=[['Gathering',['Foraging','Woodcutting','Fishing','Mining','Hunting']],['Artisan',['Cooking','Smithing','Fletching','Enchanting','Tailoring']],['Specialist',['Slayer','Leadership']]];
-export const skOf=(t:any)=>!t?null:t.k=='s'?(A.find(a=>a.id==t.id)||{}).sk:t.k=='k'?'Cooking':t.k=='f'?CSK(t.id):t.k=='r'?RFN[t.id].sk:null;
+export const SKG=[['Gathering',['Foraging','Woodcutting','Fishing','Mining','Hunting']],['Artisan',['Cooking','Smithing','Fletching','Enchanting','Tailoring']],['Cultivation',['Farming','Alchemy']],['Specialist',['Slayer','Leadership']]];
+export const skOf=(t:any)=>!t?null:t.k=='s'?(A.find(a=>a.id==t.id)||{}).sk:t.k=='k'?'Cooking':t.k=='f'?CSK(t.id):t.k=='r'?RFN[t.id].sk:TASKS[t.k]?TASKS[t.k].sk:null;
 export const pcx=(k:string)=>{const l=lv(S.xp[k]);if(l>=120)return Math.max(0,Math.min(100,(S.xp[k]-XT[120])/(2e8-XT[120])*100));const lo=XT[l];return Math.max(0,Math.min(100,(S.xp[k]-lo)/(XT[l+1]-lo)*100))};
 export const isOn=(k:string,id:string)=>{const t=who=='you'?S.cur:asg(who);return !!t&&t.k==k&&t.id==id};
 export const crew=(k:string,id:string)=>{const n=Object.keys(S.hired).filter(m=>{const t=asg(m);return t.k==k&&t.id==id}).map(m=>H[m].n.split(' ')[0]);return n.length?'<br>'+n.join(', ')+' working':''};
@@ -117,7 +120,7 @@ export const working=()=>Object.keys(S.hired).filter(k=>asg(k).k!='war'&&asg(k).
 export const hasWork=()=>!!S.ex||working().length>0||(buL('bar')>0&&Object.keys(S.hired).some(k=>asg(k).k=='idle'));
 const ING:Record<string,string>=Object.fromEntries('Pick Picking,Dig Digging,Sniff Sniffing,Gather Gathering,Find Finding,Pluck Plucking,Reach Reaching,Cut Cutting,Harvest Harvesting,Gnaw Gnawing,Fell Felling,Hew Hewing,Claim Claiming,Catch Catching,Spear Spearing,Hook Hooking,Trap Trapping,Net Netting,Lure Luring,Land Landing,Collect Collecting,Chip Chipping,Pry Prying,Free Freeing,Mine Mining,Quarry Quarrying,Snare Snaring'.split(',').map(x=>x.split(' ')));
 export const ing=(n:string)=>{const w=n.split(' ');return (ING[w[0]]||w[0])+(w.length>1?' '+w.slice(1).join(' '):'')};
-export function taskName(c:any):string{return c.k=='bar'?'Training in the barracks':c.k=='s'?ing(A.find(a=>a.id==c.id)!.n):c.k=='k'?'Cooking '+DISH[c.id].n:c.k=='f'?'Crafting '+IT[c.id].n:c.k=='r'?'Refining '+RFN[c.id].n:'Fighting '+E.find(e=>e.id==c.id)!.n}
+export function taskName(c:any):string{return TASKS[c.k]?TASKS[c.k].name(c):c.k=='bar'?'Training in the barracks':c.k=='s'?ing(A.find(a=>a.id==c.id)!.n):c.k=='k'?'Cooking '+DISH[c.id].n:c.k=='f'?'Crafting '+IT[c.id].n:c.k=='r'?'Refining '+RFN[c.id].n:'Fighting '+E.find(e=>e.id==c.id)!.n}
 export const workNames=()=>{
   const g:Record<string,string[]>={};working().forEach(k=>{const t=taskName(asg(k));(g[t]=g[t]||[]).push(H[k].n.split(' ')[0])});
   return Object.keys(g).map(t=>{const m=g[t],a=t.charAt(0).toLowerCase()+t.slice(1),who=m.length>1?m.slice(0,-1).join(', ')+' and '+m[m.length-1]:m[0];return who+(m.length==1?' is ':m.length==2?' are both ':' are all ')+a}).join('<br>')};

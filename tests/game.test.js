@@ -90,7 +90,7 @@ describe('data integrity', () => {
 
   it('refined components and dishes reference real goods', () => {
     const bad = g.ev(`(function(){
-      const goods=new Set();A.forEach(a=>goods.add(a.item));ZN.forEach(z=>{goods.add(z[4]);if(z[6])goods.add(z[6])});Object.values(RFN).forEach(r=>goods.add(r.n));
+      const goods=new Set();A.forEach(a=>goods.add(a.item));ZN.forEach(z=>{goods.add(z[4]);if(z[6])goods.add(z[6])});Object.values(RFN).forEach(r=>goods.add(r.n));CROPS.forEach(c=>goods.add(c[0]));
       const out=[];
       Object.keys(RFN).forEach(id=>Object.keys(refRecipe(id)).forEach(k=>{if(!goods.has(k))out.push(id+' needs unknown '+k)}));
       Object.keys(DISH).forEach(id=>{const d=DISH[id];if(!goods.has(d.raw))out.push(id+' raw '+d.raw);if(!(d.heal>0))out.push(id+' heal')});
@@ -156,7 +156,7 @@ describe('data integrity', () => {
   });
 
   it('pets are unique and complete', () => {
-    const r = g.ev(`(function(){const ids=new Set(),o=[];PETS.forEach(p=>{if(ids.has(p[0]))o.push('dup '+p[0]);ids.add(p[0]);if(!H[p[0]])o.push('no member '+p[0])});if(PETS.length!=31)o.push('count '+PETS.length);return o})()`);
+    const r = g.ev(`(function(){const ids=new Set(),o=[];PETS.forEach(p=>{if(ids.has(p[0]))o.push('dup '+p[0]);ids.add(p[0]);if(!H[p[0]])o.push('no member '+p[0])});if(PETS.length!=33)o.push('count '+PETS.length);return o})()`);
     assert.equal(JSON.stringify(r), "[]");
   });
 
@@ -439,11 +439,12 @@ describe('save and load', () => {
 
   it('migrations run once, in order, only when the save is older', () => {
     const g = load({ seed: 4, save: OLD_SAVE, awaySec: 0 });
-    g.ev("MIGRATIONS.push({v:2,run:()=>{S.__ran=(S.__ran||0)+1}},{v:3,run:()=>{S.__ran=(S.__ran||0)+10}})");
-    g.ev('S.v=1;migrate();migrate()');
+    const n0 = g.ev('MIGRATIONS.length');
+    g.ev("MIGRATIONS.push({v:SAVE_VERSION+1,run:()=>{S.__ran=(S.__ran||0)+1}},{v:SAVE_VERSION+2,run:()=>{S.__ran=(S.__ran||0)+10}})");
+    g.ev('S.v=SAVE_VERSION;migrate();migrate()');
     assert.equal(g.ev('S.__ran'), 11);
-    assert.equal(g.ev('S.v'), 3);
-    g.ev('MIGRATIONS.length=0;delete S.__ran');
+    assert.equal(g.ev('S.v'), g.ev('SAVE_VERSION+2'));
+    g.ev('MIGRATIONS.length=' + n0 + ';delete S.__ran');
   });
 
   it('eight hours offline does not corrupt anything', () => {
@@ -642,5 +643,70 @@ describe('member perks on expeditions', () => {
     assert.ok(o.a < o.base, 'hare should shorten the trip');
     assert.ok(o.pb > o.pa, 'otter should raise odds');
     assert.ok(o.loot > 0, 'owl should add loot');
+  });
+});
+
+describe('farming and alchemy', () => {
+  it('old saves get seeds, plots and an empty potion shelf', () => {
+    const g = load({ seed: 4, save: OLD_SAVE, awaySec: 0 });
+    assert.ok(g.ev("S.inv['turnip seeds']") > 0);
+    assert.equal(JSON.stringify(g.ev('S.buffs')), '{}');
+    assert.ok(g.ev('S.xp.Farming') === 0 && g.ev('S.xp.Alchemy') === 0);
+  });
+
+  it('crops grow on a timer, harvest into goods and seeds, and feed cooking', () => {
+    const g = load({ seed: 5 });
+    g.ev("S.inv['turnip seeds']=3;farmAct('plant:0');farmAct('plant:0')");
+    assert.equal(g.ev('S.inv["turnip seeds"]'), 1);
+    g.ev("farmAct('harvest:0')");
+    assert.equal(g.ev('S.xp.Farming'), 0, 'not ready yet, nothing harvested');
+    g.ev('plots().forEach(p=>{if(p)p.ready=Date.now()-1})');
+    g.ev("farmAct('harvestall:0')");
+    assert.ok(g.ev('S.inv.turnips') >= 6 && g.ev('S.xp.Farming') > 0);
+    assert.ok(g.ev('S.inv["turnip seeds"]') >= 3, 'harvests return seeds');
+    // the garden dish uses the crop
+    g.ev("S.inv.turnips=3;S.inv.berries=1;S.cur={k:'k',id:'dG0'};cookDone('dG0')");
+    assert.equal(g.ev('S.inv.turnips'), 0, 'the dish consumed the crop');
+    assert.equal(g.ev("dishNeeds(DISH.dG0).turnips"), 3);
+  });
+
+  it('twigs make mulch that shortens the wait; plots unlock by level', () => {
+    const g = load({ seed: 5 });
+    g.ev("S.inv['turnip seeds']=1;farmAct('plant:0')");
+    const before = g.ev('plots()[0].ready');
+    g.ev("S.inv.twigs=3;farmAct('mulch:0')");
+    assert.ok(g.ev('plots()[0].ready') < before && g.ev('S.inv.twigs') == 0);
+    assert.equal(g.ev('plotsOpen()'), 2);
+    g.ev('S.xp.Farming=XT[40]');
+    assert.equal(g.ev('plotsOpen()'), 4);
+  });
+
+  it('brewing makes potions; drinking applies real effects that expire', () => {
+    const g = load({ seed: 6 });
+    g.ev("S.inv.berries=2;S.inv.turnips=1;S.cur={k:'a',id:'p0'};S.p=0");
+    g.ev('tick(10,true)');
+    assert.equal(g.ev('S.inv["Quickroot Tonic"]'), 1);
+    assert.ok(g.ev('S.xp.Alchemy') > 0);
+    const base = g.ev("cb('spd','Foraging')");
+    g.ev("alchAct('drink:p0')");
+    assert.ok(g.ev("cb('spd','Foraging')") > base, 'buff applied');
+    assert.equal(g.ev('S.inv["Quickroot Tonic"]'), 0);
+    g.ev("S.buffs.p0=Date.now()-1;tick(1,true)");
+    assert.equal(g.ev("cb('spd','Foraging')"), base, 'buff expired');
+  });
+
+  it('only three potions at once; every potion has real ingredients and valid effects', () => {
+    const g = load({ seed: 6 });
+    const bad = g.ev(`(function(){const o=[],goods=new Set();A.forEach(a=>goods.add(a.item));CROPS.forEach(c=>goods.add(c[0]));
+      POTS.forEach(p=>{Object.keys(p.needs).forEach(k=>{if(!goods.has(k))o.push(p.id+' needs '+k)});p.fx.forEach(e=>{if(!(e[0] in FXT))o.push(p.id+' fx '+e[0])})});return o})()`);
+    assert.equal(JSON.stringify(bad), '[]');
+    g.ev("['p0','p1','p2','p3'].forEach(id=>{S.inv[POT[id].n]=1;alchAct('drink:'+id)})");
+    assert.equal(g.ev('activeBuffs().length'), 3);
+  });
+
+  it('foraging can turn up seeds', () => {
+    const g = load({ seed: 7 });
+    g.ev("S.inv['turnip seeds']=0;for(let i=0;i<400;i++)GATHERED.forEach(f=>f(A.find(a=>a.sk=='Foraging')))");
+    assert.ok(g.ev('S.inv["turnip seeds"]') > 0);
   });
 });

@@ -19,7 +19,7 @@ import { validTask } from './08-party-state';
 // Save upgrades. ensureDefaults() is idempotent: it fills any field an older save lacks.
 // For changes that are not idempotent (renames, rebalances of stored values), add an entry to MIGRATIONS
 // with the next version number; each runs once, in order, and S.v records the latest applied version.
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 function ensureDefaults() {
   S.tier=S.tier||{};S.best=S.best||{};S.cx=S.cx||{};S.lead=S.lead||null;S.style=S.style||'Melee';S.gear=S.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(S.xp.Attack==null&&(S.xp.Melee||S.xp.Ranged||S.xp.Magic)){const b0=Math.max(S.xp.Melee||0,S.xp.Ranged||0,S.xp.Magic||0);S.xp.Attack=S.xp.Strength=S.xp.Defense=b0}
@@ -40,7 +40,8 @@ function ensureDefaults() {
 }
 
 export const MIGRATIONS: { v: number; run: () => void }[] = [
-  // { v: 2, run: () => { /* example: S.newField = convert(S.oldField); */ } },
+  // v2: Farming and Alchemy arrive. Everyone gets a few turnip seeds to start the first plot.
+  { v: 2, run: () => { S.farm = S.farm || []; S.buffs = S.buffs || {}; if (!(S.inv['turnip seeds'] > 0)) S.inv['turnip seeds'] = 4; } },
 ];
 
 export function migrate() {

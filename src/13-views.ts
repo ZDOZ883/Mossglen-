@@ -10,6 +10,7 @@ import { A, CR, CSK, DISH, GL, LD, asg, bspd, burn, cl, gearView, mspd, power, r
 import { pm } from './08-party-state';
 import { BRATE, buL, burrowView, wxView } from './09-seasons-burrow';
 import { famShare, logView } from './10-achievements-log';
+import { alchPage, farmPage, potStatus } from './12-farm-alchemy';
 import { SKG, actorChips, bars, capeRow, cb, crew, curName, hasWork, isOn, pcx, tile, workNames } from './11-engine';
 // Skills, party and top-level views. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 export function skillsView(){
@@ -17,7 +18,7 @@ export function skillsView(){
   return wxView()+SKG.map((g:any)=>'<h2>'+g[0]+'</h2><div class="pick">'+g[1].map(tile).join('')+'</div>').join('')+hrView()+gatesView();
 }
 export function skillPage(k:string){
-  const body=SK.includes(k)?gatherPage(k):k=='Cooking'?cookPage():CR.includes(k)?craftPage(k):k=='Slayer'?slayerView():leadView();
+  const body=SK.includes(k)?gatherPage(k):k=='Cooking'?cookPage():k=='Farming'?farmPage():k=='Alchemy'?alchPage():CR.includes(k)?craftPage(k):k=='Slayer'?slayerView():leadView();
   return '<p style="margin:0 0 4px"><button class="btn" data-back="1">← Skills</button></p><h2 style="margin-top:8px">'+k+' · level '+lv(S.xp[k])+'</h2><div class="bar xp"><i style="width:'+pcx(k)+'%"></i></div><p class="mu" style="margin:4px 0 0">'+Math.floor(S.xp[k]).toLocaleString()+' xp</p>'+body;
 }
 export function gatherPage(k:string){
@@ -117,9 +118,11 @@ export function render(){
   }
   const cn=curName();
   app!.innerHTML='<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">'+S.sp+' of the valley · total level '+SK.concat(CS).reduce((s,k)=>s+lv(S.xp[k]),0)+'</p>'+
-  '<div class="stat sans"><div class="mu now">You are currently</div>'+(cn?'<div style="display:flex;justify-content:space-between"><span>'+cn+(S.cur.k=='c'?' <small class="mu" id="se"></small>':'')+'</span><button class="btn" data-stop="1">Rest</button></div><div class="bar'+(S.cur.k=='c'?' hp':'')+'"><i id="pb"></i></div>':'<span class="mu">Resting. Choose an activity below to begin.</span>')+(hasWork()?'<div class="mu" style="font-size:14px;margin-top:4px">'+workNames()+'</div>':'')+'</div>'+
+  '<div class="stat sans"><div class="mu now">You are currently</div>'+(cn?'<div style="display:flex;justify-content:space-between"><span>'+cn+(S.cur.k=='c'?' <small class="mu" id="se"></small>':'')+'</span><button class="btn" data-stop="1">Rest</button></div><div class="bar'+(S.cur.k=='c'?' hp':'')+'"><i id="pb"></i></div>':'<span class="mu">Resting. Choose an activity below to begin.</span>')+potStatus()+(hasWork()?'<div class="mu" style="font-size:14px;margin-top:4px">'+workNames()+'</div>':'')+'</div>'+
   '<nav>'+[['skills','Skills','leaf'],['combat','Fight','swords'],['gear','Gear','shield'],['party','Party','paw'],['delve','Explore','lantern'],['burrow','Burrow','burrow'],['log','Log','tome'],['pack','Pack','satchel']].map(t=>'<button data-tab="'+t[0]+'" class="'+(tab==t[0]?'on':'')+'"><i>'+icon(t[2],25)+'</i>'+t[1]+'</button>').join('')+'</nav>'+
   view()+'<div id="log">'+S.log.map((l:number)=>'<p>'+l+'</p>').join('')+'</div>'+
   '<p class="mu" style="margin-top:24px"><button class="btn" data-reset="1" style="font-size:14px">Start over</button></p>';
   bars();
 }
+
+Object.defineProperties(X,{render:{get:()=>render,configurable:true}});

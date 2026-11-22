@@ -82,5 +82,6 @@ export function refineDone(id:string,mk?:any){
 }
 // protected items
 export const KP:Record<string,number>={};ZN.forEach(z=>{if(z[6])KP[z[6]]=1});Object.keys(RFN).forEach(id=>KP[RFN[id].n]=1);D.forEach(d=>KP[d.tr]=1);
-export const KEEP=(k:string)=>!!FOOD[k]||!!KP[k];
+export const KEEPX:Record<string,string>={};// seeds and potions: kept out of Sell-all, label shown in the pack
+export const KEEP=(k:string)=>!!FOOD[k]||!!KP[k]||!!KEEPX[k];
 

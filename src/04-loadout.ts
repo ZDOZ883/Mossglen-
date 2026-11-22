@@ -1,4 +1,4 @@
-import { S, save, say } from './00-state';
+import { S, TASKS, save, say } from './00-state';
 import { X } from './registry';
 import { FM, H, IT, SL, XS, adv, lv, maxhp, spAff } from './01-species-pets';
 import { E, GSK, PSK, RFN, accScore, elv, gearSync } from './02-gear-data';
@@ -52,7 +52,7 @@ export function ctxNow(){
   const c=S.cur;if(!c)return null;
   if(c.k=='c')return{kind:'combat',enemy:E.find(e=>e.id==c.id),label:'combat'};
   if(c.k=='s'){const sk=X.A.find(a=>a.id==c.id).sk;return{kind:'gather',sk,label:sk}}
-  const sk=c.k=='k'?'Cooking':c.k=='r'?RFN[c.id].sk:X.CSK(c.id);return{kind:'craft',sk,label:sk};
+  const sk=TASKS[c.k]?TASKS[c.k].sk:c.k=='k'?'Cooking':c.k=='r'?RFN[c.id].sk:X.CSK(c.id);return{kind:'craft',sk,label:sk};
 }
 export function optNow(k:string){
   if(k=='fight'){const e=(S.cur&&S.cur.k=='c'&&E.find(x=>x.id==S.cur.id))||(S.task&&E.find(x=>x.id==S.task.id))||null;optimize({kind:'combat',enemy:e,label:e?e.n:'fighting'})}

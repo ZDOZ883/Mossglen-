@@ -1,4 +1,4 @@
-import { S, say } from './00-state';
+import { GATHERED, S, TASKS, say } from './00-state';
 import { X } from './registry';
 import { CS, D, IT, PETS, SK, SL, SP, TR, lv, skPet } from './01-species-pets';
 import { E, GSK, PSK, RFN, ZN, ctime, gateOk, refineDone } from './02-gear-data';
@@ -31,7 +31,7 @@ export const AC:Ach[]=[
 ['s4','Artisan','Reach level 99 in every production skill.',()=>PSK.every(k=>lv(S.xp[k])>=99),150000],
 ['s5','Warrior of the Hollow','Reach level 99 in every combat stat.',()=>CS.slice(0,4).every(k=>lv(S.xp[k])>=99),150000],
 ['s6','Beyond the Limit','Reach level 120 in any skill.',()=>nSk(120)>=1,300000],
-['s7','Maxed','Reach level 99 in all 16 skills.',()=>nSk(99)>=16,1000000],
+['s7','Maxed','Reach level 99 in every skill.',()=>nSk(99)>=SK.length+CS.length,1000000],
 ['s8','Master of Everything','Earn the Max Master Cape.',()=>X.grpTier('Max')>=4,20000000],
 ['c1','Pest Control','Defeat 100 foes.',()=>kills()>=100,1000],
 ['c2','Exterminator','Defeat 1,000 foes.',()=>kills()>=1000,20000],
@@ -104,12 +104,12 @@ export function memTick(dt:any){
 }
 export const T=(d:Delve)=>S.tier[d.id]||1;
 export function tierChips(d:Delve){let h='';for(let t=1;t<=5;t++)h+='<button class="'+(T(d)==t?'on':'')+'" data-tier="'+d.id+':'+t+'"'+(t>(S.best[d.id]||0)+1?' disabled':'')+'>Tier '+t+'</button>';return h}
-export const dur=()=>{const c=S.cur;if(!c)return 1;if(c.k=='s')return tt(A.find(a=>a.id==c.id));if(c.k=='r')return 6*Math.max(.3,1-X.cb('spd',RFN[c.id].sk));if(c.k=='f')return ctime(c.id)*Math.max(.3,1-X.cb('spd',CSK(c.id)));if(c.k=='k')return 3.5*Math.max(.3,1-X.cb('spd','Cooking'));return RT};
+export const dur=()=>{const c=S.cur;if(!c)return 1;if(c.k=='s')return tt(A.find(a=>a.id==c.id));if(c.k=='r')return 6*Math.max(.3,1-X.cb('spd',RFN[c.id].sk));if(c.k=='f')return ctime(c.id)*Math.max(.3,1-X.cb('spd',CSK(c.id)));if(c.k=='k')return 3.5*Math.max(.3,1-X.cb('spd','Cooking'));if(TASKS[c.k])return TASKS[c.k].dur(c);return RT};
 export function finish(quiet:any){
   const c=S.cur;
   if(c.k=='s'){
     const a=A.find(x=>x.id==c.id);if(!gateOk(a.gate)){S.cur=null;return}skPet(a.sk);const b=(SP[S.sp!]==a.sk?1.15:1)*(lv(S.xp[a.sk])>=99?1.1:1)*(1+X.cb('xp',a.sk)),before=lv(S.xp[a.sk]);
-    S.xp[a.sk]+=a.xp*b;const yn=1+(Math.random()<lv(S.xp[a.sk])*.004+X.cb('yld',a.sk)?1:0);S.inv[a.item]=(S.inv[a.item]||0)+yn;hrCount(a,yn);
+    S.xp[a.sk]+=a.xp*b;const yn=1+(Math.random()<lv(S.xp[a.sk])*.004+X.cb('yld',a.sk)?1:0);S.inv[a.item]=(S.inv[a.item]||0)+yn;hrCount(a,yn);GATHERED.forEach(f=>f(a));
     if(lv(S.xp[a.sk])>before)say(a.sk+' reaches level '+lv(S.xp[a.sk])+'.'+unlockText(a.sk,lv(S.xp[a.sk]))+(lv(S.xp[a.sk])>=99?' Mastery: +10% xp.':''));
     else if(!quiet&&Math.random()<.12)say('You '+a.n.toLowerCase()+'. '+['A breeze rustles the ferns.','Somewhere, a woodpecker approves.','The brook chatters along.'][Math.floor(Math.random()*3)]);
   }else{
@@ -117,6 +117,7 @@ export function finish(quiet:any){
     if(c.k=='f'){craftDone(c.id);return}
     if(c.k=='r'){refineDone(c.id);return}
     if(c.k=='c'){cround(E.find(e=>e.id==c.id)!,quiet);return}
+    if(TASKS[c.k]){TASKS[c.k].done(c);return}
     S.cur=null;
   }
 }

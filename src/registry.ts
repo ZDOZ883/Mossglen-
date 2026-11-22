@@ -7,6 +7,7 @@ import type * as M8 from './08-party-state';
 import type * as M9 from './09-seasons-burrow';
 import type * as M10 from './10-achievements-log';
 import type * as M11 from './11-engine';
+import type * as M13 from './13-views';
 export const X = {} as {
   CL: typeof M4.CL;
   CW: typeof M4.CW;
@@ -57,5 +58,6 @@ export const X = {} as {
   grpTier: typeof M11.grpTier;
   pcx: typeof M11.pcx;
   refreshFx: typeof M11.refreshFx;
+  render: typeof M13.render;
   skOf: typeof M11.skOf;
 };
