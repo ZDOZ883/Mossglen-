@@ -1,8 +1,8 @@
 import { gameState, TASKS } from './00-state';
 import { X } from './registry';
-import { COMBAT_SKILLS, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, KITSIG, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
-import { AF, CE, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
-import { GATE, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
+import { COMBAT_SKILLS, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, PB, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, KITSIG, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
+import { AF, CE, ZN, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
+import { GATE, RD, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
 import { combatView, istat } from './05-combat';
 import { icon } from './06-icons';
@@ -82,7 +82,7 @@ export function partyView(){
   if(!roster().length)h+='<p class="mu">No one has joined yet. Recruit your first member below.</p>';
   h+=hs.map(k=>{
     const m=MEMBERS[k],t=asg(k),work=t.k!='war'&&t.k!='idle'&&t.k!='bar'&&t.k!='exp';
-    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+(k==gameState.lead?' · lead':'')+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small><small>'+statTxt(k)+'</small></span><small>'+memName(k)+(work?' · '+Math.round(mspd(k)*100)+'% speed · '+Math.round(famShare()*100)+'% to your pack · family stash '+(gameState.fam[k]||0):'')+'</small>'+(work?'<div class="bar"><i id="mp_'+k+'"></i></div>':'')+kitRow(k)+(t.k=='exp'?'':'<div class="chips" style="margin:8px 0 0"><button class="'+(t.k=='war'?'on':'')+'" data-assign="'+k+':war">Fight with me</button><button class="'+(t.k=='idle'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+'<button class="'+(gameState.lead==k?'on':'')+'" data-lead="'+k+'">Lead</button><button data-dismiss="'+k+'">Bench</button></div>')+'</div>';
+    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+(k==gameState.lead?' · lead':'')+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small>'+petTag(k)+'<small>'+statTxt(k)+'</small></span><small>'+memName(k)+(work?' · '+Math.round(mspd(k)*100)+'% speed · '+Math.round(famShare()*100)+'% to your pack · family stash '+(gameState.fam[k]||0):'')+'</small>'+(work?'<div class="bar"><i id="mp_'+k+'"></i></div>':'')+kitRow(k)+(t.k=='exp'?'':'<div class="chips" style="margin:8px 0 0"><button class="'+(t.k=='war'?'on':'')+'" data-assign="'+k+':war">Fight with me</button><button class="'+(t.k=='idle'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+'<button class="'+(gameState.lead==k?'on':'')+'" data-lead="'+k+'">Lead</button><button data-dismiss="'+k+'">Bench</button></div>')+'</div>';
   }).join('');
   if(hs.length)h+='<p class="mu">To put a member to work, open a skill and choose them under “Choose who works”. Benched members stay on your roster, keep their level and can train in the barracks. Combat perks apply only while fighting beside you. Speed, loot and odds perks apply on expeditions.</p>';
   const bs=Object.keys(gameState.bench);
@@ -90,7 +90,7 @@ export function partyView(){
     h+='<h2>Resting at home <span class="mu" style="display:inline">· '+bs.length+' on your roster, not in the party</span></h2><p class="mu">Benched members do no work and fight nothing, but they keep their level and can train in the barracks. Open a slot or swap one of your party to bring them back.</p>';
     h+=bs.map(k=>{
       const m=MEMBERS[k],t=asg(k),free=nsl()<sl,sw=Object.keys(gameState.hired).filter(a=>asg(a).k!='exp');
-      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small></span><small>'+memName(k)+'</small>'+kitRow(k)+(t.k=='exp'?'':'<div class="chips" style="margin:8px 0 0"><button class="'+(t.k!='bar'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+(free?'<button data-call="'+k+'">Join party</button>':'')+'</div>'+(free?'':'<small style="margin-top:8px">Swap in for:</small><div class="chips" style="margin:4px 0 0">'+sw.map(a=>'<button data-call="'+k+':'+a+'">'+MEMBERS[a].n.split(' ')[0]+'</button>').join('')+'</div>'))+'</div>';
+      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small>'+petTag(k)+'</span><small>'+memName(k)+'</small>'+kitRow(k)+(t.k=='exp'?'':'<div class="chips" style="margin:8px 0 0"><button class="'+(t.k!='bar'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+(free?'<button data-call="'+k+'">Join party</button>':'')+'</div>'+(free?'':'<small style="margin-top:8px">Swap in for:</small><div class="chips" style="margin:4px 0 0">'+sw.map(a=>'<button data-call="'+k+':'+a+'">'+MEMBERS[a].n.split(' ')[0]+'</button>').join('')+'</div>'))+'</div>';
     }).join('');
   }
   const rec=HK.filter(k=>!known(k));
@@ -99,7 +99,7 @@ export function partyView(){
     return '<div class="row"><span>'+m.n+'<small>'+m.role+' · '+m.st+' · '+(unl?m.d:'Unlocks at Leadership '+m.lt)+'</small></span>'+(unl?'<button class="btn" data-hire="'+k+'"'+(gameState.a<m.c?' disabled':'')+'>'+m.c+'</button>':'<small>Level '+m.lt+'</small>')+'</div>';
   }).join('')+(nsl()>=sl?'<p class="mu">Your party is full, so new recruits rest at home on your roster until you swap them in. Leadership levels 10, 25, 40, 55, 70, 85, 100 and 115 each open another slot.</p>':''):'<p class="mu">Everyone in the valley has joined.</p>');
   const pr=Object.keys(gameState.pets).filter(k=>!known(k));
-  if(pr.length)h+='<h2>Pets at home</h2>'+pr.map(k=>'<div class="row"><span>'+MEMBERS[k].n+'<small>Pet · '+MEMBERS[k].st+' · '+perkTxt(k)+'</small></span><button class="btn" data-hire="'+k+'"'+'>Call back</button></div>').join('');
+  if(pr.length)h+='<h2>Pets at home</h2>'+pr.map(k=>'<div class="row"><span>'+MEMBERS[k].n+'<small>Pet · '+MEMBERS[k].st+' · '+perkTxt(k)+'</small>'+petTag(k)+'</span><button class="btn" data-hire="'+k+'"'+'>Call back</button></div>').join('');
   h+='<h2>Pet collection <span class="mu" style="display:inline">· '+Object.keys(gameState.pets).length+'/'+PETS.length+'</span></h2><p class="mu">Extremely rare drops, found only once each, modelled on RuneScape: skill pets roll about 1 in 100,000 per action (slightly better at higher levels, 15× better at 200M xp), boss pets 1 in 1,000 to 1 in 5,000 per boss kill, raid pets 1 in 80 to 1 in 150 per clear. Skill pets can drop while you or a member trains that skill. Boss pets drop from zone bosses. Raid pets drop when you clear a raid. Pets take a party slot like any member, or rest on your roster, but fight and work better than the members you can recruit.</p><p class="mu">'+PETS.map(q=>gameState.pets[q[0]]?'<b>'+q[1]+'</b>':'???').join(' · ')+'</p>';
   return h;
 }
@@ -136,10 +136,32 @@ export function statsView(){
 }
 export const logTabs=()=>'<div class="seg">'+[['log','Collection'],['guide','Guide'],['stats','Stats'],['data','Data']].map(t=>'<button data-logsub="'+t[0]+'" class="'+(logSub==t[0]?'on':'')+'">'+t[1]+'</button>').join('')+'</div>';
 const dens=(t:string,b:string)=>'<details class="chip"><summary><span>'+t+'</span><em>open</em></summary><div class="mu">'+b+'</div></details>';
+// How a pet is found. Skill pets roll while training, boss pets drop from zone bosses, raid pets from clears.
+export function petSrc(id:string):string{
+  const m=MEMBERS[id];if(!m||!m.pet)return '';
+  const sk=m.sk;
+  if(sk){
+    const r=PB[sk];
+    if(sk=='Slayer')return 'Found while completing Slayer tasks, about 1 in 400 per task.';
+    if(sk=='Leadership')return 'Found when you clear a raid, about 1 in 150 per clear.';
+    if(COMBAT_SKILLS.includes(sk))return 'Found while training '+sk+' in combat, about 1 in '+r.toLocaleString()+' per kill at level 1 (better as you level).';
+    return 'Found while training '+sk+', about 1 in '+r.toLocaleString()+' per action at level 1 (better as you level, and 15× better at 200M xp).';
+  }
+  const z=id.match(/^p_z(\d+)$/);
+  if(z){const i=+z[1];return 'Dropped by '+ZN[i][3][3]+', the boss of '+ZN[i][0]+', about 1 in '+(1000+400*i).toLocaleString()+' per boss kill.'}
+  const r=id.match(/^p_r(\d+)$/);
+  if(r){const i=+r[1];return 'Dropped by clearing '+RD[i].n+', about 1 in '+[80,100,120,150][i]+' per clear.'}
+  return '';
+}
+const petTag=(k:string)=>MEMBERS[k]&&MEMBERS[k].pet?'<small>'+petSrc(k)+'</small>':'';
 export function guideView(){
+  const found=(id:string)=>gameState.pets[id]?'✓ ':'';
+  const rec=HK.filter(k=>!MEMBERS[k].pet).map(k=>'<div style="margin-top:6px">'+(known(k)?'✓ ':'')+'<b>'+MEMBERS[k].n+'</b> · '+MEMBERS[k].role+'<br>Recruit in the Party tab for '+MEMBERS[k].c.toLocaleString()+' acorns once Leadership is level '+MEMBERS[k].lt+'.</div>').join('');
+  const pets=PETS.map(q=>'<div style="margin-top:6px">'+found(q[0])+'<b>'+q[1]+'</b> · '+q[2]+'<br>'+petSrc(q[0])+'</div>').join('');
+  const memDens=dens('Party members (recruits)',rec)+dens('Pets (found, never bought)','<p>Pets are extremely rare drops. Each is found once, joins your party or roster, and fights and works better than recruits. ✓ marks the ones you have.</p>'+pets);
   const capes=Object.keys(CE).map(k=>capeRow(k).replace('<div class="row"><span>','<div class="row"><span><b>'+k+'</b> · ')).join('');
   const rates='<b>Zone gear</b>: about 1 in 64 per kill, or 1 in 10 from a boss. A guaranteed drop arrives after 150 kills (40 for bosses).<br><b>Deep zones (8+)</b>: crafting materials about 1 in 40 per kill, 1 in 6 from a boss, guaranteed by 100 kills (18 for bosses). Bosses also have a 1 in 30 chance at gear, guaranteed by 70 kills.<br><b>Trinkets</b>: about 1 in 12 per boss kill, guaranteed by 60.<br>These are base chances. Rare-drop bonuses from gear, pets and blessings multiply them.';
-  return '<h2>Guide</h2><p class="sub">Reference notes, kept out of the way.</p>'+dens(gameState.sp+' traits','+15% xp in '+SP[gameState.sp!]+'. '+spTxt(gameState.sp))+dens('Capes','<div style="margin-top:6px">'+capes+'</div>')+dens('Drop rates',rates);
+  return '<h2>Guide</h2><p class="sub">Reference notes, kept out of the way.</p>'+dens(gameState.sp+' traits','+15% xp in '+SP[gameState.sp!]+'. '+spTxt(gameState.sp))+dens('Capes','<div style="margin-top:6px">'+capes+'</div>')+memDens+dens('Drop rates',rates);
 }
 export function view(){
   if(tab=='burrow')return burrowView();
