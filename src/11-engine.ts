@@ -118,7 +118,8 @@ export const isOn=(k:string,id:string)=>{const t=who=='you'?S.cur:asg(who);retur
 export const crew=(k:string,id:string)=>{const n=Object.keys(S.hired).filter(m=>{const t=asg(m);return t.k==k&&t.id==id}).map(m=>H[m].n.split(' ')[0]);return n.length?'<br>'+n.join(', ')+' working':''};
 export const working=()=>Object.keys(S.hired).filter(k=>asg(k).k!='war'&&asg(k).k!='idle'&&asg(k).k!='exp');
 export const hasWork=()=>!!S.ex||working().length>0||(buL('bar')>0&&Object.keys(S.hired).some(k=>asg(k).k=='idle'));
-export const workNames=()=>working().map(k=>H[k].n.split(' ')[0]).join(', ');
+export function taskName(c:any){return c.k=='bar'?'Training in the barracks':c.k=='s'?A.find(a=>a.id==c.id)!.n:c.k=='k'?'Cooking '+DISH[c.id].n:c.k=='f'?'Crafting '+IT[c.id].n:c.k=='r'?'Refining '+RFN[c.id].n:c.k=='c'?'Fighting '+E.find(e=>e.id==c.id)!.n:'Delving '+D.find(d=>d.id==c.id)!.n}
+export const workNames=()=>working().map(k=>H[k].n.split(' ')[0]+': '+taskName(asg(k))).join(' · ');
 export function actorChips(){
   const hs=Object.keys(S.hired);if(!hs.length)return '';
   if(who!='you'&&!S.hired[who])set_who('you');
