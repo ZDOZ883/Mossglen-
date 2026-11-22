@@ -108,10 +108,10 @@ export const kit=(k:string)=>{if(/^p_z\d+$/.test(k))return .045+.012*(+k.slice(3
 // The next kit tier for a recruited member: they must have the level that tier's gear asks for, and it costs acorns once per tier.
 export const kitNext=(k:string)=>{if(!MEMBERS[k]||MEMBERS[k].pet||kitTier(k)>=KIT_MAX)return null;const t=kitTier(k)+1;return{t,cost:GP[t]*KIT_COST,req:REQ[t]}};
 export function buyKit(k:string){const n=kitNext(k);if(!n||!known(k)||gameState.a<n.cost||cl(k)<n.req)return false;gameState.a-=n.cost;gameState.mk[k]=n.t;return true}
-// Second in command: one recruit commands the party for a buff, and every fighter's default stats drop a little in return.
-export const SIC_COST=.06;
+// Second in command: one recruit commands the party for a buff. Member stats are tuned 6% lower across the board to make room for it.
+export const MEM_BASE=.94;
 export const sicOn=()=>!!gameState.sic&&!!gameState.hired[gameState.sic]&&asg(gameState.sic).k=='war';
-export const mst=(k:string)=>{const c=cl(k)*(sicOn()?1-SIC_COST:1),m=STAT_MULT[MEMBERS[k].role]||[1,1,1],f=(x:number)=>Math.min(120,Math.max(1,Math.round(c*x)));return{a:f(m[0]),d:f(m[1]),v:f(m[2])}};
+export const mst=(k:string)=>{const c=cl(k)*MEM_BASE,m=STAT_MULT[MEMBERS[k].role]||[1,1,1],f=(x:number)=>Math.min(120,Math.max(1,Math.round(c*x)));return{a:f(m[0]),d:f(m[1]),v:f(m[2])}};
 // Each perk grows with the stat that fits it: damage and accuracy with Attack, damage taken with Defense, healing and health with Vitality.
 const PSTAT:Record<string,'a'|'d'|'v'>={dmg:'a',acc:'a',taken:'d',heal:'v',hp:'v'};
 export const plv=(k:string,n:string)=>{const s=PSTAT[n];return s?mst(k)[s]:cl(k)};

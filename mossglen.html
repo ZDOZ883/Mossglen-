@@ -215,13 +215,13 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     LD: () => LD,
     LT: () => LT,
     MEMBERS: () => MEMBERS,
+    MEM_BASE: () => MEM_BASE,
     OFF: () => OFF,
     PB: () => PB,
     PETS: () => PETS,
     REQ: () => REQ,
     RPN: () => RPN,
     SELL_VALUE: () => SELL_VALUE,
-    SIC_COST: () => SIC_COST,
     SL: () => SL,
     SP: () => SP,
     SPN: () => SPN,
@@ -476,10 +476,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     gameState.mk[k] = n.t;
     return true;
   }
-  var SIC_COST = 0.06;
+  var MEM_BASE = 0.94;
   var sicOn = () => !!gameState.sic && !!gameState.hired[gameState.sic] && asg(gameState.sic).k == "war";
   var mst = (k) => {
-    const c = cl(k) * (sicOn() ? 1 - SIC_COST : 1), m = STAT_MULT[MEMBERS[k].role] || [1, 1, 1], f = (x) => Math.min(120, Math.max(1, Math.round(c * x)));
+    const c = cl(k) * MEM_BASE, m = STAT_MULT[MEMBERS[k].role] || [1, 1, 1], f = (x) => Math.min(120, Math.max(1, Math.round(c * x)));
     return { a: f(m[0]), d: f(m[1]), v: f(m[2]) };
   };
   var PSTAT = { dmg: "a", acc: "a", taken: "d", heal: "v", hp: "v" };
@@ -3580,7 +3580,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     h += "<p>Party power: <b>" + power() + '</b> <span class="mu" style="display:inline">(half your total levels, plus members fighting with you)</span></p>';
     {
       const sk = gameState.sic && sicOn() ? sicBuff(gameState.sic) : null;
-      h += '<p class="mu">' + (sk ? "<b>Second in command: " + MEMBERS[gameState.sic].n + "</b> \xB7 " + sk.n + ": " + sk.d + (sk.s > 1 ? " (scaled by level)" : "") + ". Every fighter\u2019s stats are " + Math.round(SIC_COST * 100) + "% lower while this is active." : "Name a fighting recruit second in command for a party buff. Every fighter\u2019s stats drop " + Math.round(SIC_COST * 100) + "% while it is active.") + "</p>";
+      h += '<p class="mu">' + (sk ? "<b>Second in command: " + MEMBERS[gameState.sic].n + "</b> \xB7 " + sk.n + ": " + sk.d + (sk.s > 1 ? " (scaled by level)" : "") + "." : "Name a fighting recruit second in command for a party buff.") + "</p>";
     }
     if (!roster().length) h += '<p class="mu">No one has joined yet. Recruit your first member below.</p>';
     h += hs.map((k) => {

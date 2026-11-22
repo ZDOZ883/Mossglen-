@@ -1,6 +1,6 @@
 import { gameState, say, TASKS } from './00-state';
 import { X } from './registry';
-import { COMBAT_SKILLS, DISHES, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, PB, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, KITSIG, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt, sicOn, SIC_COST } from './01-species-pets';
+import { COMBAT_SKILLS, DISHES, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, PB, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, KITSIG, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt, sicOn } from './01-species-pets';
 import { sicBuff } from './08-party-state';
 import { OUTFIT_SK, OUT_TIERS, outPerkTxt } from './02-outfits';
 import { AF, BWEAPONS, CE, KEEPX, ZN, dropTier, uniqLine, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
@@ -81,7 +81,7 @@ export function partyView(){
   const hs=Object.keys(gameState.hired),l=LD(),sl=slots();
   let h='<h2>Your party</h2><p class="sub">Leadership '+l+' · '+nsl()+' of '+sl+' slots · members work at '+Math.round(bspd()*100)+'% of your speed. Raise Leadership for more slots and faster work.</p>';
   h+='<p>Party power: <b>'+power()+'</b> <span class="mu" style="display:inline">(half your total levels, plus members fighting with you)</span></p>';
-  {const sk=gameState.sic&&sicOn()?sicBuff(gameState.sic):null;h+='<p class="mu">'+(sk?'<b>Second in command: '+MEMBERS[gameState.sic!].n+'</b> · '+sk.n+': '+sk.d+(sk.s>1?' (scaled by level)':'')+'. Every fighter’s stats are '+Math.round(SIC_COST*100)+'% lower while this is active.':'Name a fighting recruit second in command for a party buff. Every fighter’s stats drop '+Math.round(SIC_COST*100)+'% while it is active.')+'</p>'}
+  {const sk=gameState.sic&&sicOn()?sicBuff(gameState.sic):null;h+='<p class="mu">'+(sk?'<b>Second in command: '+MEMBERS[gameState.sic!].n+'</b> · '+sk.n+': '+sk.d+(sk.s>1?' (scaled by level)':'')+'.':'Name a fighting recruit second in command for a party buff.')+'</p>'}
   if(!roster().length)h+='<p class="mu">No one has joined yet. Recruit your first member below.</p>';
   h+=hs.map(k=>{
     const m=MEMBERS[k],t=asg(k),work=t.k!='war'&&t.k!='idle'&&t.k!='bar'&&t.k!='exp';
