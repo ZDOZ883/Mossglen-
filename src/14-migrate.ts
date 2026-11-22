@@ -1,13 +1,13 @@
-import { S } from './00-state';
-import { A } from './07-gear-ui';
-import { CS } from './01-species-pets';
+import { gameState } from './00-state';
+import { ACHIEVEMENTS } from './07-gear-ui';
+import { COMBAT_SKILLS } from './01-species-pets';
 import { DISH } from './07-gear-ui';
-import { E } from './02-gear-data';
-import { H } from './01-species-pets';
+import { ENEMIES } from './02-gear-data';
+import { MEMBERS } from './01-species-pets';
 import { IT } from './01-species-pets';
 import { LT } from './01-species-pets';
 
-import { SK } from './01-species-pets';
+import { GATHER_SKILLS } from './01-species-pets';
 import { XS } from './01-species-pets';
 import { XT } from './01-species-pets';
 import { clampXp } from './11-engine';
@@ -22,31 +22,31 @@ import { validTask } from './08-party-state';
 export const SAVE_VERSION = 2;
 
 function ensureDefaults() {
-  S.tier=S.tier||{};S.best=S.best||{};S.cx=S.cx||{};S.lead=S.lead||null;S.style=S.style||'Melee';S.gear=S.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(S.xp.Attack==null&&(S.xp.Melee||S.xp.Ranged||S.xp.Magic)){const b0=Math.max(S.xp.Melee||0,S.xp.Ranged||0,S.xp.Magic||0);S.xp.Attack=S.xp.Strength=S.xp.Defense=b0}
-  CS.forEach(k=>S.xp[k]=S.xp[k]||(k=='Vitality'?XT[10]:0));S.tool=S.tool||{Foraging:0,Woodcutting:0,Fishing:0,Mining:0};if(S.cur&&S.cur.k=='s'&&!A.find(a=>a.id==S.cur.id))S.cur=null;
-  if(S.cur&&S.cur.k=='c'&&!E.find(e=>e.id==S.cur.id))S.cur=null;
-  if(S.cur&&S.cur.k=='d')S.cur=null; // live delves were replaced by timed expeditions
-  if(!S.own){if(S.gear){const rf=(g:string,c:any)=>c.slice(0,g).reduce((a:number,b:number)=>a+b,0);S.a+=['Melee','Ranged','Magic'].reduce((s,k)=>s+rf(S.gear[k]||0,[80,300,900]),0)+rf(S.gear.arm||0,[100,400,1000]);delete S.gear}S.own={w00:1,w10:1,w20:1};S.eq={Melee:'w00',Ranged:'w10',Magic:'w20',body:null,head:null,trinket:null}}
-  S.kc=S.kc||{};S.pity=S.pity||{};S.col=S.col||{};S.zone=S.zone||0;S.stance=S.stance||'bal';S.pt=S.pt||0;S.str=S.str||0;S.su=S.su||{};S.task=S.task||null;if(S.cur&&S.cur.k=='f'&&!IT[S.cur.id])S.cur=null;
-  initDish();SK.forEach(k=>S.xp[k]=S.xp[k]||0);S.tool.Hunting=S.tool.Hunting||0;if(S.cur&&S.cur.k=='k'&&!DISH[S.cur.id])S.cur=null;if(S.hp==null)S.hp=30+lv(S.xp.Vitality)*10;
-  S.mt=S.mt||{};S.ct=S.ct||{};S.cg=S.cg||{};S.cape=S.cape||null;S.gates=S.gates||{};S.rc=S.rc||{};S.hrc=S.hrc||{};S.hr=S.hr||null;S.lo=S.lo||{};S.pets=S.pets||{};S.fam=S.fam||{};S.bu=S.bu||{};S.exs=S.exs||[];if(S.ex){S.exs.push(S.ex)}delete (S as any).ex;if(S.cur&&S.cur.k=='c'&&String(S.cur.id).indexOf('d_')==0){S.cur=null;S.ehp=null}Object.keys(S.mt).forEach(k=>{if(S.mt[k]&&S.mt[k].k=='exp'&&!S.ex)S.mt[k]={k:'war'}});S.sg=S.sg||{};if(!S.mig19&&S.own&&S.eq){S.mig19=1;const b=S.eq.body;if(b&&IT[b]){S.own['g'+IT[b].tier]=1;if(!S.eq.legs)S.eq.legs='g'+IT[b].tier}}S.ach=S.ach||{};S.seen=S.seen||{};if(S.cur&&S.cur.k=='d')S.cur=null;if(!S.autoSet)S.auto=true;S.rr=S.rr||0;clampXp();refreshFx();
-  if(!S.form){S.form=S.stance=='agg'?'fury':S.stance=='def'?'bulwark':'steady';if(S.stance=='agg'||S.stance=='def')S.stance='bal'}
-  if(S.stance=='ldr'){S.stance='bal';S.cmd=true}
-  if(!XS[S.stance])S.stance='bal';
-  S.cmd=!!S.cmd;
-  if(S.ehp===undefined||!(S.cur&&S.cur.k=='c'))S.ehp=null;
-  {const np=Object.keys(S.hired).filter(k=>!H[k].pet).length;if(np>slots())S.xp.Leadership=XT[LT[Math.min(np,LT.length)-1]];const ps=Object.keys(S.hired).filter(k=>H[k].pet);while(Object.keys(S.hired).length>slots()&&ps.length){const k=ps.pop();delete S.hired[k!];delete S.mt[k!]}}
-  Object.keys(S.mt).forEach(k=>{if(!S.hired[k])delete S.mt[k];else if(!validTask(S.mt[k]))S.mt[k]={k:'idle'}});
+  gameState.tier=gameState.tier||{};gameState.best=gameState.best||{};gameState.cx=gameState.cx||{};gameState.lead=gameState.lead||null;gameState.style=gameState.style||'Melee';gameState.gear=gameState.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(gameState.xp.Attack==null&&(gameState.xp.Melee||gameState.xp.Ranged||gameState.xp.Magic)){const b0=Math.max(gameState.xp.Melee||0,gameState.xp.Ranged||0,gameState.xp.Magic||0);gameState.xp.Attack=gameState.xp.Strength=gameState.xp.Defense=b0}
+  COMBAT_SKILLS.forEach(k=>gameState.xp[k]=gameState.xp[k]||(k=='Vitality'?XT[10]:0));gameState.tool=gameState.tool||{Foraging:0,Woodcutting:0,Fishing:0,Mining:0};if(gameState.cur&&gameState.cur.k=='s'&&!ACHIEVEMENTS.find(a=>a.id==gameState.cur.id))gameState.cur=null;
+  if(gameState.cur&&gameState.cur.k=='c'&&!ENEMIES.find(e=>e.id==gameState.cur.id))gameState.cur=null;
+  if(gameState.cur&&gameState.cur.k=='d')gameState.cur=null; // live delves were replaced by timed expeditions
+  if(!gameState.own){if(gameState.gear){const rf=(g:string,c:any)=>c.slice(0,g).reduce((a:number,b:number)=>a+b,0);gameState.a+=['Melee','Ranged','Magic'].reduce((s,k)=>s+rf(gameState.gear[k]||0,[80,300,900]),0)+rf(gameState.gear.arm||0,[100,400,1000]);delete gameState.gear}gameState.own={w00:1,w10:1,w20:1};gameState.eq={Melee:'w00',Ranged:'w10',Magic:'w20',body:null,head:null,trinket:null}}
+  gameState.kc=gameState.kc||{};gameState.pity=gameState.pity||{};gameState.col=gameState.col||{};gameState.zone=gameState.zone||0;gameState.stance=gameState.stance||'bal';gameState.pt=gameState.pt||0;gameState.str=gameState.str||0;gameState.su=gameState.su||{};gameState.task=gameState.task||null;if(gameState.cur&&gameState.cur.k=='f'&&!IT[gameState.cur.id])gameState.cur=null;
+  initDish();GATHER_SKILLS.forEach(k=>gameState.xp[k]=gameState.xp[k]||0);gameState.tool.Hunting=gameState.tool.Hunting||0;if(gameState.cur&&gameState.cur.k=='k'&&!DISH[gameState.cur.id])gameState.cur=null;if(gameState.hp==null)gameState.hp=30+lv(gameState.xp.Vitality)*10;
+  gameState.mt=gameState.mt||{};gameState.ct=gameState.ct||{};gameState.cg=gameState.cg||{};gameState.cape=gameState.cape||null;gameState.gates=gameState.gates||{};gameState.rc=gameState.rc||{};gameState.hrc=gameState.hrc||{};gameState.hr=gameState.hr||null;gameState.lo=gameState.lo||{};gameState.pets=gameState.pets||{};gameState.fam=gameState.fam||{};gameState.bu=gameState.bu||{};gameState.exs=gameState.exs||[];if(gameState.ex){gameState.exs.push(gameState.ex)}delete (gameState as any).ex;if(gameState.cur&&gameState.cur.k=='c'&&String(gameState.cur.id).indexOf('d_')==0){gameState.cur=null;gameState.ehp=null}Object.keys(gameState.mt).forEach(k=>{if(gameState.mt[k]&&gameState.mt[k].k=='exp'&&!gameState.ex)gameState.mt[k]={k:'war'}});gameState.sg=gameState.sg||{};if(!gameState.mig19&&gameState.own&&gameState.eq){gameState.mig19=1;const b=gameState.eq.body;if(b&&IT[b]){gameState.own['g'+IT[b].tier]=1;if(!gameState.eq.legs)gameState.eq.legs='g'+IT[b].tier}}gameState.ach=gameState.ach||{};gameState.seen=gameState.seen||{};if(gameState.cur&&gameState.cur.k=='d')gameState.cur=null;if(!gameState.autoSet)gameState.auto=true;gameState.rr=gameState.rr||0;clampXp();refreshFx();
+  if(!gameState.form){gameState.form=gameState.stance=='agg'?'fury':gameState.stance=='def'?'bulwark':'steady';if(gameState.stance=='agg'||gameState.stance=='def')gameState.stance='bal'}
+  if(gameState.stance=='ldr'){gameState.stance='bal';gameState.cmd=true}
+  if(!XS[gameState.stance])gameState.stance='bal';
+  gameState.cmd=!!gameState.cmd;
+  if(gameState.ehp===undefined||!(gameState.cur&&gameState.cur.k=='c'))gameState.ehp=null;
+  {const np=Object.keys(gameState.hired).filter(k=>!MEMBERS[k].pet).length;if(np>slots())gameState.xp.Leadership=XT[LT[Math.min(np,LT.length)-1]];const ps=Object.keys(gameState.hired).filter(k=>MEMBERS[k].pet);while(Object.keys(gameState.hired).length>slots()&&ps.length){const k=ps.pop();delete gameState.hired[k!];delete gameState.mt[k!]}}
+  Object.keys(gameState.mt).forEach(k=>{if(!gameState.hired[k])delete gameState.mt[k];else if(!validTask(gameState.mt[k]))gameState.mt[k]={k:'idle'}});
 }
 
 export const MIGRATIONS: { v: number; run: () => void }[] = [
   // v2: Farming and Alchemy arrive. Everyone gets a few turnip seeds to start the first plot.
-  { v: 2, run: () => { S.farm = S.farm || []; S.buffs = S.buffs || {}; if (!(S.inv['turnip seeds'] > 0)) S.inv['turnip seeds'] = 4; } },
+  { v: 2, run: () => { gameState.farm = gameState.farm || []; gameState.buffs = gameState.buffs || {}; if (!(gameState.inv['turnip seeds'] > 0)) gameState.inv['turnip seeds'] = 4; } },
 ];
 
 export function migrate() {
   ensureDefaults();
-  let v = S.v || 1;
+  let v = gameState.v || 1;
   for (const m of MIGRATIONS) if (v < m.v) { m.run(); v = m.v; }
-  S.v = Math.max(v, SAVE_VERSION);
+  gameState.v = Math.max(v, SAVE_VERSION);
 }

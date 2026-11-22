@@ -21,7 +21,7 @@ export const X = {} as {
   fight: typeof M5.fight;
   gainItem: typeof M5.gainItem;
   rndGear: typeof M5.rndGear;
-  A: typeof M7.A;
+  A: typeof M7.ACHIEVEMENTS;
   CSK: typeof M7.CSK;
   slayKill: typeof M7.slayKill;
   slots: typeof M7.slots;

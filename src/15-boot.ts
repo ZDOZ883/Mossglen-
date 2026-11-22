@@ -1,5 +1,5 @@
-import { S, save, say } from './00-state';
-import { FM, H, LD, V, asg, cb, nsl } from './01-species-pets';
+import { gameState, save, say } from './00-state';
+import { FM, MEMBERS, LD, SELL_VALUE, asg, cb, nsl } from './01-species-pets';
 import { KEEP } from './02-gear-data';
 import { exRecall, exSel, exStart, openGate, set_exSel, startHR, startRaid } from './03-world-expeditions';
 import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadout';
@@ -14,24 +14,24 @@ import { alchAct, farmAct } from './12-farm-alchemy';
 // Input handling, boot and timers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 document.addEventListener('click',e=>{
   const t=(e.target as HTMLElement).closest('button');if(!t)return;const d=t.dataset;
-  if(d.sp){S.sp=d.sp;refreshFx();say('A '+d.sp.toLowerCase()+' steps out of the burrow. The valley is quiet.')}
+  if(d.sp){gameState.sp=d.sp;refreshFx();say('A '+d.sp.toLowerCase()+' steps out of the burrow. The valley is quiet.')}
   else if(d.tab){if(tab==d.tab&&d.tab=='skills')set_skill(null);set_tab(d.tab)}
   else if(d.skill)set_skill(d.skill);
-  else if(d.cmd)S.cmd=!S.cmd;
-  else if('cape' in d){S.cape=d.cape||null;refreshFx()}
+  else if(d.cmd)gameState.cmd=!gameState.cmd;
+  else if('cape' in d){gameState.cape=d.cape||null;refreshFx()}
   else if(d.back)set_skill(null);
   else if(d.farm)farmAct(d.farm);
   else if(d.alch)alchAct(d.alch);
   else if(d.logsub){set_logSub(d.logsub);render();return}
   else if(d.who)set_who(d.who);
   else if(d.assign){const [k,a]=d.assign.split(':');assign(k,a)}
-  else if(d.dismiss){const k=d.dismiss;if(asg(k).k=='exp'){say(H[k].n+' is away on an expedition.');}else{delete S.hired[k];delete S.mt[k];if(S.lead==k)S.lead=Object.keys(S.hired)[0]||null;if(who==k)set_who('you');say(H[k].n+' leaves the party.')}}
-  else if(d.form){if(FM[d.form]&&CL()>=FM[d.form].cl)S.form=d.form}
-  else if(d.do){const [k,id]=d.do.split(':');if(who!='you'&&S.hired[who]&&'skfr'.includes(k))assign(who,k,id);else{if(k=='c'&&!(S.cur&&S.cur.k=='c'&&S.cur.id==id)){S.ehp=null;set_hits([])}S.cur={k,id};S.p=0}}
-  else if(d.style)S.style=d.style;
+  else if(d.dismiss){const k=d.dismiss;if(asg(k).k=='exp'){say(MEMBERS[k].n+' is away on an expedition.');}else{delete gameState.hired[k];delete gameState.mt[k];if(gameState.lead==k)gameState.lead=Object.keys(gameState.hired)[0]||null;if(who==k)set_who('you');say(MEMBERS[k].n+' leaves the party.')}}
+  else if(d.form){if(FM[d.form]&&CL()>=FM[d.form].cl)gameState.form=d.form}
+  else if(d.do){const [k,id]=d.do.split(':');if(who!='you'&&gameState.hired[who]&&'skfr'.includes(k))assign(who,k,id);else{if(k=='c'&&!(gameState.cur&&gameState.cur.k=='c'&&gameState.cur.id==id)){gameState.ehp=null;set_hits([])}gameState.cur={k,id};gameState.p=0}}
+  else if(d.style)gameState.style=d.style;
   else if(d.tool)buyTool(d.tool);
-  else if(d.stance)S.stance=d.stance;
-  else if(d.zone)S.zone=+d.zone;
+  else if(d.stance)gameState.stance=d.stance;
+  else if(d.zone)gameState.zone=+d.zone;
   else if(d.eqc)cycle(d.eqc);
   else if(d.gt)set_gtab(d.gt);
   else if(d.gs)set_gsel(gsel==d.gs?null:d.gs);
@@ -39,10 +39,10 @@ document.addEventListener('click',e=>{
   else if(d.shop)shopBuy(d.shop);
   else if(d.task)taskAct(d.task);
   else if(d.slbuy)slBuy(d.slbuy);
-  else if(d.sellone){const k=d.sellone;S.a+=Math.round(S.inv[k]*V[k]*(1+cb('sell')));delete S.inv[k]}
+  else if(d.sellone){const k=d.sellone;gameState.a+=Math.round(gameState.inv[k]*SELL_VALUE[k]*(1+cb('sell')));delete gameState.inv[k]}
   else if(d.buy)buy(d.buy);
-  else if(d.tier){const [i,t]=d.tier.split(':');S.tier[i]=+t}
-  else if(d.lead)S.lead=d.lead;
+  else if(d.tier){const [i,t]=d.tier.split(':');gameState.tier[i]=+t}
+  else if(d.lead)gameState.lead=d.lead;
   else if(d.exd)set_exSel({d:exSel.d==d.exd?null:d.exd,l:null,m:[],b:null});
   else if(d.exl){exSel.l=exSel.l==d.exl?null:d.exl;exSel.m=exSel.m.filter((k:string)=>k!=d.exl)}
   else if(d.exm){exSel.m=exSel.m.includes(d.exm)?exSel.m.filter((k:string)=>k!=d.exm):exSel.m.concat(d.exm)}
@@ -55,27 +55,27 @@ document.addEventListener('click',e=>{
   else if(d.gate)openGate(+d.gate);
   else if(d.raid)startRaid(d.raid);
   else if(d.hraid)startHR(d.hraid);
-  else if('auto' in d){S.auto=!S.auto;S.autoSet=true}
+  else if('auto' in d){gameState.auto=!gameState.auto;gameState.autoSet=true}
   else if(d.opt)optNow(d.opt);
   else if(d.ls)loadoutSl(d.ls);
-  else if(d.stop){S.cur=null;S.ehp=null}
-  else if(d.hire){const h=H[d.hire];if(!S.hired[d.hire]&&nsl()<slots()&&(h.pet?!!S.pets[d.hire]:S.a>=h.c&&LD()>=h.lt)){S.a-=h.c;S.hired[d.hire]=1;S.mt[d.hire]={k:'war'};if(!S.lead)S.lead=d.hire;say(h.n+' joins your party.')}}
-  else if(d.sell){let g=0;for(const k in S.inv){if(KEEP(k))continue;g+=S.inv[k]*V[k];delete S.inv[k]}g=Math.round(g*(1+cb('sell')));S.a+=g;say('Sold your pack for '+g+' acorns.')}
+  else if(d.stop){gameState.cur=null;gameState.ehp=null}
+  else if(d.hire){const h=MEMBERS[d.hire];if(!gameState.hired[d.hire]&&nsl()<slots()&&(h.pet?!!gameState.pets[d.hire]:gameState.a>=h.c&&LD()>=h.lt)){gameState.a-=h.c;gameState.hired[d.hire]=1;gameState.mt[d.hire]={k:'war'};if(!gameState.lead)gameState.lead=d.hire;say(h.n+' joins your party.')}}
+  else if(d.sell){let g=0;for(const k in gameState.inv){if(KEEP(k))continue;g+=gameState.inv[k]*SELL_VALUE[k];delete gameState.inv[k]}g=Math.round(g*(1+cb('sell')));gameState.a+=g;say('Sold your pack for '+g+' acorns.')}
   else if(d.reset){if(confirm('Erase your progress?')){try{localStorage.removeItem('hollowbrook1')}catch(x){}location.reload();return}}
   else return;
-  if(S.auto&&(d.raid||d.hraid||d.task=='fight'||(d.do&&!(who!='you'&&S.hired[who]&&'skfr'.includes(d.do.split(':')[0]))))){if(d.hraid)optimize({kind:'gather',label:'the harvest'});else autoLoad()}
+  if(gameState.auto&&(d.raid||d.hraid||d.task=='fight'||(d.do&&!(who!='you'&&gameState.hired[who]&&'skfr'.includes(d.do.split(':')[0]))))){if(d.hraid)optimize({kind:'gather',label:'the harvest'});else autoLoad()}
   save();render();
 });
 import { OPEN } from './03-world-expeditions';
 import { migrate } from './14-migrate';
 migrate();
-export const away=Math.min(Date.now()-S.t,offlineCap());
-if(S.sp&&(S.cur||hasWork())&&away>20000){tick(away/1000,true);say('You were away '+Math.round(away/60000)+' min. Your work carried on.')}
-S.t=Date.now();
+export const away=Math.min(Date.now()-gameState.t,offlineCap());
+if(gameState.sp&&(gameState.cur||hasWork())&&away>20000){tick(away/1000,true);say('You were away '+Math.round(away/60000)+' min. Your work carried on.')}
+gameState.t=Date.now();
 export let last=Date.now(),sv=0;
 setInterval(()=>{
-  const n=Date.now(),dt=(n-last)/1000;last=n;S.t=n;
-  if(S.sp&&(S.cur||hasWork())){const lg=S.log[0],a=S.a;tick(dt,false);if(S.log[0]!==lg||S.a!==a)render();}
+  const n=Date.now(),dt=(n-last)/1000;last=n;gameState.t=n;
+  if(gameState.sp&&(gameState.cur||hasWork())){const lg=gameState.log[0],a=gameState.a;tick(dt,false);if(gameState.log[0]!==lg||gameState.a!==a)render();}
   bars();
   if(++sv%25==0)save();
 },200);

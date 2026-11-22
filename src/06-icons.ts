@@ -1,4 +1,4 @@
-import { S } from './00-state';
+import { gameState } from './00-state';
 import { X } from './registry';
 import { IT, SL } from './01-species-pets';
 import { gearSync, qrank, skey } from './02-gear-data';
@@ -45,22 +45,22 @@ export let gtab='eq',gsel:any=null;
 export const SLI:Record<string,string[]>={off:['🛡️','Off-hand'],Melee:['🗡️','Melee'],Ranged:['🏹','Ranged'],Magic:['🪄','Magic'],head:['⛑️','Helm'],body:['🦺','Chest'],legs:['👖','Legs'],neck:['📿','Necklace'],ring1:['💍','Ring'],ring2:['💍','Ring'],trinket:['🔮','Trinket'],cape:['🧣','Cape']};
 export const grade=(it:Item)=>it.slot=='trinket'?['u','Unique']:it.q=='d'?['d','Heirloom']:it.q=='s'?['s','Plain']:['c','Crafted'];
 export function equipSlot(k:string,id:string){
-  if(!id){S.eq[k]=null}
-  else{if(!S.own[id]||!IT[id]||!canEq(IT[id]))return;
-    if(k=='ring1'&&S.eq.ring2==id)S.eq.ring2=S.eq.ring1||null;
-    if(k=='ring2'&&S.eq.ring1==id)S.eq.ring1=S.eq.ring2||null;
-    S.eq[k]=id}
+  if(!id){gameState.eq[k]=null}
+  else{if(!gameState.own[id]||!IT[id]||!canEq(IT[id]))return;
+    if(k=='ring1'&&gameState.eq.ring2==id)gameState.eq.ring2=gameState.eq.ring1||null;
+    if(k=='ring2'&&gameState.eq.ring1==id)gameState.eq.ring1=gameState.eq.ring2||null;
+    gameState.eq[k]=id}
   gearSync();
 }
 export function tileHtml(k:string){
   const lab=SLI[k][1],w3=false;let ic;
-  if(k=='cape'){const c=S.cape;ic=icon('cape');return '<button class="gt'+(w3?' w3':'')+(c?' q-c':' empty')+'" data-gt="capes"><span class="ic">'+ic+'</span><span class="sl">'+lab+'</span><span class="nm">'+(c?X.capeLabel(c):'None')+'</span><span class="st">'+(c?'Tap to change':'Skill capes and cloaks')+'</span></button>'}
-  const id=S.eq[k],it=id?IT[id]:null,g=it?grade(it):null;ic=icon(it?iconOf(it):SLIC[k]);
-  return '<button class="gt'+(w3?' w3':'')+(it?' q-'+g![0]:' empty')+(gsel==k?' sel':'')+'" data-gs="'+k+'"><span class="ic">'+ic+'</span><span class="sl">'+lab+(SL.includes(k)&&S.style==k?' · style':'')+(it&&it.kind=='2h'?' · 2H':'')+'</span><span class="nm">'+(it?it.n:'Empty')+'</span>'+(it?'<span class="st">'+(k=='off'&&!offIt()?(is2h()?'Hands full (two-hander)':'Inactive: wrong style'):istat(it))+'</span><span class="badge '+g![0]+'">'+g![1]+'</span>':'<span class="st">Nothing equipped</span>')+'</button>';
+  if(k=='cape'){const c=gameState.cape;ic=icon('cape');return '<button class="gt'+(w3?' w3':'')+(c?' q-c':' empty')+'" data-gt="capes"><span class="ic">'+ic+'</span><span class="sl">'+lab+'</span><span class="nm">'+(c?X.capeLabel(c):'None')+'</span><span class="st">'+(c?'Tap to change':'Skill capes and cloaks')+'</span></button>'}
+  const id=gameState.eq[k],it=id?IT[id]:null,g=it?grade(it):null;ic=icon(it?iconOf(it):SLIC[k]);
+  return '<button class="gt'+(w3?' w3':'')+(it?' q-'+g![0]:' empty')+(gsel==k?' sel':'')+'" data-gs="'+k+'"><span class="ic">'+ic+'</span><span class="sl">'+lab+(SL.includes(k)&&gameState.style==k?' · style':'')+(it&&it.kind=='2h'?' · 2H':'')+'</span><span class="nm">'+(it?it.n:'Empty')+'</span>'+(it?'<span class="st">'+(k=='off'&&!offIt()?(is2h()?'Hands full (two-hander)':'Inactive: wrong style'):istat(it))+'</span><span class="badge '+g![0]+'">'+g![1]+'</span>':'<span class="st">Nothing equipped</span>')+'</button>';
 }
 export function pickerHtml(k:string){
-  const ot=k=='ring1'?S.eq.ring2:k=='ring2'?S.eq.ring1:null,cur=S.eq[k];
-  const o=Object.keys(S.own).filter(i=>IT[i]&&IT[i].slot==skey(k)).sort((a,b)=>IT[b].tier-IT[a].tier||qrank(IT[b])-qrank(IT[a])||(IT[a].fam||0)-(IT[b].fam||0));
+  const ot=k=='ring1'?gameState.eq.ring2:k=='ring2'?gameState.eq.ring1:null,cur=gameState.eq[k];
+  const o=Object.keys(gameState.own).filter(i=>IT[i]&&IT[i].slot==skey(k)).sort((a,b)=>IT[b].tier-IT[a].tier||qrank(IT[b])-qrank(IT[a])||(IT[a].fam||0)-(IT[b].fam||0));
   let h='<h2>'+SLI[k][1]+' · choose</h2>';
   if(!o.length)return h+'<p class="mu">You own nothing for this slot yet. Buy Plain gear in the shop, craft better, or find Heirlooms.</p>';
   h+=o.map(i=>{const it=IT[i],g=grade(it),ok=canEq(it),on=cur==i,mv=ot==i;
@@ -68,8 +68,8 @@ export function pickerHtml(k:string){
   return h;
 }
 export function bonusSummary(){
-  const l:any[]=[];['neck','ring1','ring2'].forEach(k=>{const id=S.eq[k];if(id&&IT[id]&&IT[id].fx)IT[id].fx.forEach(e=>l.push([e[0],e[1]]))});
-  if(S.cape){if(S.cape.indexOf('I:')==0){const it=IT[S.cape.slice(2)];if(it&&it.fx)it.fx.forEach(e=>l.push([e[0],e[1]]))}}
+  const l:any[]=[];['neck','ring1','ring2'].forEach(k=>{const id=gameState.eq[k];if(id&&IT[id]&&IT[id].fx)IT[id].fx.forEach(e=>l.push([e[0],e[1]]))});
+  if(gameState.cape){if(gameState.cape.indexOf('I:')==0){const it=IT[gameState.cape.slice(2)];if(it&&it.fx)it.fx.forEach(e=>l.push([e[0],e[1]]))}}
   return l.length?X.fxTxt(l):'';
 }
 

@@ -1,7 +1,7 @@
-import { S, say } from './00-state';
+import { gameState, say } from './00-state';
 import { X } from './registry';
-import { AR, CS, FOOD, GL, GN, GP, H, IT, LD, LT, SK, SP, V, W, XT, cb, cl, fighters, ldx, lv, mxp, petRoll, skPet, useMats, weak } from './01-species-pets';
-import { E, RF, ZN, gateOk, zoneOpen } from './02-gear-data';
+import { AR, COMBAT_SKILLS, FOOD, GL, GN, GP, MEMBERS, IT, LD, LT, GATHER_SKILLS, SP, SELL_VALUE, W, XT, cb, cl, fighters, ldx, lv, mxp, petRoll, skPet, useMats, weak } from './01-species-pets';
+import { ENEMIES, RF, ZN, gateOk, zoneOpen } from './02-gear-data';
 import { armor, loadoutView } from './04-loadout';
 import { autoEq, istat, price, reqText } from './05-combat';
 import { bonusSummary, gsel, gtab, icon, iconOf, pickerHtml, tileHtml } from './06-icons';
@@ -15,14 +15,14 @@ export function gearView(){
     h+='<div class="gslots">'+['Melee','Ranged','Magic','head','neck','cape','body','legs','off','trinket','ring1','ring2'].map(tileHtml).join('')+'</div>';
     h+=gsel?pickerHtml(gsel):'<p class="sub" style="margin-top:12px">Tap any slot to see everything you own for it. Pick a grip: a two-hander hits harder, a one-hander can carry a shield (less damage taken, more armor) or an off-hand weapon (an extra strike). Gear comes in three grades per tier: <b>Plain</b> from the shop, <b>Crafted</b> by the production skills, and <b>Heirloom</b> from rare drops, bosses and raids.</p>';
   }else if(gtab=='shop'){
-    const fn:any[]=[['Melee',(t:number)=>'w0'+t],['Ranged',(t:number)=>'w1'+t],['Magic',(t:number)=>'w2'+t],['body',(t:number)=>'b'+t],['head',(t:number)=>'h'+t],['legs',(t:number)=>'g'+t],['ring',(t:number)=>'r0_'+t],['neck',(t:number)=>'n0_'+t],['cloak',(t:number)=>'c0_'+t],['off',(t:number)=>'y'+t]],have=(b:number)=>S.own[b]||S.own[b+'d']||S.own[b+'s'];let sh='';
-    fn.forEach(f=>{for(let t=0;t<2;t++){const b=f[1](t),id=b+'s';if(!have(b)){const it=IT[id];sh+='<div class="row"><span class="ri">'+icon(iconOf(it),30)+'</span><span style="flex:1">'+it.n+'<small>'+istat(it)+' · needs '+reqText(it)+'</small></span><button class="btn" data-shop="'+id+'"'+(S.a<price(it)?' disabled':'')+'>🌰 '+price(it).toLocaleString()+'</button></div>';break}}});
+    const fn:any[]=[['Melee',(t:number)=>'w0'+t],['Ranged',(t:number)=>'w1'+t],['Magic',(t:number)=>'w2'+t],['body',(t:number)=>'b'+t],['head',(t:number)=>'h'+t],['legs',(t:number)=>'g'+t],['ring',(t:number)=>'r0_'+t],['neck',(t:number)=>'n0_'+t],['cloak',(t:number)=>'c0_'+t],['off',(t:number)=>'y'+t]],have=(b:number)=>gameState.own[b]||gameState.own[b+'d']||gameState.own[b+'s'];let sh='';
+    fn.forEach(f=>{for(let t=0;t<2;t++){const b=f[1](t),id=b+'s';if(!have(b)){const it=IT[id];sh+='<div class="row"><span class="ri">'+icon(iconOf(it),30)+'</span><span style="flex:1">'+it.n+'<small>'+istat(it)+' · needs '+reqText(it)+'</small></span><button class="btn" data-shop="'+id+'"'+(gameState.a<price(it)?' disabled':'')+'>🌰 '+price(it).toLocaleString()+'</button></div>';break}}});
     h+='<p class="sub">The shop sells Plain starter gear for the first two tiers. Everything better is crafted or found.</p>'+(sh||'<p class="mu">You own everything the shop sells.</p>');
   }else if(gtab=='lo'){h+=loadoutView()}
   else h+=X.capesView();
   return h;
 }
-export const CR=['Smithing','Fletching','Enchanting','Tailoring'];CS.push(...CR,'Slayer','Leadership');
+export const CR=['Smithing','Fletching','Enchanting','Tailoring'];COMBAT_SKILLS.push(...CR,'Slayer','Leadership');
 export const CSK=(id:string)=>id[0]=='y'?'Smithing':id[0]=='g'?'Fletching':id[0]=='r'?'Smithing':id[0]=='n'?'Enchanting':id[0]=='c'?'Tailoring':id[0]=='b'?'Smithing':id[0]=='h'?'Tailoring':id[1]=='0'?'Smithing':id[1]=='1'?'Fletching':'Enchanting';
 export function recipe(id:string){
   const it=IT[id],t=it.tier,i=Math.max(0,t-1),m={},s=CSK(id),g=(k:string)=>GN[k][i][1],add=(k:string,q:number)=>(m as any)[k]=((m as any)[k]||0)+q;
@@ -40,67 +40,67 @@ export const SCR=[1,1,1,1,.6,.8,.7,.55,.9,.7,.4];
 export const scrap=(t:number)=>Math.round(GP[t]*.15*(SCR[t]??1));
 export function craftDone(id:string,mk?:any){
   const it=IT[id],r=recipe(id),sk=CSK(id),x=it.tier>=8?[4300,7800,14000][it.tier-8]:Math.round(25*Math.pow(1.7,it.tier));
-  if(it.tier>=8&&!gateOk(it.tier-7)){if(mk)S.mt[mk]={k:'idle'};else S.cur=null;return}
-  if(!useMats(r,sk)){if(mk){S.mt[mk]={k:'idle'};say(H[mk].n+' ran out of materials for '+it.n+'.')}else{S.cur=null;say('Out of materials for '+it.n+'.')}return}
+  if(it.tier>=8&&!gateOk(it.tier-7)){if(mk)gameState.mt[mk]={k:'idle'};else gameState.cur=null;return}
+  if(!useMats(r,sk)){if(mk){gameState.mt[mk]={k:'idle'};say(MEMBERS[mk].n+' ran out of materials for '+it.n+'.')}else{gameState.cur=null;say('Out of materials for '+it.n+'.')}return}
   skPet(sk);
-  if(mk){mxp(mk,x*.6);ldx(x*.5)}else{const b=lv(S.xp[sk]);S.xp[sk]+=x*(1+cb('xp',sk));if(lv(S.xp[sk])>b)say(sk+' reaches level '+lv(S.xp[sk])+'.')}
-  if(!S.own[id]){S.own[id]=1;say((mk?H[mk].n+' crafted ':'Crafted ')+it.n+'.');autoEq(id)}else S.a+=scrap(it.tier);
+  if(mk){mxp(mk,x*.6);ldx(x*.5)}else{const b=lv(gameState.xp[sk]);gameState.xp[sk]+=x*(1+cb('xp',sk));if(lv(gameState.xp[sk])>b)say(sk+' reaches level '+lv(gameState.xp[sk])+'.')}
+  if(!gameState.own[id]){gameState.own[id]=1;say((mk?MEMBERS[mk].n+' crafted ':'Crafted ')+it.n+'.');autoEq(id)}else gameState.a+=scrap(it.tier);
 }
 export function newTask(){
-  const sl=lv(S.xp.Slayer),zm=ZN.reduce((m,z,i)=>zoneOpen(i)?i:m,0);
-  const c=E.filter(e=>!e.boss&&e.zone>=zm-2&&zoneOpen(e.zone)&&!e.inst&&Math.floor(ZN[e.zone][1]*.5)<=sl);
+  const sl=lv(gameState.xp.Slayer),zm=ZN.reduce((m,z,i)=>zoneOpen(i)?i:m,0);
+  const c=ENEMIES.filter(e=>!e.boss&&e.zone>=zm-2&&zoneOpen(e.zone)&&!e.inst&&Math.floor(ZN[e.zone][1]*.5)<=sl);
   const e=c[Math.floor(Math.random()*c.length)],n=20+Math.floor(Math.random()*21);
-  S.task={id:e.id,n,left:n};say('New task: defeat '+n+' × '+e.n+'.');
+  gameState.task={id:e.id,n,left:n};say('New task: defeat '+n+' × '+e.n+'.');
 }
 export function slayKill(e:Enemy){
-  const k=S.task;if(!k||k.id!=e.id)return;
-  const b=lv(S.xp.Slayer);S.xp.Slayer+=e.xp*3*(1+cb('txp'));if(lv(S.xp.Slayer)>b)say('Slayer reaches level '+lv(S.xp.Slayer)+'.');
+  const k=gameState.task;if(!k||k.id!=e.id)return;
+  const b=lv(gameState.xp.Slayer);gameState.xp.Slayer+=e.xp*3*(1+cb('txp'));if(lv(gameState.xp.Slayer)>b)say('Slayer reaches level '+lv(gameState.xp.Slayer)+'.');
   k.left--;
-  if(k.left<=0){S.str++;petRoll('p_Slayer',400);const p=Math.round((3+e.zone*2)*(S.str%10==0?3:S.str%5==0?2:1)*(1+cb('pts'))),ac=Math.round(e.a*k.n*.5);S.pt+=p;S.a+=ac;say('Task complete! +'+p+' slayer points, +'+ac+' acorns (streak '+S.str+').');S.task=null}
+  if(k.left<=0){gameState.str++;petRoll('p_Slayer',400);const p=Math.round((3+e.zone*2)*(gameState.str%10==0?3:gameState.str%5==0?2:1)*(1+cb('pts'))),ac=Math.round(e.a*k.n*.5);gameState.pt+=p;gameState.a+=ac;say('Task complete! +'+p+' slayer points, +'+ac+' acorns (streak '+gameState.str+').');gameState.task=null}
 }
 export function taskAct(a:string){
-  if(a=='new'&&!S.task)newTask();
-  else if(a=='reroll'&&S.task&&S.pt>=10){S.pt-=10;newTask()}
-  else if(a=='fight'&&S.task){const e=E.find(q=>q.id==S.task.id)!;S.zone=e.zone;S.ehp=null;S.cur={k:'c',id:e.id};S.p=0}
+  if(a=='new'&&!gameState.task)newTask();
+  else if(a=='reroll'&&gameState.task&&gameState.pt>=10){gameState.pt-=10;newTask()}
+  else if(a=='fight'&&gameState.task){const e=ENEMIES.find(q=>q.id==gameState.task.id)!;gameState.zone=e.zone;gameState.ehp=null;gameState.cur={k:'c',id:e.id};gameState.p=0}
 }
-export function slBuy(k:string){const c=({keen:60,fort:100} as Record<string,number>)[k];if(!S.su[k]&&S.pt>=c){S.pt-=c;S.su[k]=1;say('Unlocked '+(k=='keen'?'Keen Instinct':'Hunter’s Fortune')+'.')}}
+export function slBuy(k:string){const c=({keen:60,fort:100} as Record<string,number>)[k];if(!gameState.su[k]&&gameState.pt>=c){gameState.pt-=c;gameState.su[k]=1;say('Unlocked '+(k=='keen'?'Keen Instinct':'Hunter’s Fortune')+'.')}}
 export function slayerView(){
-  const t=S.task,e=t&&E.find(q=>q.id==t.id);
-  let h='<p class="sub">Warden Thistle posts hunts on the Burrow Board. Points: <b>'+S.pt+'</b> · streak '+S.str+' (bonus points on every 5th and 10th task). Party members fighting beside you help clear tasks.</p>';
-  if(t)h+='<div class="row"><span>Defeat '+t.left+' more '+e.n+'<small>'+ZN[e.zone][0]+' · '+e.type+' · weak to '+weak(e.type)+'. On task: +10% damage, +10% rare drops, Slayer xp.</small></span><button class="btn" data-task="fight">Fight</button></div><p><button class="btn" data-task="reroll"'+(S.pt<10?' disabled':'')+'>Reroll (10 pts)</button></p>';
+  const t=gameState.task,e=t&&ENEMIES.find(q=>q.id==t.id);
+  let h='<p class="sub">Warden Thistle posts hunts on the Burrow Board. Points: <b>'+gameState.pt+'</b> · streak '+gameState.str+' (bonus points on every 5th and 10th task). Party members fighting beside you help clear tasks.</p>';
+  if(t)h+='<div class="row"><span>Defeat '+t.left+' more '+e.n+'<small>'+ZN[e.zone][0]+' · '+e.type+' · weak to '+weak(e.type)+'. On task: +10% damage, +10% rare drops, Slayer xp.</small></span><button class="btn" data-task="fight">Fight</button></div><p><button class="btn" data-task="reroll"'+(gameState.pt<10?' disabled':'')+'>Reroll (10 pts)</button></p>';
   else h+='<p><button class="btn" data-task="new">Get a task</button></p><p class="mu">Tasks come from zones you can fight. Harder zones need a higher Slayer level.</p>';
-  h+='<h2>Rewards</h2>'+[['keen','Keen Instinct','+15% damage against your task',60],['fort','Hunter’s Fortune','+25% rare drops on task',100]].map(r=>'<div class="row"><span>'+r[1]+'<small>'+r[2]+'</small></span>'+(S.su[r[0]]?'<span class="good">Owned</span>':'<button class="btn" data-slbuy="'+r[0]+'"'+(S.pt<r[3]?' disabled':'')+'>'+r[3]+' pts</button>')+'</div>').join('');
+  h+='<h2>Rewards</h2>'+[['keen','Keen Instinct','+15% damage against your task',60],['fort','Hunter’s Fortune','+25% rare drops on task',100]].map(r=>'<div class="row"><span>'+r[1]+'<small>'+r[2]+'</small></span>'+(gameState.su[r[0]]?'<span class="good">Owned</span>':'<button class="btn" data-slbuy="'+r[0]+'"'+(gameState.pt<r[3]?' disabled':'')+'>'+r[3]+' pts</button>')+'</div>').join('');
   return h+X.sgView();
 }
-CS.push('Cooking');
+COMBAT_SKILLS.push('Cooking');
 export const DISH:Record<string,Dish>={},DN={G:['Turnip mash','Oat porridge','Pumpkin pie','Honeyroot glaze','Frostbeet borscht','Sunmelon tart','Stargourd soup','Deepyam hash','Wyrmpepper stew','Eclipse fig preserve'],F:['Berry tart','Mushroom pie','Truffle pasty','Moonroot soup','Frostcap broth','Sunpetal salad','Starbloom cake','Deepbloom torte','Wyrmcap roast','Eclipse lotus feast'],I:['Fried minnows','Baked trout','Pike pie','Eel stew','Carp supper','Moonfish feast','Glassfin platter','Cavefin chowder','Drakescale grill','Voidfin tasting'],H:['Beetle crisps','Cricket skewers','Garlic snails','Frog legs','Newt stew','Skink roast','Moth-wing pastry','Root beetle bake','Ember moth skewers','Dusk spider pie']},DSK={F:'Foraging',I:'Fishing',H:'Hunting',G:'Farming'},DM={F:.9,I:1,H:1.1,G:1.05},HEAL=[15,28,50,80,125,190,280,420,600,850];
 export const CROPS=[['turnips','turnip seeds'],['oats','oat seeds'],['pumpkins','pumpkin seeds'],['honeyroot','honeyroot cuttings'],['frostbeets','frostbeet seeds'],['sunmelons','sunmelon seeds'],['stargourds','stargourd seeds'],['deepyams','deepyam cuttings'],['wyrmpeppers','wyrmpepper seeds'],['eclipse figs','eclipse fig cuttings']];
 export const CROPSECS=[300,600,1200,2400,3600,7200,10800,16200,21600,28800];// grow time per tier, capped at the 8 hour offline window
-export function initDish(){['F','I','H','G'].forEach(c=>(DN as any)[c].forEach((n:string,i:number)=>{const heal=Math.round(HEAL[i]*(DM as any)[c]);DISH['d'+c+i]={n,raw:c=='G'?CROPS[i][0]:GN[(DSK as any)[c]][i][1],q:c=='F'||c=='G'?3:2,side:c=='F'?null:GN.Foraging[i][1],lv:GL[i],gate:i>6?i-6:0,heal,xp:GX[i]*2};FOOD[n]=heal;V[n]=Math.round(GV[i]*3.5)}))}
-export const burn=(d:any)=>Math.max(0,.4-(lv(S.xp.Cooking)-d.lv)*.02)*(1-Math.min(.9,cb('burn','Cooking')));
+export function initDish(){['F','I','H','G'].forEach(c=>(DN as any)[c].forEach((n:string,i:number)=>{const heal=Math.round(HEAL[i]*(DM as any)[c]);DISH['d'+c+i]={n,raw:c=='G'?CROPS[i][0]:GN[(DSK as any)[c]][i][1],q:c=='F'||c=='G'?3:2,side:c=='F'?null:GN.Foraging[i][1],lv:GL[i],gate:i>6?i-6:0,heal,xp:GX[i]*2};FOOD[n]=heal;SELL_VALUE[n]=Math.round(GV[i]*3.5)}))}
+export const burn=(d:any)=>Math.max(0,.4-(lv(gameState.xp.Cooking)-d.lv)*.02)*(1-Math.min(.9,cb('burn','Cooking')));
 export const dishNeeds=(d:any)=>{const nd:Record<string,any>={};nd[d.raw]=d.q;if(d.side)nd[d.side]=1;return nd};
 export function cookDone(id:string,mk?:any){
   const d=DISH[id];
-  if(!gateOk(d.gate)||!useMats(dishNeeds(d),'Cooking')){if(mk){S.mt[mk]={k:'idle'};say(H[mk].n+' ran out of ingredients for '+d.n+'.')}else{S.cur=null;say('Out of ingredients for '+d.n+'.')}return}
-  const b=lv(S.xp.Cooking),burnt=Math.random()<burn(d);
+  if(!gateOk(d.gate)||!useMats(dishNeeds(d),'Cooking')){if(mk){gameState.mt[mk]={k:'idle'};say(MEMBERS[mk].n+' ran out of ingredients for '+d.n+'.')}else{gameState.cur=null;say('Out of ingredients for '+d.n+'.')}return}
+  const b=lv(gameState.xp.Cooking),burnt=Math.random()<burn(d);
   if(burnt){if(!mk&&Math.random()<.2)say('You burn the '+d.n.toLowerCase()+'.');return}
-  S.inv[d.n]=(S.inv[d.n]||0)+(mk?X.famCut(mk,1):1);skPet('Cooking');
+  gameState.inv[d.n]=(gameState.inv[d.n]||0)+(mk?X.famCut(mk,1):1);skPet('Cooking');
   if(mk){mxp(mk,d.xp*.6);ldx(d.xp*.5);return}
-  S.xp.Cooking+=d.xp*(SP[S.sp!]=='Cooking'?1.15:1)*(b>=99?1.1:1)*(1+cb('xp','Cooking'));
-  const a=lv(S.xp.Cooking);if(a>b)say('Cooking reaches level '+a+'.'+Object.keys(DISH).filter(k=>DISH[k].lv==a).map(k=>' Unlocked: '+DISH[k].n+'.').join(''));
+  gameState.xp.Cooking+=d.xp*(SP[gameState.sp!]=='Cooking'?1.15:1)*(b>=99?1.1:1)*(1+cb('xp','Cooking'));
+  const a=lv(gameState.xp.Cooking);if(a>b)say('Cooking reaches level '+a+'.'+Object.keys(DISH).filter(k=>DISH[k].lv==a).map(k=>' Unlocked: '+DISH[k].n+'.').join(''));
 }
-export function buy(k:string){const t=S.gear[k],c=(k=='arm'?[100,400,1000]:[80,300,900])[t];if(t<3&&S.a>=c){S.a-=c;S.gear[k]++;say('Equipped '+(k=='arm'?AR[t]:W[k][t])+'.')}}
+export function buy(k:string){const t=gameState.gear[k],c=(k=='arm'?[100,400,1000]:[80,300,900])[t];if(t<3&&gameState.a>=c){gameState.a-=c;gameState.gear[k]++;say('Equipped '+(k=='arm'?AR[t]:W[k][t])+'.')}}
 export const need=(l:number)=>XT[Math.min(l+1,120)];
 export const GX=[6,18,36,60,96,144,210,360,570,900],GV=[1,3,8,15,30,55,100,175,350,750];
-export const A:any[]=[];Object.keys(GN).forEach(sk=>GN[sk].forEach((g:string[],i:number)=>{A.push({id:sk.slice(0,2)+i,sk,n:g[0],lv:GL[i],t:i>6?[9,11,14][i-7]:3+i*.5,xp:GX[i],item:g[1],gate:i>6?i-6:0});V[g[1]]=GV[i]}));
+export const ACHIEVEMENTS:any[]=[];Object.keys(GN).forEach(sk=>GN[sk].forEach((g:string[],i:number)=>{ACHIEVEMENTS.push({id:sk.slice(0,2)+i,sk,n:g[0],lv:GL[i],t:i>6?[9,11,14][i-7]:3+i*.5,xp:GX[i],item:g[1],gate:i>6?i-6:0});SELL_VALUE[g[1]]=GV[i]}));
 export const TN=['Flint','Bramble','Moonsteel','Amberforged','Elderglass'],TC=[0,150,800,4000,20000],TL=[1,10,30,50,75],TM=[1,.9,.8,.7,.6],TK={Foraging:'basket',Woodcutting:'axe',Fishing:'rod',Mining:'pick',Hunting:'snare'};
-export const tt=(a:any)=>a.t*TM[S.tool[a.sk]]*Math.max(.3,1-cb('spd',a.sk));
-export function unlockText(sk:string,n:number){const u=A.filter(a=>a.sk==sk&&a.lv==n&&!a.gate).map(a=>a.item);TL.forEach((l,i)=>{if(l==n&&i>0)u.push(TN[i]+' '+(TK as any)[sk])});return u.length?' Unlocked: '+u.join(', ')+'.':''}
-export function buyTool(sk:string){const t=S.tool[sk]+1;if(t<5&&lv(S.xp[sk])>=TL[t]&&S.a>=TC[t]){S.a-=TC[t];S.tool[sk]=t;say('Equipped '+TN[t]+' '+(TK as any)[sk]+'.')}}
-export function toolRow(k:string){const t=S.tool[k],n=t+1;return '<div class="row"><span>'+TN[t]+' '+(TK as any)[k]+'<small>Bonus yield '+Math.round(lv(S.xp[k])*.4)+'% · '+(t<4?'Next: '+TN[n]+' (level '+TL[n]+', '+TM[n]+'× time)':'Best tool')+'</small></span>'+(t<4?'<button class="btn" data-tool="'+k+'"'+(lv(S.xp[k])<TL[n]||S.a<TC[n]?' disabled':'')+'>'+TC[n]+'</button>':'')+'</div>'}
+export const tt=(a:any)=>a.t*TM[gameState.tool[a.sk]]*Math.max(.3,1-cb('spd',a.sk));
+export function unlockText(sk:string,n:number){const u=ACHIEVEMENTS.filter(a=>a.sk==sk&&a.lv==n&&!a.gate).map(a=>a.item);TL.forEach((l,i)=>{if(l==n&&i>0)u.push(TN[i]+' '+(TK as any)[sk])});return u.length?' Unlocked: '+u.join(', ')+'.':''}
+export function buyTool(sk:string){const t=gameState.tool[sk]+1;if(t<5&&lv(gameState.xp[sk])>=TL[t]&&gameState.a>=TC[t]){gameState.a-=TC[t];gameState.tool[sk]=t;say('Equipped '+TN[t]+' '+(TK as any)[sk]+'.')}}
+export function toolRow(k:string){const t=gameState.tool[k],n=t+1;return '<div class="row"><span>'+TN[t]+' '+(TK as any)[k]+'<small>Bonus yield '+Math.round(lv(gameState.xp[k])*.4)+'% · '+(t<4?'Next: '+TN[n]+' (level '+TL[n]+', '+TM[n]+'× time)':'Best tool')+'</small></span>'+(t<4?'<button class="btn" data-tool="'+k+'"'+(lv(gameState.xp[k])<TL[n]||gameState.a<TC[n]?' disabled':'')+'>'+TC[n]+'</button>':'')+'</div>'}
 export let tab='skills',who='you',skill:any=null;
-export const power=()=>Math.floor(SK.concat(CS).reduce((s,k)=>s+lv(S.xp[k]),0)/2)+fighters().reduce((s,k)=>s+hp(k),0);
-export const hp=(k:string)=>H[k].p+(cl(k)-1)*(k==S.lead?2:1);
+export const power=()=>Math.floor(GATHER_SKILLS.concat(COMBAT_SKILLS).reduce((s,k)=>s+lv(gameState.xp[k]),0)/2)+fighters().reduce((s,k)=>s+hp(k),0);
+export const hp=(k:string)=>MEMBERS[k].p+(cl(k)-1)*(k==gameState.lead?2:1);
 export const slots=()=>LT.filter(l=>l<=LD()).length;
 // Leadership past 70: mentoring speeds barracks training, and the offline window stretches an hour per ten levels (to 12h).
 export const mentor=()=>1+Math.min(.5,Math.max(0,LD()-70)*.01);
@@ -111,4 +111,4 @@ export const mspd=(k:string)=>bspd()*(1+.01*(cl(k)-1));
 export function set_who(v:any){who=v}
 export function set_skill(v:any){skill=v}
 export function set_tab(v:any){tab=v}
-Object.defineProperties(X,{slots:{get:()=>slots,configurable:true},A:{get:()=>A,configurable:true},CSK:{get:()=>CSK,configurable:true},slayKill:{get:()=>slayKill,configurable:true}});
+Object.defineProperties(X,{slots:{get:()=>slots,configurable:true},A:{get:()=>ACHIEVEMENTS,configurable:true},CSK:{get:()=>CSK,configurable:true},slayKill:{get:()=>slayKill,configurable:true}});

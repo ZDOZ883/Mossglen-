@@ -61,7 +61,7 @@ function load(opts = {}) {
   vm.createContext(ctx);
   let src = extractScript();
   if (opts.awaySec != null) {
-    src = src.replace(/(?:const|var|let)\s+away\s*=\s*Math\.min\(Date\.now\(\)\s*-\s*S\.t\s*,[^;]*\);/, 'var away=' + Math.min(opts.awaySec, 8 * 3600) * 1000 + ';');
+    src = src.replace(/(?:const|var|let)\s+away\s*=\s*Math\.min\(Date\.now\(\)\s*-\s*gameState\.t\s*,[^;]*\);/, 'var away=' + Math.min(opts.awaySec, 8 * 3600) * 1000 + ';');
     if (!/var away=\d/.test(src)) throw new Error('harness: could not patch offline-away line');
   }
   ctx.__MG_TEST = true;
@@ -94,13 +94,13 @@ function expectedSetup(g, zoneIdx, opts = {}) {
   g.ev(`(function(){
     const i=${zoneIdx},gt=${tier},nm=${members};
     const L=Math.min(120,ZN[i][1]+5),ml=Math.round(L*.75);
-    S.cape=null;S.form='steady';S.bn=[];S.cur=null;S.ehid=null;S.own={};
-    ['Attack','Strength','Defense','Vitality'].forEach(k=>S.xp[k]=XT[Math.max(1,L)]);
-    S.eq={Melee:'w0'+gt,Ranged:'w1'+gt,Magic:'w2'+gt,body:gt>0?'b'+gt:null,head:gt>0?'h'+gt:null,legs:gt>0?'g'+gt:null,off:gt>0?'y'+gt:null,trinket:null};
-    if(gt>1){const a=gt-1;S.eq.ring1='r0_'+a;S.eq.ring2='r1_'+a;S.eq.neck='n0_'+a;S.cape='I:c1_'+a;S.own['c1_'+a]=1}
-    S.hired={};S.mt={};S.pets={};
-    ['mole','hare','owl','otter','badger','fox'].slice(0,nm).forEach(k=>{S.hired[k]=1;S.mt[k]={k:'war'};S.cx[k]=XT[Math.max(1,ml)]});
-    refreshFx();gearSync();S.hp=maxhp();
+    gameState.cape=null;gameState.form='steady';gameState.bn=[];gameState.cur=null;gameState.ehid=null;gameState.own={};
+    ['Attack','Strength','Defense','Vitality'].forEach(k=>gameState.xp[k]=XT[Math.max(1,L)]);
+    gameState.eq={Melee:'w0'+gt,Ranged:'w1'+gt,Magic:'w2'+gt,body:gt>0?'b'+gt:null,head:gt>0?'h'+gt:null,legs:gt>0?'g'+gt:null,off:gt>0?'y'+gt:null,trinket:null};
+    if(gt>1){const a=gt-1;gameState.eq.ring1='r0_'+a;gameState.eq.ring2='r1_'+a;gameState.eq.neck='n0_'+a;gameState.cape='I:c1_'+a;gameState.own['c1_'+a]=1}
+    gameState.hired={};gameState.mt={};gameState.pets={};
+    ['mole','hare','owl','otter','badger','fox'].slice(0,nm).forEach(k=>{gameState.hired[k]=1;gameState.mt[k]={k:'war'};gameState.cx[k]=XT[Math.max(1,ml)]});
+    refreshFx();gearSync();gameState.hp=maxhp();
   })()`);
 }
 
