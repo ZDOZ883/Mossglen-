@@ -100,7 +100,8 @@ export function partyView(){
 }
 export let logSub='log';
 export function set_logSub(v:string){logSub=v}
-export const logTabs=()=>'<div class="seg">'+[['log','Collection'],['guide','Guide']].map(t=>'<button data-logsub="'+t[0]+'" class="'+(logSub==t[0]?'on':'')+'">'+t[1]+'</button>').join('')+'</div>';
+export const dataView=()=>'<h2>Your save</h2><p class="mu">Mossglen saves in this browser automatically. There is one character and no resets, so starting over erases everything for good.</p><h2>Danger zone</h2><p class="mu">Erases your character, party, gear and every skill. You will be asked to type ERASE to confirm.</p><p><button class="btn" data-reset="1" style="font-size:14px">Erase all progress</button></p>';
+export const logTabs=()=>'<div class="seg">'+[['log','Collection'],['guide','Guide'],['data','Data']].map(t=>'<button data-logsub="'+t[0]+'" class="'+(logSub==t[0]?'on':'')+'">'+t[1]+'</button>').join('')+'</div>';
 const dens=(t:string,b:string)=>'<details class="chip"><summary><span>'+t+'</span><em>open</em></summary><div class="mu">'+b+'</div></details>';
 export function guideView(){
   const capes=Object.keys(CE).map(k=>capeRow(k).replace('<div class="row"><span>','<div class="row"><span><b>'+k+'</b> · ')).join('');
@@ -109,7 +110,7 @@ export function guideView(){
 }
 export function view(){
   if(tab=='burrow')return burrowView();
-  if(tab=='log')return logTabs()+(logSub=='guide'?guideView():logView());
+  if(tab=='log')return logTabs()+(logSub=='guide'?guideView():logSub=='data'?dataView():logView());
   if(tab=='skills')return skillsView();
   if(tab=='combat')return combatView();
   if(tab=='gear')return gearView();
@@ -129,8 +130,7 @@ export function render(){
   app!.innerHTML='<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">'+gameState.sp+' of the valley · total level '+GATHER_SKILLS.concat(COMBAT_SKILLS).reduce((s,k)=>s+lv(gameState.xp[k]),0)+'</p>'+
   '<div class="stat sans"><div class="mu now">You are currently</div>'+(cn?'<div style="display:flex;justify-content:space-between"><span>'+cn+(gameState.cur.k=='c'?' <small class="mu" id="se"></small>':'')+'</span><button class="btn" data-stop="1">Rest</button></div><div class="bar'+(gameState.cur.k=='c'?' hp':'')+'"><i id="pb"></i></div>':'<span class="mu">Resting. Choose an activity below to begin.</span>')+potStatus()+(hasWork()?'<div class="mu" style="font-size:14px;margin-top:4px">'+workNames()+'</div>':'')+'</div>'+
   '<nav>'+[['skills','Skills','leaf'],['combat','Fight','swords'],['gear','Gear','shield'],['party','Party','paw'],['delve','Explore','lantern'],['burrow','Burrow','burrow'],['log','Log','tome'],['pack','Pack','satchel']].map(t=>'<button data-tab="'+t[0]+'" class="'+(tab==t[0]?'on':'')+'"><i>'+icon(t[2],25)+'</i>'+t[1]+'</button>').join('')+'</nav>'+
-  view()+'<div id="log">'+gameState.log.map((l:number)=>'<p>'+l+'</p>').join('')+'</div>'+
-  '<p class="mu" style="margin-top:24px"><button class="btn" data-reset="1" style="font-size:14px">Start over</button></p>';
+  view()+'<div id="log">'+gameState.log.map((l:number)=>'<p>'+l+'</p>').join('')+'</div>';
   bars();
 }
 

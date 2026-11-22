@@ -383,6 +383,18 @@ describe('gear slots', () => {
     assert.ok(g.ev('gameState.hp<=maxhp()'));
   });
 
+  it('Start over lives in Log > Data, not on every screen, and needs a typed confirmation', () => {
+    const g = load({ seed: 13 });
+    g.ev(`gameState.sp='Badger'`);
+    for (const t of ['skills', 'combat', 'gear', 'party', 'delve', 'burrow', 'pack']) assert.ok(!/data-reset/.test(g.view(t)), t + ' has no reset button');
+    g.ev(`set_logSub('data')`);
+    assert.ok(/data-reset/.test(g.view('log')), 'Data tab holds the reset button');
+    g.ev(`set_logSub('log')`);
+    // Without the typed word nothing happens (the test harness has no prompt, so it must refuse).
+    g.click({ reset: '1' });
+    assert.ok(g.ev('!!gameState.sp'), 'progress is kept without the typed confirmation');
+  });
+
   it('old saves start Ranged and Magic at their Attack xp', () => {
     const g = load({ seed: 6 });
     g.ev(`gameState.xp.Attack=XT[50];delete gameState.xp.Ranged;delete gameState.xp.Magic;gameState.v=2;migrate()`);

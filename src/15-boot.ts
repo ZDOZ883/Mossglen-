@@ -62,7 +62,7 @@ document.addEventListener('click',e=>{
   else if(d.stop){gameState.cur=null;gameState.ehp=null}
   else if(d.hire){const h=MEMBERS[d.hire];if(!known(d.hire)&&(h.pet?!!gameState.pets[d.hire]:gameState.a>=h.c&&LD()>=h.lt)){if(!h.pet)gameState.a-=h.c;const inParty=joinParty(d.hire);say(h.n+(inParty?' joins your party.':' joins your roster and rests at home. Your party is full.'))}}
   else if(d.sell){let g=0;for(const k in gameState.inv){if(KEEP(k))continue;g+=gameState.inv[k]*SELL_VALUE[k];delete gameState.inv[k]}g=Math.round(g*(1+cb('sell')));gameState.a+=g;say('Sold your pack for '+g+' acorns.')}
-  else if(d.reset){if(confirm('Erase your progress?')){try{localStorage.removeItem('hollowbrook1')}catch(x){}location.reload();return}}
+  else if(d.reset){if(typeof prompt=='function'&&prompt('This erases your character, party, gear and every skill, and cannot be undone. Type ERASE to confirm.')==='ERASE'){try{localStorage.removeItem('hollowbrook1')}catch(x){}location.reload();return}}
   else return;
   if(gameState.auto&&(d.raid||d.hraid||d.task=='fight'||(d.do&&!(who!='you'&&gameState.hired[who]&&'skfr'.includes(d.do.split(':')[0]))))){if(d.hraid)optimize({kind:'gather',label:'the harvest'});else autoLoad()}
   {const mh=maxhp();if(gameState.hp>mh)gameState.hp=mh}
