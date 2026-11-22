@@ -22,7 +22,7 @@ import { validTask } from './08-party-state';
 export const SAVE_VERSION = 3;
 
 function ensureDefaults() {
-  gameState.tier=gameState.tier||{};gameState.best=gameState.best||{};gameState.cx=gameState.cx||{};gameState.lead=gameState.lead||null;gameState.style=gameState.style||'Melee';gameState.gear=gameState.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(gameState.xp.Attack==null&&(gameState.xp.Melee||gameState.xp.Ranged||gameState.xp.Magic)){const b0=Math.max(gameState.xp.Melee||0,gameState.xp.Ranged||0,gameState.xp.Magic||0);gameState.xp.Attack=gameState.xp.Strength=gameState.xp.Defense=b0}
+  gameState.tier=gameState.tier||{};gameState.best=gameState.best||{};gameState.cx=gameState.cx||{};gameState.bench=gameState.bench||{};gameState.lead=gameState.lead||null;gameState.style=gameState.style||'Melee';gameState.gear=gameState.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(gameState.xp.Attack==null&&(gameState.xp.Melee||gameState.xp.Ranged||gameState.xp.Magic)){const b0=Math.max(gameState.xp.Melee||0,gameState.xp.Ranged||0,gameState.xp.Magic||0);gameState.xp.Attack=gameState.xp.Strength=gameState.xp.Defense=b0}
   COMBAT_SKILLS.forEach(k=>gameState.xp[k]=gameState.xp[k]||(k=='Vitality'?XT[10]:0));gameState.tool=gameState.tool||{Foraging:0,Woodcutting:0,Fishing:0,Mining:0};if(gameState.cur&&gameState.cur.k=='s'&&!ACHIEVEMENTS.find(a=>a.id==gameState.cur.id))gameState.cur=null;
   if(gameState.cur&&gameState.cur.k=='c'&&!ENEMIES.find(e=>e.id==gameState.cur.id))gameState.cur=null;
   if(gameState.cur&&gameState.cur.k=='d')gameState.cur=null; // live delves were replaced by timed expeditions
@@ -36,7 +36,7 @@ function ensureDefaults() {
   gameState.cmd=!!gameState.cmd;
   if(gameState.ehp===undefined||!(gameState.cur&&gameState.cur.k=='c'))gameState.ehp=null;
   {const np=Object.keys(gameState.hired).filter(k=>!MEMBERS[k].pet).length;if(np>slots())gameState.xp.Leadership=XT[LT[Math.min(np,LT.length)-1]];const ps=Object.keys(gameState.hired).filter(k=>MEMBERS[k].pet);while(Object.keys(gameState.hired).length>slots()&&ps.length){const k=ps.pop();delete gameState.hired[k!];delete gameState.mt[k!]}}
-  Object.keys(gameState.mt).forEach(k=>{if(!gameState.hired[k])delete gameState.mt[k];else if(!validTask(gameState.mt[k]))gameState.mt[k]={k:'idle'}});
+  Object.keys(gameState.mt).forEach(k=>{if(!gameState.hired[k]&&!gameState.bench[k])delete gameState.mt[k];else if(!validTask(gameState.mt[k]))gameState.mt[k]={k:'idle'}});
 }
 
 export const MIGRATIONS: { v: number; run: () => void }[] = [

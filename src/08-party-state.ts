@@ -7,6 +7,7 @@ import { hrCount } from './03-world-expeditions';
 import { ACHIEVEMENTS, CSK, DISH, cookDone, craftDone, mspd, tt } from './07-gear-ui';
 export function validTask(t:any){return !!t&&((!!TASKS[t.k]&&TASKS[t.k].valid(t))||t.k=='war'||t.k=='idle'||t.k=='bar'||t.k=='exp'||(t.k=='s'&&!!ACHIEVEMENTS.find(a=>a.id==t.id))||(t.k=='k'&&!!DISH[t.id])||(t.k=='f'&&!!IT[t.id]&&t.id[0]!='t')||(t.k=='r'&&!!RFN[t.id]))}
 export function assign(k:string,kind:string,id?:any){
+  if(gameState.bench[k]&&!gameState.hired[k]){if(kind=='bar'&&X.buL('bar')>0)gameState.mt[k]={k:'bar'};else if(kind=='idle')gameState.mt[k]={k:'idle'};return}
   if(!gameState.hired[k]||asg(k).k=='exp')return;
   const t=gameState.mt[k];
   if(kind=='bar'){if(X.buL('bar')>0)gameState.mt[k]={k:'bar'};return}

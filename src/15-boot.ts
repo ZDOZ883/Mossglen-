@@ -1,5 +1,5 @@
 import { gameState, save, say } from './00-state';
-import { FM, MEMBERS, LD, SELL_VALUE, asg, cb, nsl } from './01-species-pets';
+import { FM, MEMBERS, LD, SELL_VALUE, asg, cb, joinParty, known, nsl } from './01-species-pets';
 import { KEEP } from './02-gear-data';
 import { exRecall, exSel, exStart, openGate, set_exSel, startHR, startRaid } from './03-world-expeditions';
 import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadout';
@@ -25,7 +25,8 @@ document.addEventListener('click',e=>{
   else if(d.logsub){set_logSub(d.logsub);render();return}
   else if(d.who)set_who(d.who);
   else if(d.assign){const [k,a]=d.assign.split(':');assign(k,a)}
-  else if(d.dismiss){const k=d.dismiss;if(asg(k).k=='exp'){say(MEMBERS[k].n+' is away on an expedition.');}else{delete gameState.hired[k];delete gameState.mt[k];if(gameState.lead==k)gameState.lead=Object.keys(gameState.hired)[0]||null;if(who==k)set_who('you');say(MEMBERS[k].n+' leaves the party.')}}
+  else if(d.dismiss){const k=d.dismiss;if(asg(k).k=='exp'){say(MEMBERS[k].n+' is away on an expedition.');}else if(gameState.hired[k]){delete gameState.hired[k];gameState.bench[k]=1;gameState.mt[k]={k:'idle'};if(gameState.lead==k)gameState.lead=Object.keys(gameState.hired)[0]||null;if(who==k)set_who('you');say(MEMBERS[k].n+' rests at home. They stay on your roster and can train in the barracks.')}}
+  else if(d.call){const [k,out]=d.call.split(':');if(gameState.bench[k]&&!(out&&asg(out).k=='exp')){if(out&&gameState.hired[out]){delete gameState.hired[out];gameState.bench[out]=1;gameState.mt[out]={k:'idle'};if(gameState.lead==out)gameState.lead=null;if(who==out)set_who('you')}if(nsl()<slots()){delete gameState.bench[k];gameState.hired[k]=1;gameState.mt[k]={k:'war'};if(!gameState.lead)gameState.lead=k;say(MEMBERS[k].n+' joins the party'+(out?', taking '+MEMBERS[out].n+"'s place.":'.'))}}}
   else if(d.form){if(FM[d.form]&&CL()>=FM[d.form].cl)gameState.form=d.form}
   else if(d.do){const [k,id]=d.do.split(':');if(who!='you'&&gameState.hired[who]&&'skfr'.includes(k))assign(who,k,id);else{if(k=='c'&&!(gameState.cur&&gameState.cur.k=='c'&&gameState.cur.id==id)){gameState.ehp=null;set_hits([])}gameState.cur={k,id};gameState.p=0}}
   else if(d.style)gameState.style=d.style;
@@ -59,7 +60,7 @@ document.addEventListener('click',e=>{
   else if(d.opt)optNow(d.opt);
   else if(d.ls)loadoutSl(d.ls);
   else if(d.stop){gameState.cur=null;gameState.ehp=null}
-  else if(d.hire){const h=MEMBERS[d.hire];if(!gameState.hired[d.hire]&&nsl()<slots()&&(h.pet?!!gameState.pets[d.hire]:gameState.a>=h.c&&LD()>=h.lt)){gameState.a-=h.c;gameState.hired[d.hire]=1;gameState.mt[d.hire]={k:'war'};if(!gameState.lead)gameState.lead=d.hire;say(h.n+' joins your party.')}}
+  else if(d.hire){const h=MEMBERS[d.hire];if(!known(d.hire)&&(h.pet?!!gameState.pets[d.hire]:gameState.a>=h.c&&LD()>=h.lt)){if(!h.pet)gameState.a-=h.c;const inParty=joinParty(d.hire);say(h.n+(inParty?' joins your party.':' joins your roster and rests at home. Your party is full.'))}}
   else if(d.sell){let g=0;for(const k in gameState.inv){if(KEEP(k))continue;g+=gameState.inv[k]*SELL_VALUE[k];delete gameState.inv[k]}g=Math.round(g*(1+cb('sell')));gameState.a+=g;say('Sold your pack for '+g+' acorns.')}
   else if(d.reset){if(confirm('Erase your progress?')){try{localStorage.removeItem('hollowbrook1')}catch(x){}location.reload();return}}
   else return;

@@ -1,6 +1,6 @@
 import { GATHERED, gameState, TASKS, say } from './00-state';
 import { X } from './registry';
-import { COMBAT_SKILLS, DISHES, IT, LD, PETS, GATHER_SKILLS, SL, SP, T, TR, asg, cb, lv, mxp, skPet } from './01-species-pets';
+import { COMBAT_SKILLS, roster, DISHES, IT, LD, PETS, GATHER_SKILLS, SL, SP, T, TR, asg, cb, lv, mxp, skPet } from './01-species-pets';
 import { CE, ENEMIES, GRP, GSK, PSK, RFN, ZN, capeName, capeTier, ctime, gateOk, grpName, grpTier, refineDone } from './02-gear-data';
 import { HR, RD, exs, hrCount } from './03-world-expeditions';
 import { RT } from './04-loadout';
@@ -60,10 +60,10 @@ export const AC:Ach[]=[
 ['b1','Home Sweet Home','Build anything in the Burrow.',()=>BU.some(b=>buL(b.id)>=1),1000],
 ['b2','Master Builder','Bring every Burrow building to tier 3.',()=>allBu(3),150000],
 ['b3','The Grand Burrow','Bring every Burrow building to tier 5.',()=>allBu(5),5000000],
-['m1','Band of Friends','Have 3 party members.',()=>Object.keys(gameState.hired).length>=3,3000],
-['m2','Full Party','Have 6 party members.',()=>Object.keys(gameState.hired).length>=6,100000],
+['m1','Band of Friends','Have 3 party members.',()=>roster().length>=3,3000],
+['m2','Full Party','Have 6 party members.',()=>roster().length>=6,100000],
 ['m3','Veteran Squad','Raise a member to level 50.',()=>Object.keys(gameState.cx).some(k=>lv(gameState.cx[k])>=50),20000],
-['m5','Grand Company','Have 9 party members.',()=>Object.keys(gameState.hired).length>=9,1000000],
+['m5','Grand Company','Have 9 party members.',()=>roster().length>=9,1000000],
 ['m4','Elite Companion','Raise a member to level 100.',()=>Object.keys(gameState.cx).some(k=>lv(gameState.cx[k])>=100),1000000],
 ['e1','Acorn Collector','Hold 100,000 acorns.',()=>gameState.a>=1e5,0],
 ['e2','Wealthy','Hold 5,000,000 acorns.',()=>gameState.a>=5e6,0],
@@ -99,6 +99,7 @@ export const famShare=()=>Math.min(.68,1/3+Math.min(1,LD()/99)/6+.02*buL('larder
 export function famCut(k:string,n:number){let g=0;for(let i=0;i<n;i++)if(Math.random()<famShare())g++;gameState.fam[k]=(gameState.fam[k]||0)+n-g;return g}
 export function memTick(dt:any){
   exs().forEach(e=>Object.keys(gameState.hired).forEach(k=>{if(asg(k).k!='exp'&&e.mem.includes(k))gameState.mt[k]={k:'exp'}}));
+  Object.keys(gameState.bench).forEach(k=>{const t=asg(k);if(t.k=='bar'){if(buL('bar'))mxp(k,dt*BRATE(buL('bar'))*mentor()/3600)}else if(buL('bar'))mxp(k,dt*BRATE(buL('bar'))*mentor()/3600*.25)});
   Object.keys(gameState.hired).forEach(k=>{
     const t=asg(k);if(t.k=='exp')return;if(t.k=='bar'){mxp(k,dt*BRATE(buL('bar'))*mentor()/3600);return}if(t.k=='idle'){if(buL('bar'))mxp(k,dt*BRATE(buL('bar'))*mentor()/3600*.25);return}if(t.k=='war')return;
     t.p=(t.p||0)+dt;const d=mdur(k,t);let n=0;

@@ -32,11 +32,14 @@ RPN.forEach((n,j)=>PETS.push(['p_r'+j,n,'Melee',{dmg:.12+.02*j,taken:.1,heal:.02
 PETS.forEach(q=>{MEMBERS[q[0]]={n:q[1],c:0,p:q[6],st:q[2],role:'Pet',pk:q[3],d:q[4],lt:0,pet:true,sk:q[5]}});
 export const pbs=(k:string,sk:string)=>MEMBERS[k]&&MEMBERS[k].pet&&MEMBERS[k].sk&&MEMBERS[k].sk==sk?1.3:1;
 export const nsl=()=>Object.keys(gameState.hired).length;
+// Everyone recruited: the active party (limited by Leadership slots) plus those resting at home, who stay idle and can still train in the barracks.
+export const roster=()=>Object.keys(gameState.hired).concat(Object.keys(gameState.bench||{}));
+export const known=(k:string)=>!!gameState.hired[k]||!!(gameState.bench&&gameState.bench[k]);
+export function joinParty(id:string){if(nsl()<X.slots()){gameState.hired[id]=1;delete gameState.bench[id];gameState.mt[id]={k:'war'};if(!gameState.lead)gameState.lead=id;return true}gameState.bench[id]=1;delete gameState.hired[id];gameState.mt[id]={k:'idle'};return false}
 export function gainPet(id:string){
   if(gameState.pets[id]||!MEMBERS[id])return;
   gameState.pets[id]=1;gameState.cx[id]=XT[10];
-  if(nsl()<X.slots()){gameState.hired[id]=1;gameState.mt[id]={k:'war'};if(!gameState.lead)gameState.lead=id;say('★ Extremely rare! '+MEMBERS[id].n+' has joined your party.')}
-  else say('★ Extremely rare! You found '+MEMBERS[id].n+'. Your party is full, so it waits at home. Swap it in from the Party tab.');
+  say('★ Extremely rare! '+MEMBERS[id].n+(joinParty(id)?' has joined your party.':' has joined your roster. Your party is full, so they are resting at home.'));
 }
 export const PB:Record<string,number>={Attack:40000,Strength:40000,Ranged:40000,Magic:40000,Defense:40000,Vitality:40000,Foraging:150000,Woodcutting:160000,Fishing:130000,Mining:250000,Hunting:100000,Cooking:110000,Smithing:90000,Fletching:80000,Enchanting:90000,Tailoring:85000,Farming:95000,Alchemy:90000};
 export function skPet(sk:string){if(typeof sk!='string')return;let r=PB[sk]-25*lv(gameState.xp[sk]);if(gameState.xp[sk]>=2e8)r/=15;petRoll('p_'+sk,r)}

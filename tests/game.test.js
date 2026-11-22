@@ -314,6 +314,36 @@ describe('gear slots', () => {
     assert.equal(a.Attack, b.Attack); assert.equal(a.Magic, b.Magic);
   });
 
+  it('members beyond the party slots rest on the roster, can train in the barracks, and swap in without being dismissed', () => {
+    const g = load({ seed: 8 });
+    g.ev(`gameState.sp='Badger';gameState.xp.Leadership=XT[10];gameState.a=1e9;gameState.hired={};gameState.bench={};gameState.mt={};gameState.pets={p_Attack:1};gameState.lead=null;gameState.bu={bar:1}`);
+    assert.equal(g.ev('slots()'), 2);
+    for (const k of ['mole', 'hare', 'p_Attack']) g.click({ hire: k });
+    assert.equal(g.ev('Object.keys(gameState.hired).join()'), 'mole,hare');
+    assert.ok(g.ev('!!gameState.bench.p_Attack'), 'a recruit beyond the slots rests on the roster');
+    assert.equal(g.ev("gameState.mt.p_Attack.k"), 'idle');
+    assert.equal(g.ev('fighters().includes("p_Attack")'), false, 'a benched member does not fight');
+    // The benched member can train in the barracks.
+    g.click({ assign: 'p_Attack:bar' });
+    assert.equal(g.ev('gameState.mt.p_Attack.k'), 'bar');
+    const x0 = g.ev('gameState.cx.p_Attack||0');
+    g.ev('tick(3600,true)');
+    assert.ok(g.ev('gameState.cx.p_Attack||0') > x0, 'barracks training reaches the bench');
+    // Swapping brings the benched member in and rests the other one; nobody leaves the roster.
+    g.click({ call: 'p_Attack:hare' });
+    assert.ok(g.ev('!!gameState.hired.p_Attack&&!gameState.hired.hare&&!!gameState.bench.hare'));
+    assert.equal(g.ev('roster().length'), 3);
+    assert.equal(g.ev('gameState.mt.hare.k'), 'idle');
+    // Benching an active member keeps them on the roster.
+    g.click({ dismiss: 'mole' });
+    assert.ok(g.ev('!!gameState.bench.mole&&!gameState.hired.mole'));
+    assert.equal(g.ev('roster().length'), 3);
+    // They cannot be hired twice.
+    const a = g.ev('gameState.a');
+    g.click({ hire: 'mole' });
+    assert.equal(g.ev('gameState.a'), a);
+  });
+
   it('old saves start Ranged and Magic at their Attack xp', () => {
     const g = load({ seed: 6 });
     g.ev(`gameState.xp.Attack=XT[50];delete gameState.xp.Ranged;delete gameState.xp.Magic;gameState.v=2;migrate()`);

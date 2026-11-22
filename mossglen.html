@@ -140,7 +140,7 @@ nav button.on i{opacity:1}
     gameState = JSON.parse(localStorage.getItem("hollowbrook1"));
   } catch (e) {
   }
-  if (!gameState) gameState = { sp: null, xp: { Foraging: 0, Woodcutting: 0, Fishing: 0, Mining: 0 }, inv: {}, a: 0, cur: null, p: 0, hired: {}, t: Date.now(), log: [] };
+  if (!gameState) gameState = { sp: null, xp: { Foraging: 0, Woodcutting: 0, Fishing: 0, Mining: 0 }, inv: {}, a: 0, cur: null, p: 0, hired: {}, bench: {}, t: Date.now(), log: [] };
   var save = () => {
     try {
       localStorage.setItem("hollowbrook1", JSON.stringify(gameState));
@@ -206,6 +206,8 @@ nav button.on i{opacity:1}
     fighters: () => fighters,
     fw: () => fw,
     gainPet: () => gainPet,
+    joinParty: () => joinParty,
+    known: () => known,
     ldx: () => ldx,
     lv: () => lv,
     maxhp: () => maxhp,
@@ -216,6 +218,7 @@ nav button.on i{opacity:1}
     petRoll: () => petRoll,
     pk: () => pk,
     pm: () => pm,
+    roster: () => roster,
     set_FXC: () => set_FXC,
     skPet: () => skPet,
     spAff: () => spAff,
@@ -291,16 +294,26 @@ nav button.on i{opacity:1}
   });
   var pbs = (k, sk) => MEMBERS[k] && MEMBERS[k].pet && MEMBERS[k].sk && MEMBERS[k].sk == sk ? 1.3 : 1;
   var nsl = () => Object.keys(gameState.hired).length;
+  var roster = () => Object.keys(gameState.hired).concat(Object.keys(gameState.bench || {}));
+  var known = (k) => !!gameState.hired[k] || !!(gameState.bench && gameState.bench[k]);
+  function joinParty(id) {
+    if (nsl() < X.slots()) {
+      gameState.hired[id] = 1;
+      delete gameState.bench[id];
+      gameState.mt[id] = { k: "war" };
+      if (!gameState.lead) gameState.lead = id;
+      return true;
+    }
+    gameState.bench[id] = 1;
+    delete gameState.hired[id];
+    gameState.mt[id] = { k: "idle" };
+    return false;
+  }
   function gainPet(id) {
     if (gameState.pets[id] || !MEMBERS[id]) return;
     gameState.pets[id] = 1;
     gameState.cx[id] = XT[10];
-    if (nsl() < X.slots()) {
-      gameState.hired[id] = 1;
-      gameState.mt[id] = { k: "war" };
-      if (!gameState.lead) gameState.lead = id;
-      say("\u2605 Extremely rare! " + MEMBERS[id].n + " has joined your party.");
-    } else say("\u2605 Extremely rare! You found " + MEMBERS[id].n + ". Your party is full, so it waits at home. Swap it in from the Party tab.");
+    say("\u2605 Extremely rare! " + MEMBERS[id].n + (joinParty(id) ? " has joined your party." : " has joined your roster. Your party is full, so they are resting at home."));
   }
   var PB = { Attack: 4e4, Strength: 4e4, Ranged: 4e4, Magic: 4e4, Defense: 4e4, Vitality: 4e4, Foraging: 15e4, Woodcutting: 16e4, Fishing: 13e4, Mining: 25e4, Hunting: 1e5, Cooking: 11e4, Smithing: 9e4, Fletching: 8e4, Enchanting: 9e4, Tailoring: 85e3, Farming: 95e3, Alchemy: 9e4 };
   function skPet(sk) {
@@ -2110,6 +2123,11 @@ nav button.on i{opacity:1}
     return !!t && (!!TASKS[t.k] && TASKS[t.k].valid(t) || t.k == "war" || t.k == "idle" || t.k == "bar" || t.k == "exp" || t.k == "s" && !!ACHIEVEMENTS.find((a) => a.id == t.id) || t.k == "k" && !!DISH[t.id] || t.k == "f" && !!IT[t.id] && t.id[0] != "t" || t.k == "r" && !!RFN[t.id]);
   }
   function assign(k, kind, id) {
+    if (gameState.bench[k] && !gameState.hired[k]) {
+      if (kind == "bar" && X.buL("bar") > 0) gameState.mt[k] = { k: "bar" };
+      else if (kind == "idle") gameState.mt[k] = { k: "idle" };
+      return;
+    }
     if (!gameState.hired[k] || asg(k).k == "exp") return;
     const t = gameState.mt[k];
     if (kind == "bar") {
@@ -2392,10 +2410,10 @@ nav button.on i{opacity:1}
     ["b1", "Home Sweet Home", "Build anything in the Burrow.", () => BU.some((b) => buL(b.id) >= 1), 1e3],
     ["b2", "Master Builder", "Bring every Burrow building to tier 3.", () => allBu(3), 15e4],
     ["b3", "The Grand Burrow", "Bring every Burrow building to tier 5.", () => allBu(5), 5e6],
-    ["m1", "Band of Friends", "Have 3 party members.", () => Object.keys(gameState.hired).length >= 3, 3e3],
-    ["m2", "Full Party", "Have 6 party members.", () => Object.keys(gameState.hired).length >= 6, 1e5],
+    ["m1", "Band of Friends", "Have 3 party members.", () => roster().length >= 3, 3e3],
+    ["m2", "Full Party", "Have 6 party members.", () => roster().length >= 6, 1e5],
     ["m3", "Veteran Squad", "Raise a member to level 50.", () => Object.keys(gameState.cx).some((k) => lv(gameState.cx[k]) >= 50), 2e4],
-    ["m5", "Grand Company", "Have 9 party members.", () => Object.keys(gameState.hired).length >= 9, 1e6],
+    ["m5", "Grand Company", "Have 9 party members.", () => roster().length >= 9, 1e6],
     ["m4", "Elite Companion", "Raise a member to level 100.", () => Object.keys(gameState.cx).some((k) => lv(gameState.cx[k]) >= 100), 1e6],
     ["e1", "Acorn Collector", "Hold 100,000 acorns.", () => gameState.a >= 1e5, 0],
     ["e2", "Wealthy", "Hold 5,000,000 acorns.", () => gameState.a >= 5e6, 0],
@@ -2458,6 +2476,12 @@ nav button.on i{opacity:1}
     exs().forEach((e) => Object.keys(gameState.hired).forEach((k) => {
       if (asg(k).k != "exp" && e.mem.includes(k)) gameState.mt[k] = { k: "exp" };
     }));
+    Object.keys(gameState.bench).forEach((k) => {
+      const t = asg(k);
+      if (t.k == "bar") {
+        if (buL("bar")) mxp(k, dt * BRATE(buL("bar")) * mentor() / 3600);
+      } else if (buL("bar")) mxp(k, dt * BRATE(buL("bar")) * mentor() / 3600 * 0.25);
+    });
     Object.keys(gameState.hired).forEach((k) => {
       const t = asg(k);
       if (t.k == "exp") return;
@@ -2705,7 +2729,7 @@ nav button.on i{opacity:1}
     return n.length ? "<br>" + n.join(", ") + " working" : "";
   };
   var working = () => Object.keys(gameState.hired).filter((k) => asg(k).k != "war" && asg(k).k != "idle" && asg(k).k != "exp");
-  var hasWork = () => exs().length > 0 || working().length > 0 || buL("bar") > 0 && Object.keys(gameState.hired).some((k) => asg(k).k == "idle");
+  var hasWork = () => exs().length > 0 || working().length > 0 || buL("bar") > 0 && roster().some((k) => asg(k).k == "idle" || asg(k).k == "bar");
   var ING = Object.fromEntries("Pick Picking,Dig Digging,Sniff Sniffing,Gather Gathering,Find Finding,Pluck Plucking,Reach Reaching,Cut Cutting,Harvest Harvesting,Gnaw Gnawing,Fell Felling,Hew Hewing,Claim Claiming,Catch Catching,Spear Spearing,Hook Hooking,Trap Trapping,Net Netting,Lure Luring,Land Landing,Collect Collecting,Chip Chipping,Pry Prying,Free Freeing,Mine Mining,Quarry Quarrying,Snare Snaring".split(",").map((x) => x.split(" ")));
   var ing = (n) => {
     const w = n.split(" ");
@@ -3073,20 +3097,28 @@ nav button.on i{opacity:1}
     const hs = Object.keys(gameState.hired), l = LD(), sl = slots();
     let h = '<h2>Your party</h2><p class="sub">Leadership ' + l + " \xB7 " + nsl() + " of " + sl + " slots \xB7 members work at " + Math.round(bspd() * 100) + "% of your speed. Raise Leadership for more slots and faster work.</p>";
     h += "<p>Party power: <b>" + power() + '</b> <span class="mu" style="display:inline">(half your total levels, plus members fighting with you)</span></p>';
-    if (!hs.length) h += '<p class="mu">No one has joined yet. Recruit your first member below.</p>';
+    if (!roster().length) h += '<p class="mu">No one has joined yet. Recruit your first member below.</p>';
     h += hs.map((k) => {
       const m = MEMBERS[k], t = asg(k), work = t.k != "war" && t.k != "idle" && t.k != "bar" && t.k != "exp";
-      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + m.n + " \xB7 level " + cl(k) + (k == gameState.lead ? " \xB7 lead" : "") + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + perkTxt(k) + "</small></span><small>" + memName(k) + (work ? " \xB7 " + Math.round(mspd(k) * 100) + "% speed \xB7 " + Math.round(famShare() * 100) + "% to your pack \xB7 family stash " + (gameState.fam[k] || 0) : "") + "</small>" + (work ? '<div class="bar"><i id="mp_' + k + '"></i></div>' : "") + (t.k == "exp" ? "" : '<div class="chips" style="margin:8px 0 0"><button class="' + (t.k == "war" ? "on" : "") + '" data-assign="' + k + ':war">Fight with me</button><button class="' + (t.k == "idle" ? "on" : "") + '" data-assign="' + k + ':idle">Rest</button>' + (buL("bar") ? '<button class="' + (t.k == "bar" ? "on" : "") + '" data-assign="' + k + ':bar">Barracks</button>' : "") + '<button class="' + (gameState.lead == k ? "on" : "") + '" data-lead="' + k + '">Lead</button><button data-dismiss="' + k + '">Dismiss</button></div>') + "</div>";
+      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + m.n + " \xB7 level " + cl(k) + (k == gameState.lead ? " \xB7 lead" : "") + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + perkTxt(k) + "</small></span><small>" + memName(k) + (work ? " \xB7 " + Math.round(mspd(k) * 100) + "% speed \xB7 " + Math.round(famShare() * 100) + "% to your pack \xB7 family stash " + (gameState.fam[k] || 0) : "") + "</small>" + (work ? '<div class="bar"><i id="mp_' + k + '"></i></div>' : "") + (t.k == "exp" ? "" : '<div class="chips" style="margin:8px 0 0"><button class="' + (t.k == "war" ? "on" : "") + '" data-assign="' + k + ':war">Fight with me</button><button class="' + (t.k == "idle" ? "on" : "") + '" data-assign="' + k + ':idle">Rest</button>' + (buL("bar") ? '<button class="' + (t.k == "bar" ? "on" : "") + '" data-assign="' + k + ':bar">Barracks</button>' : "") + '<button class="' + (gameState.lead == k ? "on" : "") + '" data-lead="' + k + '">Lead</button><button data-dismiss="' + k + '">Bench</button></div>') + "</div>";
     }).join("");
-    if (hs.length) h += '<p class="mu">To put a member to work, open a skill and choose them under \u201CChoose who works\u201D. Members keep their level if dismissed. Combat perks apply only while fighting beside you. Speed, loot and odds perks apply on expeditions.</p>';
-    const rec = HK.filter((k) => !gameState.hired[k]);
+    if (hs.length) h += '<p class="mu">To put a member to work, open a skill and choose them under \u201CChoose who works\u201D. Benched members stay on your roster, keep their level and can train in the barracks. Combat perks apply only while fighting beside you. Speed, loot and odds perks apply on expeditions.</p>';
+    const bs = Object.keys(gameState.bench);
+    if (bs.length) {
+      h += '<h2>Resting at home <span class="mu" style="display:inline">\xB7 ' + bs.length + ' on your roster, not in the party</span></h2><p class="mu">Benched members do no work and fight nothing, but they keep their level and can train in the barracks. Open a slot or swap one of your party to bring them back.</p>';
+      h += bs.map((k) => {
+        const m = MEMBERS[k], t = asg(k), free = nsl() < sl, sw = Object.keys(gameState.hired).filter((a) => asg(a).k != "exp");
+        return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + m.n + " \xB7 level " + cl(k) + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + perkTxt(k) + "</small></span><small>" + memName(k) + '</small><div class="chips" style="margin:8px 0 0"><button class="' + (t.k != "bar" ? "on" : "") + '" data-assign="' + k + ':idle">Rest</button>' + (buL("bar") ? '<button class="' + (t.k == "bar" ? "on" : "") + '" data-assign="' + k + ':bar">Barracks</button>' : "") + (free ? '<button data-call="' + k + '">Join party</button>' : "") + "</div>" + (free ? "" : '<small style="margin-top:8px">Swap in for:</small><div class="chips" style="margin:4px 0 0">' + sw.map((a) => '<button data-call="' + k + ":" + a + '">' + MEMBERS[a].n.split(" ")[0] + "</button>").join("") + "</div>") + "</div>";
+      }).join("");
+    }
+    const rec = HK.filter((k) => !known(k));
     h += "<h2>Recruit</h2>" + (rec.length ? rec.map((k) => {
-      const m = MEMBERS[k], unl = l >= m.lt, full = nsl() >= sl;
-      return '<div class="row"><span>' + m.n + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + (unl ? m.d : "Unlocks at Leadership " + m.lt) + "</small></span>" + (unl ? '<button class="btn" data-hire="' + k + '"' + (gameState.a < m.c || full ? " disabled" : "") + ">" + m.c + "</button>" : "<small>Level " + m.lt + "</small>") + "</div>";
-    }).join("") + (nsl() >= sl ? '<p class="mu">Your slots are full. Leadership levels 10, 25, 40, 55, 70, 85, 100 and 115 each open another.</p>' : "") : '<p class="mu">Everyone in the valley has joined.</p>');
-    const pr = Object.keys(gameState.pets).filter((k) => !gameState.hired[k]);
-    if (pr.length) h += "<h2>Pets at home</h2>" + pr.map((k) => '<div class="row"><span>' + MEMBERS[k].n + "<small>Pet \xB7 " + MEMBERS[k].st + " \xB7 " + perkTxt(k) + '</small></span><button class="btn" data-hire="' + k + '"' + (nsl() >= sl ? " disabled" : "") + ">Call back</button></div>").join("");
-    h += '<h2>Pet collection <span class="mu" style="display:inline">\xB7 ' + Object.keys(gameState.pets).length + "/" + PETS.length + '</span></h2><p class="mu">Extremely rare drops, found only once each, modelled on RuneScape: skill pets roll about 1 in 100,000 per action (slightly better at higher levels, 15\xD7 better at 200M xp), boss pets 1 in 1,000 to 1 in 5,000 per boss kill, raid pets 1 in 80 to 1 in 150 per clear. Skill pets can drop while you or a member trains that skill. Boss pets drop from zone bosses. Raid pets drop when you clear a raid. Pets take a party slot like any member, but fight and work better than the members you can recruit.</p><p class="mu">' + PETS.map((q) => gameState.pets[q[0]] ? "<b>" + q[1] + "</b>" : "???").join(" \xB7 ") + "</p>";
+      const m = MEMBERS[k], unl = l >= m.lt;
+      return '<div class="row"><span>' + m.n + "<small>" + m.role + " \xB7 " + m.st + " \xB7 " + (unl ? m.d : "Unlocks at Leadership " + m.lt) + "</small></span>" + (unl ? '<button class="btn" data-hire="' + k + '"' + (gameState.a < m.c ? " disabled" : "") + ">" + m.c + "</button>" : "<small>Level " + m.lt + "</small>") + "</div>";
+    }).join("") + (nsl() >= sl ? '<p class="mu">Your party is full, so new recruits rest at home on your roster until you swap them in. Leadership levels 10, 25, 40, 55, 70, 85, 100 and 115 each open another slot.</p>' : "") : '<p class="mu">Everyone in the valley has joined.</p>');
+    const pr = Object.keys(gameState.pets).filter((k) => !known(k));
+    if (pr.length) h += "<h2>Pets at home</h2>" + pr.map((k) => '<div class="row"><span>' + MEMBERS[k].n + "<small>Pet \xB7 " + MEMBERS[k].st + " \xB7 " + perkTxt(k) + '</small></span><button class="btn" data-hire="' + k + '">Call back</button></div>').join("");
+    h += '<h2>Pet collection <span class="mu" style="display:inline">\xB7 ' + Object.keys(gameState.pets).length + "/" + PETS.length + '</span></h2><p class="mu">Extremely rare drops, found only once each, modelled on RuneScape: skill pets roll about 1 in 100,000 per action (slightly better at higher levels, 15\xD7 better at 200M xp), boss pets 1 in 1,000 to 1 in 5,000 per boss kill, raid pets 1 in 80 to 1 in 150 per clear. Skill pets can drop while you or a member trains that skill. Boss pets drop from zone bosses. Raid pets drop when you clear a raid. Pets take a party slot like any member, or rest on your roster, but fight and work better than the members you can recruit.</p><p class="mu">' + PETS.map((q) => gameState.pets[q[0]] ? "<b>" + q[1] + "</b>" : "???").join(" \xB7 ") + "</p>";
     return h;
   }
   var logSub = "log";
@@ -3136,6 +3168,7 @@ nav button.on i{opacity:1}
     gameState.tier = gameState.tier || {};
     gameState.best = gameState.best || {};
     gameState.cx = gameState.cx || {};
+    gameState.bench = gameState.bench || {};
     gameState.lead = gameState.lead || null;
     gameState.style = gameState.style || "Melee";
     gameState.gear = gameState.gear || { Melee: 0, Ranged: 0, Magic: 0, arm: 0 };
@@ -3234,7 +3267,7 @@ nav button.on i{opacity:1}
       }
     }
     Object.keys(gameState.mt).forEach((k) => {
-      if (!gameState.hired[k]) delete gameState.mt[k];
+      if (!gameState.hired[k] && !gameState.bench[k]) delete gameState.mt[k];
       else if (!validTask(gameState.mt[k])) gameState.mt[k] = { k: "idle" };
     });
   }
@@ -3299,12 +3332,31 @@ nav button.on i{opacity:1}
       const k = d.dismiss;
       if (asg(k).k == "exp") {
         say(MEMBERS[k].n + " is away on an expedition.");
-      } else {
+      } else if (gameState.hired[k]) {
         delete gameState.hired[k];
-        delete gameState.mt[k];
+        gameState.bench[k] = 1;
+        gameState.mt[k] = { k: "idle" };
         if (gameState.lead == k) gameState.lead = Object.keys(gameState.hired)[0] || null;
         if (who == k) set_who("you");
-        say(MEMBERS[k].n + " leaves the party.");
+        say(MEMBERS[k].n + " rests at home. They stay on your roster and can train in the barracks.");
+      }
+    } else if (d.call) {
+      const [k, out] = d.call.split(":");
+      if (gameState.bench[k] && !(out && asg(out).k == "exp")) {
+        if (out && gameState.hired[out]) {
+          delete gameState.hired[out];
+          gameState.bench[out] = 1;
+          gameState.mt[out] = { k: "idle" };
+          if (gameState.lead == out) gameState.lead = null;
+          if (who == out) set_who("you");
+        }
+        if (nsl() < slots()) {
+          delete gameState.bench[k];
+          gameState.hired[k] = 1;
+          gameState.mt[k] = { k: "war" };
+          if (!gameState.lead) gameState.lead = k;
+          say(MEMBERS[k].n + " joins the party" + (out ? ", taking " + MEMBERS[out].n + "'s place." : "."));
+        }
       }
     } else if (d.form) {
       if (FM[d.form] && CL() >= FM[d.form].cl) gameState.form = d.form;
@@ -3371,12 +3423,10 @@ nav button.on i{opacity:1}
       gameState.ehp = null;
     } else if (d.hire) {
       const h = MEMBERS[d.hire];
-      if (!gameState.hired[d.hire] && nsl() < slots() && (h.pet ? !!gameState.pets[d.hire] : gameState.a >= h.c && LD() >= h.lt)) {
-        gameState.a -= h.c;
-        gameState.hired[d.hire] = 1;
-        gameState.mt[d.hire] = { k: "war" };
-        if (!gameState.lead) gameState.lead = d.hire;
-        say(h.n + " joins your party.");
+      if (!known(d.hire) && (h.pet ? !!gameState.pets[d.hire] : gameState.a >= h.c && LD() >= h.lt)) {
+        if (!h.pet) gameState.a -= h.c;
+        const inParty = joinParty(d.hire);
+        say(h.n + (inParty ? " joins your party." : " joins your roster and rests at home. Your party is full."));
       }
     } else if (d.sell) {
       let g = 0;

@@ -1,6 +1,6 @@
 import { FXSRC, gameState, TASKS, TICKS, say } from './00-state';
 import { X } from './registry';
-import { MEMBERS, IT, XT, asg, lv, maxhp, nsl, set_FXC, spFx } from './01-species-pets';
+import { MEMBERS, IT, XT, asg, lv, maxhp, nsl, roster, set_FXC, spFx } from './01-species-pets';
 import { CAPN, CE, ENEMIES, GE, GRP, RFN, TNAME, capeFx, capeLabel, capeName, capeOk, capeTier, cumFx, fxTxt, gcumFx, gearFx, gearSync, grpName, grpTier, qrank, gw } from './02-gear-data';
 import { exFinish, exs, hrFx } from './03-world-expeditions';
 import { hits, hitsStr, set_hitsStr } from './04-loadout';
@@ -67,7 +67,7 @@ export const pcx=(k:string)=>{const l=lv(gameState.xp[k]);if(l>=120)return Math.
 export const isOn=(k:string,id:string)=>{const t=who=='you'?gameState.cur:asg(who);return !!t&&t.k==k&&t.id==id};
 export const crew=(k:string,id:string)=>{const n=Object.keys(gameState.hired).filter(m=>{const t=asg(m);return t.k==k&&t.id==id}).map(m=>MEMBERS[m].n.split(' ')[0]);return n.length?'<br>'+n.join(', ')+' working':''};
 export const working=()=>Object.keys(gameState.hired).filter(k=>asg(k).k!='war'&&asg(k).k!='idle'&&asg(k).k!='exp');
-export const hasWork=()=>exs().length>0||working().length>0||(buL('bar')>0&&Object.keys(gameState.hired).some(k=>asg(k).k=='idle'));
+export const hasWork=()=>exs().length>0||working().length>0||(buL('bar')>0&&roster().some(k=>asg(k).k=='idle'||asg(k).k=='bar'));
 const ING:Record<string,string>=Object.fromEntries('Pick Picking,Dig Digging,Sniff Sniffing,Gather Gathering,Find Finding,Pluck Plucking,Reach Reaching,Cut Cutting,Harvest Harvesting,Gnaw Gnawing,Fell Felling,Hew Hewing,Claim Claiming,Catch Catching,Spear Spearing,Hook Hooking,Trap Trapping,Net Netting,Lure Luring,Land Landing,Collect Collecting,Chip Chipping,Pry Prying,Free Freeing,Mine Mining,Quarry Quarrying,Snare Snaring'.split(',').map(x=>x.split(' ')));
 export const ing=(n:string)=>{const w=n.split(' ');return (ING[w[0]]||w[0])+(w.length>1?' '+w.slice(1).join(' '):'')};
 export function taskName(c:any):string{return TASKS[c.k]?TASKS[c.k].name(c):c.k=='bar'?'Training in the barracks':c.k=='s'?ing(ACHIEVEMENTS.find(a=>a.id==c.id)!.n):c.k=='k'?'Cooking '+DISH[c.id].n:c.k=='f'?'Crafting '+IT[c.id].n:c.k=='r'?'Refining '+RFN[c.id].n:'Fighting '+ENEMIES.find(e=>e.id==c.id)!.n}

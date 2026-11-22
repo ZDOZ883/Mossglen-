@@ -1,6 +1,6 @@
 import { gameState, TASKS } from './00-state';
 import { X } from './registry';
-import { COMBAT_SKILLS, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, nsl, pm, spTxt } from './01-species-pets';
+import { COMBAT_SKILLS, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, nsl, pm, roster, known, spTxt } from './01-species-pets';
 import { AF, CE, KEEP, KP, RF, RFN, gateOk, refRecipe } from './02-gear-data';
 import { GATE, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
@@ -73,20 +73,28 @@ export function partyView(){
   const hs=Object.keys(gameState.hired),l=LD(),sl=slots();
   let h='<h2>Your party</h2><p class="sub">Leadership '+l+' · '+nsl()+' of '+sl+' slots · members work at '+Math.round(bspd()*100)+'% of your speed. Raise Leadership for more slots and faster work.</p>';
   h+='<p>Party power: <b>'+power()+'</b> <span class="mu" style="display:inline">(half your total levels, plus members fighting with you)</span></p>';
-  if(!hs.length)h+='<p class="mu">No one has joined yet. Recruit your first member below.</p>';
+  if(!roster().length)h+='<p class="mu">No one has joined yet. Recruit your first member below.</p>';
   h+=hs.map(k=>{
     const m=MEMBERS[k],t=asg(k),work=t.k!='war'&&t.k!='idle'&&t.k!='bar'&&t.k!='exp';
-    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+(k==gameState.lead?' · lead':'')+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small></span><small>'+memName(k)+(work?' · '+Math.round(mspd(k)*100)+'% speed · '+Math.round(famShare()*100)+'% to your pack · family stash '+(gameState.fam[k]||0):'')+'</small>'+(work?'<div class="bar"><i id="mp_'+k+'"></i></div>':'')+(t.k=='exp'?'':'<div class="chips" style="margin:8px 0 0"><button class="'+(t.k=='war'?'on':'')+'" data-assign="'+k+':war">Fight with me</button><button class="'+(t.k=='idle'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+'<button class="'+(gameState.lead==k?'on':'')+'" data-lead="'+k+'">Lead</button><button data-dismiss="'+k+'">Dismiss</button></div>')+'</div>';
+    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+(k==gameState.lead?' · lead':'')+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small></span><small>'+memName(k)+(work?' · '+Math.round(mspd(k)*100)+'% speed · '+Math.round(famShare()*100)+'% to your pack · family stash '+(gameState.fam[k]||0):'')+'</small>'+(work?'<div class="bar"><i id="mp_'+k+'"></i></div>':'')+(t.k=='exp'?'':'<div class="chips" style="margin:8px 0 0"><button class="'+(t.k=='war'?'on':'')+'" data-assign="'+k+':war">Fight with me</button><button class="'+(t.k=='idle'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+'<button class="'+(gameState.lead==k?'on':'')+'" data-lead="'+k+'">Lead</button><button data-dismiss="'+k+'">Bench</button></div>')+'</div>';
   }).join('');
-  if(hs.length)h+='<p class="mu">To put a member to work, open a skill and choose them under “Choose who works”. Members keep their level if dismissed. Combat perks apply only while fighting beside you. Speed, loot and odds perks apply on expeditions.</p>';
-  const rec=HK.filter(k=>!gameState.hired[k]);
+  if(hs.length)h+='<p class="mu">To put a member to work, open a skill and choose them under “Choose who works”. Benched members stay on your roster, keep their level and can train in the barracks. Combat perks apply only while fighting beside you. Speed, loot and odds perks apply on expeditions.</p>';
+  const bs=Object.keys(gameState.bench);
+  if(bs.length){
+    h+='<h2>Resting at home <span class="mu" style="display:inline">· '+bs.length+' on your roster, not in the party</span></h2><p class="mu">Benched members do no work and fight nothing, but they keep their level and can train in the barracks. Open a slot or swap one of your party to bring them back.</p>';
+    h+=bs.map(k=>{
+      const m=MEMBERS[k],t=asg(k),free=nsl()<sl,sw=Object.keys(gameState.hired).filter(a=>asg(a).k!='exp');
+      return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+m.n+' · level '+cl(k)+'<small>'+m.role+' · '+m.st+' · '+perkTxt(k)+'</small></span><small>'+memName(k)+'</small><div class="chips" style="margin:8px 0 0"><button class="'+(t.k!='bar'?'on':'')+'" data-assign="'+k+':idle">Rest</button>'+(buL('bar')?'<button class="'+(t.k=='bar'?'on':'')+'" data-assign="'+k+':bar">Barracks</button>':'')+(free?'<button data-call="'+k+'">Join party</button>':'')+'</div>'+(free?'':'<small style="margin-top:8px">Swap in for:</small><div class="chips" style="margin:4px 0 0">'+sw.map(a=>'<button data-call="'+k+':'+a+'">'+MEMBERS[a].n.split(' ')[0]+'</button>').join('')+'</div>')+'</div>';
+    }).join('');
+  }
+  const rec=HK.filter(k=>!known(k));
   h+='<h2>Recruit</h2>'+(rec.length?rec.map(k=>{
-    const m=MEMBERS[k],unl=l>=m.lt,full=nsl()>=sl;
-    return '<div class="row"><span>'+m.n+'<small>'+m.role+' · '+m.st+' · '+(unl?m.d:'Unlocks at Leadership '+m.lt)+'</small></span>'+(unl?'<button class="btn" data-hire="'+k+'"'+(gameState.a<m.c||full?' disabled':'')+'>'+m.c+'</button>':'<small>Level '+m.lt+'</small>')+'</div>';
-  }).join('')+(nsl()>=sl?'<p class="mu">Your slots are full. Leadership levels 10, 25, 40, 55, 70, 85, 100 and 115 each open another.</p>':''):'<p class="mu">Everyone in the valley has joined.</p>');
-  const pr=Object.keys(gameState.pets).filter(k=>!gameState.hired[k]);
-  if(pr.length)h+='<h2>Pets at home</h2>'+pr.map(k=>'<div class="row"><span>'+MEMBERS[k].n+'<small>Pet · '+MEMBERS[k].st+' · '+perkTxt(k)+'</small></span><button class="btn" data-hire="'+k+'"'+(nsl()>=sl?' disabled':'')+'>Call back</button></div>').join('');
-  h+='<h2>Pet collection <span class="mu" style="display:inline">· '+Object.keys(gameState.pets).length+'/'+PETS.length+'</span></h2><p class="mu">Extremely rare drops, found only once each, modelled on RuneScape: skill pets roll about 1 in 100,000 per action (slightly better at higher levels, 15× better at 200M xp), boss pets 1 in 1,000 to 1 in 5,000 per boss kill, raid pets 1 in 80 to 1 in 150 per clear. Skill pets can drop while you or a member trains that skill. Boss pets drop from zone bosses. Raid pets drop when you clear a raid. Pets take a party slot like any member, but fight and work better than the members you can recruit.</p><p class="mu">'+PETS.map(q=>gameState.pets[q[0]]?'<b>'+q[1]+'</b>':'???').join(' · ')+'</p>';
+    const m=MEMBERS[k],unl=l>=m.lt;
+    return '<div class="row"><span>'+m.n+'<small>'+m.role+' · '+m.st+' · '+(unl?m.d:'Unlocks at Leadership '+m.lt)+'</small></span>'+(unl?'<button class="btn" data-hire="'+k+'"'+(gameState.a<m.c?' disabled':'')+'>'+m.c+'</button>':'<small>Level '+m.lt+'</small>')+'</div>';
+  }).join('')+(nsl()>=sl?'<p class="mu">Your party is full, so new recruits rest at home on your roster until you swap them in. Leadership levels 10, 25, 40, 55, 70, 85, 100 and 115 each open another slot.</p>':''):'<p class="mu">Everyone in the valley has joined.</p>');
+  const pr=Object.keys(gameState.pets).filter(k=>!known(k));
+  if(pr.length)h+='<h2>Pets at home</h2>'+pr.map(k=>'<div class="row"><span>'+MEMBERS[k].n+'<small>Pet · '+MEMBERS[k].st+' · '+perkTxt(k)+'</small></span><button class="btn" data-hire="'+k+'"'+'>Call back</button></div>').join('');
+  h+='<h2>Pet collection <span class="mu" style="display:inline">· '+Object.keys(gameState.pets).length+'/'+PETS.length+'</span></h2><p class="mu">Extremely rare drops, found only once each, modelled on RuneScape: skill pets roll about 1 in 100,000 per action (slightly better at higher levels, 15× better at 200M xp), boss pets 1 in 1,000 to 1 in 5,000 per boss kill, raid pets 1 in 80 to 1 in 150 per clear. Skill pets can drop while you or a member trains that skill. Boss pets drop from zone bosses. Raid pets drop when you clear a raid. Pets take a party slot like any member, or rest on your roster, but fight and work better than the members you can recruit.</p><p class="mu">'+PETS.map(q=>gameState.pets[q[0]]?'<b>'+q[1]+'</b>':'???').join(' · ')+'</p>';
   return h;
 }
 export let logSub='log';
