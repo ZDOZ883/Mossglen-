@@ -1,15 +1,15 @@
 // Achievements and collection log. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- achievements and collection log
-const nSk=n=>SK.concat(CS).filter(k=>lv(S.xp[k])>=n).length;
+const nSk=(n:any)=>SK.concat(CS).filter(k=>lv(S.xp[k])>=n).length;
 const totLv=()=>SK.concat(CS).reduce((q,k)=>q+lv(S.xp[k]),0);
 const kills=()=>Object.keys(S.kc).reduce((q,k)=>q+S.kc[k],0);
 const bossDone=()=>ZN.filter((z,i)=>(S.kc['z'+i+'m3']||0)>0).length;
 const raidClears=()=>Object.keys(S.rc).reduce((q,k)=>q+S.rc[k],0);
 const nPets=()=>Object.keys(S.pets).length;
-const logItems=()=>{const o=[];for(let t=1;t<=10;t++){SL.forEach((x,i)=>o.push('w'+i+t+'d'));o.push('b'+t+'d');o.push('h'+t+'d')}for(let t=8;t<=10;t++){SL.forEach((x,i)=>o.push('w'+i+t));o.push('b'+t);o.push('h'+t)}for(let i=0;i<TR.length;i++)o.push('t'+i);Object.keys(IT).forEach(id=>{if((/^[grnc]/.test(id)||IT[id].kind)&&IT[id].slot!='trinket'&&IT[id].q!='s')o.push(id)});return o};
-const logFound=id=>!!(S.col[id]||S.own[id]);
+const logItems=()=>{const o:any[]=[];for(let t=1;t<=10;t++){SL.forEach((x,i)=>o.push('w'+i+t+'d'));o.push('b'+t+'d');o.push('h'+t+'d')}for(let t=8;t<=10;t++){SL.forEach((x,i)=>o.push('w'+i+t));o.push('b'+t);o.push('h'+t)}for(let i=0;i<TR.length;i++)o.push('t'+i);Object.keys(IT).forEach(id=>{if((/^[grnc]/.test(id)||IT[id].kind)&&IT[id].slot!='trinket'&&IT[id].q!='s')o.push(id)});return o};
+const logFound=(id:string)=>!!(S.col[id]||S.own[id]);
 const nLog=()=>logItems().filter(logFound).length;
-const allBu=n=>BU.every(b=>buL(b.id)>=n);
+const allBu=(n:any)=>BU.every(b=>buL(b.id)>=n);
 const AC:any[]=[
 ['t1','Getting Hands Dirty','Reach total level 100.',()=>totLv()>=100,500],
 ['t2','Valley Worker','Reach total level 500.',()=>totLv()>=500,5000],
@@ -62,11 +62,11 @@ function checkAch(){
   for(let i=0;i<AC.length;i++){const a=AC[i];if(!S.ach[a[0]]&&a[3]()){S.ach[a[0]]=1;S.a+=a[4];say('🏆 Achievement: '+a[1]+(a[4]?' (+'+a[4].toLocaleString()+' acorns)':'')+'.')}}
 }
 function logView(){
-  const names=ids=>ids.map(id=>logFound(id)?'<b>'+IT[id].n+'</b>':'???').join(' · ');
-  const rare=[],craft=[];for(let t=1;t<=10;t++){SL.forEach((x,i)=>rare.push('w'+i+t+'d'));rare.push('b'+t+'d');rare.push('h'+t+'d')}for(let t=8;t<=10;t++){SL.forEach((x,i)=>craft.push('w'+i+t));craft.push('b'+t);craft.push('h'+t)}
-  const tr=[];for(let i=0;i<TR.length;i++)tr.push('t'+i);
+  const names=(ids:any)=>ids.map((id:string)=>logFound(id)?'<b>'+IT[id].n+'</b>':'???').join(' · ');
+  const rare:any[]=[],craft=[];for(let t=1;t<=10;t++){SL.forEach((x,i)=>rare.push('w'+i+t+'d'));rare.push('b'+t+'d');rare.push('h'+t+'d')}for(let t=8;t<=10;t++){SL.forEach((x,i)=>craft.push('w'+i+t));craft.push('b'+t);craft.push('h'+t)}
+  const tr:any[]=[];for(let i=0;i<TR.length;i++)tr.push('t'+i);
   const nw=Object.keys(IT).filter(id=>IT[id].q!='s'&&((/^[grnc]/.test(id)&&['legs','ring','neck','cloak'].includes(IT[id].slot))||IT[id].kind)),nf=nw.filter(logFound);
-  const cnt=ids=>ids.filter(logFound).length+'/'+ids.length;
+  const cnt=(ids:any)=>ids.filter(logFound).length+'/'+ids.length;
   let h='<h2>Collection log</h2><p class="sub">Everything you have found. Unfound entries stay hidden as ???.</p>';
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Pets · '+nPets()+'/'+PETS.length+'<small>'+PETS.map(q=>S.pets[q[0]]?'<b>'+q[1]+'</b>':'???').join(' · ')+'</small></span></div>';
   h+='<div class="row" style="flex-direction:column;align-items:stretch"><span>Rare gear drops · '+cnt(rare)+'<small>'+names(rare)+'</small></span></div>';
@@ -83,8 +83,8 @@ function logView(){
   return h;
 }
 const famShare=()=>Math.min(.6,1/3+Math.min(1,LD()/99)/6+.02*buL('larder'));
-function famCut(k,n){let g=0;for(let i=0;i<n;i++)if(Math.random()<famShare())g++;S.fam[k]=(S.fam[k]||0)+n-g;return g}
-function memTick(dt){
+function famCut(k:string,n:any){let g=0;for(let i=0;i<n;i++)if(Math.random()<famShare())g++;S.fam[k]=(S.fam[k]||0)+n-g;return g}
+function memTick(dt:any){
   if(S.ex)Object.keys(S.hired).forEach(k=>{if(asg(k).k!='exp'&&S.ex.mem.includes(k))S.mt[k]={k:'exp'}});
   Object.keys(S.hired).forEach(k=>{
     const t=asg(k);if(t.k=='exp')return;if(t.k=='bar'){mxp(k,dt*BRATE(buL('bar'))/3600);return}if(t.k=='idle'){if(buL('bar'))mxp(k,dt*BRATE(buL('bar'))/3600*.25);return}if(t.k=='war')return;
@@ -92,10 +92,10 @@ function memTick(dt){
     while(S.mt[k]===t&&t.p>=d&&n<5000){t.p-=d;memAct(k,t);n++}
   });
 }
-const T=d=>S.tier[d.id]||1;
-function tierChips(d){let h='';for(let t=1;t<=5;t++)h+='<button class="'+(T(d)==t?'on':'')+'" data-tier="'+d.id+':'+t+'"'+(t>(S.best[d.id]||0)+1?' disabled':'')+'>Tier '+t+'</button>';return h}
+const T=(d:any)=>S.tier[d.id]||1;
+function tierChips(d:any){let h='';for(let t=1;t<=5;t++)h+='<button class="'+(T(d)==t?'on':'')+'" data-tier="'+d.id+':'+t+'"'+(t>(S.best[d.id]||0)+1?' disabled':'')+'>Tier '+t+'</button>';return h}
 const dur=()=>{const c=S.cur;if(!c)return 1;if(c.k=='s')return tt(A.find(a=>a.id==c.id));if(c.k=='r')return 6*Math.max(.3,1-cb('spd',RFN[c.id].sk));if(c.k=='f')return ctime(c.id)*Math.max(.3,1-cb('spd',CSK(c.id)));if(c.k=='k')return 3.5*Math.max(.3,1-cb('spd','Cooking'));return RT};
-function finish(quiet){
+function finish(quiet:any){
   const c=S.cur;
   if(c.k=='s'){
     const a=A.find(x=>x.id==c.id);if(!gateOk(a.gate)){S.cur=null;return}skPet(a.sk);const b=(SP[S.sp]==a.sk?1.15:1)*(lv(S.xp[a.sk])>=99?1.1:1)*(1+cb('xp',a.sk)),before=lv(S.xp[a.sk]);

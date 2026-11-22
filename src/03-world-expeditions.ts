@@ -4,17 +4,17 @@ const GATE=[
 {n:'The Rootgate',gather:95,prod:90,cl:95,sk:{},items:{'Hollow Heart':5,'Badger Claw':5,'Crow Feather':5,'star dust':250},a:2000000,d:'Sealed roots wall off the deep wood. Opens Deepwood Hollow, level 100 gathering, tier 8 gear, the first Moonlit raid and the Rootgate Descent.'},
 {n:'The Wyrmgate',gather:105,prod:100,cl:105,sk:{Slayer:90},items:{'Deepwood Core':15,'deep root':200,'Crow Feather':15},a:12000000,d:'A scaled door under the ridge. Opens Wyrmscale Ridge, level 110 gathering, tier 9 gear and tougher raids.'},
 {n:'The Eclipse Gate',gather:115,prod:110,cl:115,sk:{Slayer:105,Leadership:90},items:{'Wyrm Core':20,'wyrm scale':300,'Deepwood Core':20},a:48000000,d:'The last seal. Opens Eclipse Sanctum, level 120 gathering, tier 10 gear and the Eclipse Citadel.'}];
-function gateChecks(i){const g=GATE[i-1],c=[];
+function gateChecks(i:any){const g=GATE[i-1],c=[];
   if(i>1)c.push([GATE[i-2].n+' open',gateOk(i-1)]);
   c.push(['Gathering skills at '+g.gather,GSK.every(k=>lv(S.xp[k])>=g.gather)]);
   c.push(['Production skills at '+g.prod,PSK.every(k=>lv(S.xp[k])>=g.prod)]);
   c.push(['Combat level '+g.cl,CL()>=g.cl]);
-  Object.keys(g.sk).forEach(k=>c.push([k+' level '+g.sk[k],lv(S.xp[k])>=g.sk[k]]));
-  Object.keys(g.items).forEach(k=>c.push([g.items[k]+' × '+k+' ('+(S.inv[k]||0)+')',(S.inv[k]||0)>=g.items[k]]));
+  Object.keys(g.sk).forEach(k=>c.push([k+' level '+(g.sk as any)[k],lv(S.xp[k])>=(g.sk as any)[k]]));
+  Object.keys(g.items).forEach(k=>c.push([(g.items as any)[k]+' × '+k+' ('+(S.inv[k]||0)+')',(S.inv[k]||0)>=(g.items as any)[k]]));
   c.push([g.a.toLocaleString()+' acorns',S.a>=g.a]);return c}
-function openGate(i){
+function openGate(i:any){
   if(S.gates[i]||!GATE[i-1]||!gateChecks(i).every(c=>c[1]))return;
-  const g=GATE[i-1];Object.keys(g.items).forEach(k=>S.inv[k]-=g.items[k]);S.a-=g.a;S.gates[i]=1;
+  const g=GATE[i-1];Object.keys(g.items).forEach(k=>S.inv[k]-=(g.items as any)[k]);S.a-=g.a;S.gates[i]=1;
   say(g.n+' grinds open!'+ZN.filter(z=>z[5]==i).map(z=>' New zone: '+z[0]+'.').join(''));
 }
 function gatesView(){
@@ -28,28 +28,28 @@ const RD:any[]=[
 {id:'r1',n:'Thornspire Keep',cl:100,gate:1,party:3,mlv:50,lvl:105,H:310720,D:101.5,ref:2113,rw:150000,core:['Deepwood Core',2],tr:'t12',st:[['Thorn Wardens','Melee',1,1],['Keep Sappers','Ranged',1.1,1.1],['Spire Hexcaller','Magic',1.4,1.2],['Barbfang the Gatekeeper','Melee',1.8,1.4],['Queen Bramblethorn','Ranged',4.5,1.8]]},
 {id:'r2',n:'The Gloamwyrm Lair',cl:110,gate:2,party:4,mlv:75,lvl:115,H:752120,D:195.8,ref:3487,rw:540000,core:['Wyrm Core',2],tr:'t13',st:[['Scale Cultists','Magic',1,1],['Ashen Drakelings','Ranged',1.1,1.1],['Gloam Brood Mother','Melee',1.5,1.25],['Twin Wyrmguards','Melee',1.8,1.4],['Ember Oracle','Magic',2,1.5],['Gloamwyrm Vaerath','Ranged',5,2]]},
 {id:'r3',n:'The Eclipse Citadel',cl:118,gate:3,party:5,mlv:100,lvl:125,H:1842473,D:237.6,ref:5873,rw:1800000,core:['Eclipse Core',3],tr:'t14',st:[['Citadel Vanguard','Melee',1,1],['Dusk Archers','Ranged',1.1,1.1],['Umbral Magi','Magic',1.3,1.25],['Eclipse Knight-Commander','Melee',1.7,1.4],['The Hollow Choir','Magic',1.9,1.5],['Warden of the Last Light','Ranged',2.2,1.6],['The Eclipse Sovereign','Melee',5.5,2.1]]}];
-RD.forEach(r=>r.st.forEach((st,j)=>{const hp=Math.round(r.H*st[2]);E.push({id:r.id+'s'+j,zone:7,raid:r.id,inst:1,stage:j,lvl:r.lvl,n:st[0],type:st[1],hp,dps:r.D*st[3],soft:Math.round(hp/r.ref),xp:Math.round(hp*XK[10]*.5),a:Math.round(hp*AK[10]*.3),boss:j==r.st.length-1})}));
+RD.forEach(r=>r.st.forEach((st:any,j:any)=>{const hp=Math.round(r.H*st[2]);E.push({id:r.id+'s'+j,zone:7,raid:r.id,inst:1,stage:j,lvl:r.lvl,n:st[0],type:st[1],hp,dps:r.D*st[3],soft:Math.round(hp/r.ref),xp:Math.round(hp*XK[10]*.5),a:Math.round(hp*AK[10]*.3),boss:j==r.st.length-1})}));
 
 // ---------- delves: short raids with boons
-const DX={hollow:{cl:10,party:0,mlv:0,zb:1,st:[['Oak Gnawers','Melee'],['Rot Sprites','Magic'],['The Hollow Heart','Magic']]},
+const DX:Record<string,any>={hollow:{cl:10,party:0,mlv:0,zb:1,st:[['Oak Gnawers','Melee'],['Rot Sprites','Magic'],['The Hollow Heart','Magic']]},
 sett:{cl:30,party:1,mlv:12,zb:3,st:[['Sett Guards','Melee'],['Tunnel Diggers','Ranged'],['Badger Chieftain','Melee']]},
 roost:{cl:58,party:2,mlv:30,zb:5,st:[['Roost Scouts','Ranged'],['Carrion Mystics','Magic'],['The Crow King','Ranged']]},
 root:{cl:92,party:3,mlv:60,zb:8,st:[['Rootbound Wardens','Melee'],['Gloom Weavers','Magic'],['The Rootgate Keeper','Ranged']]},
 wyrmc:{cl:104,party:3,mlv:80,zb:9,st:[['Cellar Drakes','Magic'],['Scale Brutes','Melee'],['The Wyrm Warden','Melee']]},
 vault:{cl:114,party:4,mlv:100,zb:10,st:[['Vault Sentinels','Melee'],['Umbral Casters','Magic'],['The Eclipse Curator','Ranged']]}};
-const DHM=[1.5,2,4],DDM=[1.2,1.3,1.8],dvTm=t=>[1,1.4,1.9,2.5,3.2][t-1],dvTd=t=>[1,1.25,1.55,1.9,2.3][t-1];
-D.forEach(d=>{const x=DX[d.id];Object.assign(d,x);for(let t=1;t<=5;t++)x.st.forEach((st,j)=>{const hp=Math.round(H0[x.zb]*DHM[j]*dvTm(t));E.push({id:'d_'+d.id+'_'+t+'_'+j,zone:x.zb,inst:1,dv:d.id,tier:t,stage:j,lvl:ZN[x.zb][1],n:st[0],type:st[1],hp,dps:D0[x.zb]*DDM[j]*dvTd(t),xp:Math.round(hp*XK[x.zb]*1.2),a:Math.round(hp*AK[x.zb]*.8),boss:j==2})})});
+const DHM=[1.5,2,4],DDM=[1.2,1.3,1.8],dvTm=(t:any)=>[1,1.4,1.9,2.5,3.2][t-1],dvTd=(t:any)=>[1,1.25,1.55,1.9,2.3][t-1];
+D.forEach(d=>{const x=DX[d.id];Object.assign(d,x);for(let t=1;t<=5;t++)x.st.forEach((st:any,j:any)=>{const hp=Math.round(H0[x.zb]*DHM[j]*dvTm(t));E.push({id:'d_'+d.id+'_'+t+'_'+j,zone:x.zb,inst:1,dv:d.id,tier:t,stage:j,lvl:ZN[x.zb][1],n:st[0],type:st[1],hp,dps:D0[x.zb]*DDM[j]*dvTd(t),xp:Math.round(hp*XK[x.zb]*1.2),a:Math.round(hp*AK[x.zb]*.8),boss:j==2})})});
 // ---------- expeditions (delves sent out on a timer)
-let exSel={d:null,l:null,m:[],b:null};
-const EXB={might:['Might','+12% party damage'],stone:['Stone Skin','−10% damage taken'],focus:['Keen Eye','+8% party damage'],vigor:['Vigor','+10% party health'],crit:['Killer Instinct','+10% party damage'],fortune:['Fortune','+25% rewards'],wind:['Second Wind','+10% party health']};
-const exDur=(d,t)=>Math.min(7*3600,Math.round([2400,4500,7200,10800,16200][t-1]*(1+d.zb*.06)));
-const exFmt=sec=>{sec=Math.max(0,Math.round(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return (h?h+'h ':'')+m+'m'};
+let exSel:Record<string,any>={d:null,l:null,m:[],b:null};
+const EXB:Record<string,any>={might:['Might','+12% party damage'],stone:['Stone Skin','−10% damage taken'],focus:['Keen Eye','+8% party damage'],vigor:['Vigor','+10% party health'],crit:['Killer Instinct','+10% party damage'],fortune:['Fortune','+25% rewards'],wind:['Second Wind','+10% party health']};
+const exDur=(d:any,t:any)=>Math.min(7*3600,Math.round([2400,4500,7200,10800,16200][t-1]*(1+d.zb*.06)));
+const exFmt=(sec:any)=>{sec=Math.max(0,Math.round(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return (h?h+'h ':'')+m+'m'};
 const EXK=12;
-const mhpx=k=>(30+cl(k)*10)*(H[k].pet?1.25:1);
-const exLead=k=>k?Math.min(.35,.08+cl(k)/500):0;
-function exEligible(d,k){return !!S.hired[k]&&asg(k).k!='exp'&&cl(k)>=d.mlv}
-function exOdds(d,t,lead,mem,boon){
-  const all=(lead?[lead]:[]).concat(mem.filter(k=>k!=lead)),need=Math.max(1,d.party);
+const mhpx=(k:string)=>(30+cl(k)*10)*(H[k].pet?1.25:1);
+const exLead=(k:string)=>k?Math.min(.35,.08+cl(k)/500):0;
+function exEligible(d:any,k:string){return !!S.hired[k]&&asg(k).k!='exp'&&cl(k)>=d.mlv}
+function exOdds(d:any,t:any,lead:any,mem:any,boon:any){
+  const all=(lead?[lead]:[]).concat(mem.filter((k:string)=>k!=lead)),need=Math.max(1,d.party);
   const lb=exLead(lead);let dm=1,hm=1,dt=1;
   if(boon=='might'||boon=='crit')dm=boon=='might'?1.12:1.1;if(boon=='focus')dm=1.08;if(boon=='vigor'||boon=='wind')hm=1.1;if(boon=='stone')dt=.9;
   const es=[0,1,2].map(j=>E.find(e=>e.id=='d_'+d.id+'_'+t+'_'+j));
@@ -63,16 +63,16 @@ function exOdds(d,t,lead,mem,boon){
 }
 function exStart(){
   const d=D.find(x=>x.id==exSel.d);if(!d||S.ex||!exSel.l)return;
-  const t=T(d),mem=[exSel.l].concat(exSel.m.filter(k=>k!=exSel.l)).filter(k=>exEligible(d,k)),o=exOdds(d,t,exSel.l,mem,exSel.b);
+  const t=T(d),mem=[exSel.l].concat(exSel.m.filter((k:string)=>k!=exSel.l)).filter(k=>exEligible(d,k)),o=exOdds(d,t,exSel.l,mem,exSel.b);
   if(!o.ok||mem.length<o.need)return;
-  const prev={};mem.forEach(k=>{prev[k]=S.mt[k]||{k:'war'};S.mt[k]={k:'exp'}});
+  const prev:Record<string,any>={};mem.forEach(k=>{prev[k]=S.mt[k]||{k:'war'};S.mt[k]={k:'exp'}});
   S.ex={id:d.id,tier:t,leader:exSel.l,mem,boon:exSel.b,p:0,dur:o.dur,odds:o.p,prev};
   say('Expedition sent to '+d.n+' (tier '+t+'), led by '+H[exSel.l].n+'. Back in '+exFmt(o.dur)+'.');
   exSel={d:null,l:null,m:[],b:null};
 }
 function exRestore(){const e=S.ex;if(!e)return;e.mem.forEach(k=>{if(!S.hired[k])return;const pv=e.prev&&e.prev[k];S.mt[k]=pv&&validTask(pv)&&pv.k!='exp'?pv:{k:'war'}});}
 function exRecall(){const e=S.ex;if(!e)return;const d=D.find(x=>x.id==e.id);exRestore();S.ex=null;say('The expedition to '+d.n+' is called home early. Nothing was gained.')}
-function exFinish(quiet){
+function exFinish(quiet:any){
   const e=S.ex;if(!e)return;const d=D.find(x=>x.id==e.id),t=e.tier,win=Math.random()<e.odds;
   const bn=e.boon=='fortune'?.25:0,lead=e.leader,scale=e.dur/600;
   const m=(1+pk('loot'))*(1+bn)*(1+.6*(t-1))*(1+exLead(lead)/2);
@@ -105,8 +105,8 @@ function exView(){
   }).join('');
   if(sel){
     const t=T(sel),av=hs.filter(k=>asg(k).k!='exp'),el=av.filter(k=>exEligible(sel,k));
-    exSel.m=exSel.m.filter(k=>el.includes(k));if(exSel.l&&!el.includes(exSel.l))exSel.l=null;
-    const team=(exSel.l?[exSel.l]:[]).concat(exSel.m.filter(k=>k!=exSel.l)),o=exOdds(sel,t,exSel.l,team.filter(k=>k!=exSel.l),exSel.b);
+    exSel.m=exSel.m.filter((k:string)=>el.includes(k));if(exSel.l&&!el.includes(exSel.l))exSel.l=null;
+    const team=(exSel.l?[exSel.l]:[]).concat(exSel.m.filter((k:string)=>k!=exSel.l)),o=exOdds(sel,t,exSel.l,team.filter(k=>k!=exSel.l),exSel.b);
     h+='<h2>'+sel.n+'</h2><p class="mu" style="margin-top:0">Tier</p><div class="chips">'+tierChips(sel)+'</div>';
     h+='<p class="mu" style="margin:6px 0 4px">Leader (gives the group a bonus based on level)</p><div class="chips">'+(el.length?el.map(k=>'<button class="'+(exSel.l==k?'on':'')+'" data-exl="'+k+'">'+H[k].n.split(" ")[0]+' L'+cl(k)+'</button>').join(''):'<span class="mu">No one is ready.</span>')+'</div>';
     h+='<p class="mu" style="margin:6px 0 4px">Members</p><div class="chips">'+el.filter(k=>k!=exSel.l).map(k=>'<button class="'+(exSel.m.includes(k)?'on':'')+'" data-exm="'+k+'">'+H[k].n.split(" ")[0]+' L'+cl(k)+'</button>').join('')+'</div>';
@@ -116,10 +116,10 @@ function exView(){
   }
   return h;
 }
-const enr=e=>e.raid&&S.ehid==e.id&&(S.rr||0)>e.soft?1+((S.rr||0)-e.soft)*.04:1;
-function raidOk(r){const fg=fighters();return CL()>=r.cl&&gateOk(r.gate)&&fg.filter(k=>cl(k)>=r.mlv).length>=r.party}
-function startRaid(id){const r=RD.find(x=>x.id==id);if(!r||!raidOk(r))return;S.hp=maxhp();S.ehp=null;S.rr=0;hits=[];S.cur={k:'c',id:id+'s0'};S.p=0;say('You lead your party into '+r.n+'.')}
-function raidKill(e,quiet?:any){
+const enr=(e:Enemy)=>e.raid&&S.ehid==e.id&&(S.rr||0)>e.soft?1+((S.rr||0)-e.soft)*.04:1;
+function raidOk(r:any){const fg=fighters();return CL()>=r.cl&&gateOk(r.gate)&&fg.filter(k=>cl(k)>=r.mlv).length>=r.party}
+function startRaid(id:string){const r=RD.find(x=>x.id==id);if(!r||!raidOk(r))return;S.hp=maxhp();S.ehp=null;S.rr=0;hits=[];S.cur={k:'c',id:id+'s0'};S.p=0;say('You lead your party into '+r.n+'.')}
+function raidKill(e:Enemy,quiet?:any){
   const r=RD.find(x=>x.id==e.raid),n=r.st.length;
   if(e.stage<n-1){S.cur={k:'c',id:r.id+'s'+(e.stage+1)};S.ehp=null;say(r.n+': '+e.n+' falls. '+r.st[e.stage+1][0]+' steps forward.');return}
   S.rc[r.id]=(S.rc[r.id]||0)+1;petRoll('p_r'+RD.indexOf(r),[80,100,120,150][RD.indexOf(r)]);petRoll('p_Leadership',150);
@@ -146,10 +146,10 @@ const HR:any[]=[
 {id:'h1',n:'The Moonlit Gathering',gate:1,tier:7,q:200,fx:[['yld',.08],['spd',.04]]},
 {id:'h2',n:'The Wyrmwood Tithe',gate:2,tier:8,q:250,fx:[['yld',.1],['spd',.06],['xp',.06],['sell',.1]]},
 {id:'h3',n:'The Eclipse Reaping',gate:3,tier:9,q:300,fx:[['yld',.12],['spd',.1],['xp',.1],['sell',.15]]}];
-const hrOk=r=>gateOk(r.gate)&&GSK.every(k=>lv(S.xp[k])>=GL[r.tier]);
-const hrTxt=r=>fxTxt(r.fx)+' on every gathering skill';
-function hrFx(){const o=[];HR.forEach(r=>{if(!(S.hrc&&S.hrc[r.id]))return;r.fx.forEach(e=>{if(CTX.includes(e[0]))GSK.forEach(sk=>o.push({k:e[0],v:e[1],sk}));else o.push({k:e[0],v:e[1],sk:null})})});return o}
-function hrCount(a,n){
+const hrOk=(r:any)=>gateOk(r.gate)&&GSK.every(k=>lv(S.xp[k])>=GL[r.tier]);
+const hrTxt=(r:any)=>fxTxt(r.fx)+' on every gathering skill';
+function hrFx(){const o:any[]=[];HR.forEach(r=>{if(!(S.hrc&&S.hrc[r.id]))return;r.fx.forEach((e:Enemy)=>{if(CTX.includes(e[0]))GSK.forEach(sk=>o.push({k:e[0],v:e[1],sk}));else o.push({k:e[0],v:e[1],sk:null})})});return o}
+function hrCount(a:any,n:any){
   const h=S.hr;if(!h)return;const r=HR.find(x=>x.id==h.id);if(!r||+a.id.slice(2)<r.tier)return;
   h.q[a.sk]=Math.min(r.q,(h.q[a.sk]||0)+n);
   if(GSK.every(k=>(h.q[k]||0)>=r.q)){
@@ -157,7 +157,7 @@ function hrCount(a,n){
     say(r.n+' complete! +'+g.toLocaleString()+' acorns.'+(first?' Blessing earned: '+hrTxt(r)+'.':''));if(first)refreshFx();
   }
 }
-function startHR(id){const r=HR.find(x=>x.id==id);if(!r||!hrOk(r))return;if(S.hr&&S.hr.id==id){S.hr=null;return}S.hr={id,q:{}};say(r.n+' begins. Gather tier '+(r.tier+1)+' goods or better, alone or with your party.')}
+function startHR(id:string){const r=HR.find(x=>x.id==id);if(!r||!hrOk(r))return;if(S.hr&&S.hr.id==id){S.hr=null;return}S.hr={id,q:{}};say(r.n+' begins. Gather tier '+(r.tier+1)+' goods or better, alone or with your party.')}
 function hrView(){
   return '<h2>Harvest raids</h2><p class="sub">A raid for gatherers. Collect a quota from every gathering skill, at or above the stated tier. You and your party members all count. The first clear of each grants a permanent blessing.</p>'+HR.map(r=>{
     const on=S.hr&&S.hr.id==r.id,ok=hrOk(r),n=S.hrc[r.id]||0,it=GN.Foraging[r.tier][1];

@@ -1,5 +1,5 @@
 // Main tick loop and progress bars. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
-function tick(dt,quiet){
+function tick(dt:any,quiet:any){
   if(dt<=0)return;
   if(S.cur){S.p+=dt;const d=dur();let n=0;while(S.cur&&S.p>=d&&n<20000){S.p-=d;finish(quiet);n++}}
   if(S.ex){S.ex.p+=dt;if(S.ex.p>=S.ex.dur)exFinish(quiet)}
@@ -30,7 +30,7 @@ function curName(){
   const c=S.cur;if(!c)return null;
   return c.k=='s'?A.find(a=>a.id==c.id).n:c.k=='k'?'Cooking: '+DISH[c.id].n:c.k=='f'?'Crafting: '+IT[c.id].n:c.k=='r'?'Refining: '+RFN[c.id].n:c.k=='c'?'Fighting: '+E.find(e=>e.id==c.id).n:'Delving: '+D.find(d=>d.id==c.id).n;
 }
-const CAPN={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
+const CAPN:Record<string,any>={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
 const TNAME=['','Skill Cape','120 Cape','Sub-master Cape','Master Cape'];
 const CE:any={
 Foraging:[[['yld',.15]],[['xp',.1]],[['spd',.1]],[['heal',.25]]],
@@ -55,24 +55,24 @@ Combat:[[['xpm',.05],['taken',.04]],[['dmgm',.05],['acc',.04]],[['crit',.05],['r
 Gathering:[[['yld',.1]],[['xp',.05]],[['spd',.05]],[['yld',.1],['sell',.1]]],
 Production:[[['save',.1]],[['xp',.05]],[['spd',.05]],[['save',.1],['burn',.25],['sell',.1]]]};
 GRP.Max=Object.keys(CE);GE.Max=[[['xp',.05],['xpm',.05]],[['yld',.05],['save',.05],['drop',.05]],[['spd',.05],['crit',.05]],[['xp',.1],['xpm',.1],['sell',.1],['mspd',.1]]];
-const gw=g=>g=='Max'?'skill':g.toLowerCase();
+const gw=(g:any)=>g=='Max'?'skill':g.toLowerCase();
 const CTX=['yld','xp','spd','save','burn'];
-const pc=v=>Math.round(v*100);
-const FXT={yld:v=>pc(v)+'% chance of a double yield',xp:v=>'+'+pc(v)+'% xp',spd:v=>pc(v)+'% faster work',save:v=>pc(v)+'% chance to save materials',burn:v=>pc(v)+'% less burning',heal:v=>'+'+pc(v)+'% food healing',sell:v=>'+'+pc(v)+'% acorns from sales',drop:v=>'+'+pc(v)+'% rare drops',regen:v=>'+'+pc(v)+'% health regeneration',taken:v=>'−'+pc(v)+'% damage taken',acc:v=>'+'+pc(v)+'% hit chance',dmgm:v=>'+'+pc(v)+'% max hit',crit:v=>pc(v)+'% chance to hit twice as hard',lsteal:v=>'heal '+pc(v)+'% of damage dealt',ls:v=>'survive one lethal hit per fight',hpm:v=>'+'+pc(v)+'% max health',xpm:v=>'+'+pc(v)+'% combat xp',ttaken:v=>'−'+pc(v)+'% damage taken on task',txp:v=>'+'+pc(v)+'% Slayer xp',tdmg:v=>'+'+pc(v)+'% damage on Slayer tasks',tdrop:v=>'+'+pc(v)+'% rare drops on task',pts:v=>'+'+pc(v)+'% slayer points',mspd:v=>'+'+pc(v)+'% member work speed',pmult:v=>'+'+pc(v)+'% member perks'};
-const fxTxt=arr=>{const m={},o=[];arr.forEach(e=>{if(!(e[0] in m)){m[e[0]]=0;o.push(e[0])}m[e[0]]+=e[1]});return o.map(k=>FXT[k](m[k])).join(', ')};
-const cumFx=(k,t)=>{let a=[];for(let i=0;i<t;i++)a=a.concat(CE[k][i]);return fxTxt(a)};
-const gcumFx=(g,t)=>{let a=[];for(let i=0;i<t;i++)a=a.concat(GE[g][i]);return fxTxt(a)};
-const capeTier=k=>{const x=S.xp[k],l=lv(x);return x>=2e8?4:x>=1.5e8?3:l>=120?2:l>=99?1:0};
-const grpTier=g=>Math.min.apply(null,GRP[g].map(capeTier));
-const capeName=(k,t)=>CAPN[k]+'’s '+TNAME[t];
-const grpName=(g,t)=>g+' '+(t==1?'Cape':TNAME[t]);
-const capeLabel=id=>id.indexOf('I:')==0?IT[id.slice(2)].n:id.indexOf('G:')==0?grpName(id.slice(2),grpTier(id.slice(2))):capeName(id,capeTier(id));
-const capeOk=id=>id.indexOf('I:')==0?(!!IT[id.slice(2)]&&!!S.own[id.slice(2)]):id.indexOf('G:')==0?grpTier(id.slice(2))>=1:capeTier(id)>=1;
+const pc=(v:any)=>Math.round(v*100);
+const FXT:Record<string,any>={yld:(v:any)=>pc(v)+'% chance of a double yield',xp:(v:any)=>'+'+pc(v)+'% xp',spd:(v:any)=>pc(v)+'% faster work',save:(v:any)=>pc(v)+'% chance to save materials',burn:(v:any)=>pc(v)+'% less burning',heal:(v:any)=>'+'+pc(v)+'% food healing',sell:(v:any)=>'+'+pc(v)+'% acorns from sales',drop:(v:any)=>'+'+pc(v)+'% rare drops',regen:(v:any)=>'+'+pc(v)+'% health regeneration',taken:(v:any)=>'−'+pc(v)+'% damage taken',acc:(v:any)=>'+'+pc(v)+'% hit chance',dmgm:(v:any)=>'+'+pc(v)+'% max hit',crit:(v:any)=>pc(v)+'% chance to hit twice as hard',lsteal:(v:any)=>'heal '+pc(v)+'% of damage dealt',ls:(v:any)=>'survive one lethal hit per fight',hpm:(v:any)=>'+'+pc(v)+'% max health',xpm:(v:any)=>'+'+pc(v)+'% combat xp',ttaken:(v:any)=>'−'+pc(v)+'% damage taken on task',txp:(v:any)=>'+'+pc(v)+'% Slayer xp',tdmg:(v:any)=>'+'+pc(v)+'% damage on Slayer tasks',tdrop:(v:any)=>'+'+pc(v)+'% rare drops on task',pts:(v:any)=>'+'+pc(v)+'% slayer points',mspd:(v:any)=>'+'+pc(v)+'% member work speed',pmult:(v:any)=>'+'+pc(v)+'% member perks'};
+const fxTxt=(arr:any)=>{const m:Record<string,any>={},o:any=[];arr.forEach((e:Enemy)=>{if(!(e[0] in m)){m[e[0]]=0;o.push(e[0])}m[e[0]]+=e[1]});return o.map((k:string)=>FXT[k](m[k])).join(', ')};
+const cumFx=(k:string,t:any)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(CE[k][i]);return fxTxt(a)};
+const gcumFx=(g:any,t:any)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(GE[g][i]);return fxTxt(a)};
+const capeTier=(k:string)=>{const x=S.xp[k],l=lv(x);return x>=2e8?4:x>=1.5e8?3:l>=120?2:l>=99?1:0};
+const grpTier=(g:any)=>Math.min.apply(null,GRP[g].map(capeTier));
+const capeName=(k:string,t:any)=>CAPN[k]+'’s '+TNAME[t];
+const grpName=(g:any,t:any)=>g+' '+(t==1?'Cape':TNAME[t]);
+const capeLabel=(id:string)=>id.indexOf('I:')==0?IT[id.slice(2)].n:id.indexOf('G:')==0?grpName(id.slice(2),grpTier(id.slice(2))):capeName(id,capeTier(id));
+const capeOk=(id:string)=>id.indexOf('I:')==0?(!!IT[id.slice(2)]&&!!S.own[id.slice(2)]):id.indexOf('G:')==0?grpTier(id.slice(2))>=1:capeTier(id)>=1;
 function capeFx(){
-  const id=S.cape,out=[];if(!id)return out;
+  const id=S.cape,out:any=[];if(!id)return out;
   if(id.indexOf('I:')==0)return itFx(IT[id.slice(2)]);
-  const add=(arr,sk)=>arr.forEach(e=>out.push({k:e[0],v:e[1],sk:CTX.includes(e[0])?sk:null}));
-  if(id.indexOf('G:')==0){const g=id.slice(2),t=grpTier(g);for(let i=0;i<t;i++){GRP[g].forEach(sk=>add(CE[sk][i],sk));add(GE[g][i],'*');if(g=='Max')['Combat','Gathering','Production'].forEach(q=>add(GE[q][i],'*'))}}
+  const add=(arr:any,sk:string)=>arr.forEach((e:Enemy)=>out.push({k:e[0],v:e[1],sk:CTX.includes(e[0])?sk:null}));
+  if(id.indexOf('G:')==0){const g=id.slice(2),t=grpTier(g);for(let i=0;i<t;i++){GRP[g].forEach((sk:string)=>add(CE[sk][i],sk));add(GE[g][i],'*');if(g=='Max')['Combat','Gathering','Production'].forEach(q=>add(GE[q][i],'*'))}}
   else{const t=capeTier(id);for(let i=0;i<t;i++)add(CE[id][i],id)}
   return out;
 }
@@ -85,13 +85,13 @@ function checkCapes(){
   Object.keys(GRP).forEach(g=>{const t=grpTier(g);if(t>(S.cg[g]||0)){S.cg[g]=t;say(grpName(g,t)+' unlocked! It carries every '+gw(g)+' cape bonus, plus '+fxTxt(GE[g][t-1])+'.');ch=true}});
   if(ch)refreshFx();
 }
-function capeRow(k){
+function capeRow(k:string){
   const t=capeTier(k),x=S.xp[k],th=[XT[99],XT[120],1.5e8,2e8];
   const nx=t<4?'Next: '+capeName(k,t+1)+' ('+fxTxt(CE[k][t])+') at '+(t<2?'level '+[99,120][t]:[150,200][t-2]+'M xp')+' · '+Math.ceil(th[t]-x).toLocaleString()+' xp to go':'Every cape tier earned.';
   return '<div class="row"><span>'+(t?capeName(k,t):'No cape yet')+(t?'<small>'+cumFx(k,t)+'</small>':'')+'<small>'+nx+'</small></span></div>';
 }
 function capesView(){
-  const wear=(id,t)=>t?(S.cape==id?'<span class="good">Worn</span>':'<button class="btn" data-cape="'+id+'">Wear</button>'):'';
+  const wear=(id:string,t:any)=>t?(S.cape==id?'<span class="good">Worn</span>':'<button class="btn" data-cape="'+id+'">Wear</button>'):'';
   let h='<h2>Capes</h2><p class="sub">Wear one cape at a time. A skill cape unlocks at level 99, upgrades at level 120, then at 150M and 200M xp, adding a bonus each time. A group cape wears every bonus of its skills, plus extras, once all of them reach the same tier.</p>';
   h+='<div class="row"><span>Worn<small>'+(S.cape?capeLabel(S.cape):'No cape')+'</small></span>'+(S.cape?'<button class="btn" data-cape="">Remove</button>':'')+'</div>';
   h+=Object.keys(GRP).map(g=>{const t=grpTier(g),id='G:'+g;return '<div class="row'+(S.cape==id?' on':'')+'"><span>'+(t?grpName(g,t):g+' Cape')+'<small>'+(t?'Every '+gw(g)+' cape bonus, plus '+gcumFx(g,t):'Needs every '+(g=='Max'?'one of the 16':gw(g))+' skill at level 99')+'</small></span>'+wear(id,t)+'</div>'}).join('');
@@ -101,10 +101,10 @@ function capesView(){
   return h;
 }
 const SKG=[['Gathering',['Foraging','Woodcutting','Fishing','Mining','Hunting']],['Artisan',['Cooking','Smithing','Fletching','Enchanting','Tailoring']],['Command',['Slayer','Leadership']]];
-const skOf=t=>!t?null:t.k=='s'?(A.find(a=>a.id==t.id)||{}).sk:t.k=='k'?'Cooking':t.k=='f'?CSK(t.id):t.k=='r'?RFN[t.id].sk:null;
-const pcx=k=>{const l=lv(S.xp[k]);if(l>=120)return Math.max(0,Math.min(100,(S.xp[k]-XT[120])/(2e8-XT[120])*100));const lo=XT[l];return Math.max(0,Math.min(100,(S.xp[k]-lo)/(XT[l+1]-lo)*100))};
-const isOn=(k,id)=>{const t=who=='you'?S.cur:asg(who);return !!t&&t.k==k&&t.id==id};
-const crew=(k,id)=>{const n=Object.keys(S.hired).filter(m=>{const t=asg(m);return t.k==k&&t.id==id}).map(m=>H[m].n.split(' ')[0]);return n.length?'<br>'+n.join(', ')+' working':''};
+const skOf=(t:any)=>!t?null:t.k=='s'?(A.find(a=>a.id==t.id)||{}).sk:t.k=='k'?'Cooking':t.k=='f'?CSK(t.id):t.k=='r'?RFN[t.id].sk:null;
+const pcx=(k:string)=>{const l=lv(S.xp[k]);if(l>=120)return Math.max(0,Math.min(100,(S.xp[k]-XT[120])/(2e8-XT[120])*100));const lo=XT[l];return Math.max(0,Math.min(100,(S.xp[k]-lo)/(XT[l+1]-lo)*100))};
+const isOn=(k:string,id:string)=>{const t=who=='you'?S.cur:asg(who);return !!t&&t.k==k&&t.id==id};
+const crew=(k:string,id:string)=>{const n=Object.keys(S.hired).filter(m=>{const t=asg(m);return t.k==k&&t.id==id}).map(m=>H[m].n.split(' ')[0]);return n.length?'<br>'+n.join(', ')+' working':''};
 const working=()=>Object.keys(S.hired).filter(k=>asg(k).k!='war'&&asg(k).k!='idle'&&asg(k).k!='exp');
 const hasWork=()=>!!S.ex||working().length>0||(buL('bar')>0&&Object.keys(S.hired).some(k=>asg(k).k=='idle'));
 const workNames=()=>working().map(k=>H[k].n.split(' ')[0]).join(', ');
@@ -113,8 +113,8 @@ function actorChips(){
   if(who!='you'&&!S.hired[who])who='you';
   return '<p class="mu" style="margin:6px 0 4px">Choose who works:</p><div class="chips">'+['you'].concat(hs).map(k=>'<button class="'+(who==k?'on':'')+'" data-who="'+k+'">'+(k=='you'?'You':H[k].n)+'</button>').join('')+'</div>'+(who!='you'?'<p class="mu">'+H[who].n+' works at '+Math.round(mspd(who)*100)+'% of your speed. About '+Math.round(famShare()*100)+'% of what they gather, cook or refine comes to your pack; their family keeps the rest. Pick an activity to assign, or pick it again to stop.</p>':'');
 }
-function tile(k){
-  const w=[];if(S.cur&&skOf(S.cur)==k)w.push('You');
+function tile(k:string){
+  const w:any[]=[];if(S.cur&&skOf(S.cur)==k)w.push('You');
   Object.keys(S.hired).forEach(m=>{if(skOf(asg(m))==k)w.push(H[m].n.split(' ')[0])});
   const extra=k=='Leadership'?' · '+nsl()+'/'+slots()+' slots':'';
   return '<button class="row'+(w.length?' on':'')+'" data-skill="'+k+'"><span>'+k+'</span><small>Level '+lv(S.xp[k])+(capeTier(k)?' · '+TNAME[capeTier(k)]:'')+extra+(w.length?' · '+w.join(', '):'')+'</small><div class="bar xp" style="width:100%"><i style="width:'+pcx(k)+'%"></i></div></button>';

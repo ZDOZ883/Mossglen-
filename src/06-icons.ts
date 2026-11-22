@@ -1,6 +1,6 @@
 // Hand-drawn SVG icons. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- hand-drawn fantasy icons (32x32, line art)
-const ICN={
+const ICN:Record<string,any>={
 sword:'<path class="f" d="M23 5H27V9L13 23L9 19Z"/><path d="M7 17L15 25"/><path d="M10 22L5.5 26.5"/><circle cx="4.5" cy="27.5" r="1.6" class="f"/>',
 axe:'<path d="M6 27L23 10"/><path class="f" d="M17 4Q29 5 28 17Q22 15 14 11Z"/><path d="M5 28l2-2"/>',
 dagger:'<path class="f" d="M22 6L26 10L16 20L12 16Z"/><path d="M9 14L18 23"/><path d="M12 19L7 24"/><circle cx="6" cy="25" r="1.5" class="f"/>',
@@ -25,7 +25,7 @@ lantern:'<path d="M12.5 6Q16 1.5 19.5 6"/><path d="M10.5 8H21.5"/><path class="f
 burrow:'<path class="f" d="M3 27Q3 7 16 7Q29 7 29 27Z"/><path d="M12 27V19Q12 14 16 14Q20 14 20 19V27"/><path d="M8 11Q10 9 12 8.5"/>',
 satchel:'<path class="f" d="M7 12H25V27H7Z"/><path d="M7 12Q16 21 25 12"/><path d="M12 12V8Q16 3 20 8V12"/><circle cx="16" cy="19" r="1.4"/>'};
 const icon=(n:string,z?:number)=>'<svg class="ico" viewBox="0 0 32 32" width="'+(z||34)+'" height="'+(z||34)+'" aria-hidden="true">'+(ICN[n]||'')+'</svg>';
-function iconOf(it){
+function iconOf(it:Item){
   if(!it)return 'shield';
   const sl=it.slot;
   if(sl=='Melee')return it.kind=='2h'?'axe':'sword';
@@ -34,11 +34,11 @@ function iconOf(it){
   if(sl=='off')return it.kind=='shield'?'shield':it.st=='Melee'?'dagger':it.st=='Ranged'?'crossbow':'tome';
   return {head:'helm',body:'chest',legs:'legs',neck:'amulet',ring:'ring',cloak:'cape',trinket:'charm'}[sl]||'charm';
 }
-const SLIC={Melee:'sword',Ranged:'shortbow',Magic:'wand',head:'helm',body:'chest',legs:'legs',neck:'amulet',ring1:'ring',ring2:'ring',trinket:'charm',off:'shield',cape:'cape'};
-let gtab='eq',gsel=null;
-const SLI={off:['🛡️','Off-hand'],Melee:['🗡️','Melee'],Ranged:['🏹','Ranged'],Magic:['🪄','Magic'],head:['⛑️','Helm'],body:['🦺','Chest'],legs:['👖','Legs'],neck:['📿','Necklace'],ring1:['💍','Ring'],ring2:['💍','Ring'],trinket:['🔮','Trinket'],cape:['🧣','Cape']};
-const grade=it=>it.slot=='trinket'?['u','Unique']:it.q=='d'?['d','Heirloom']:it.q=='s'?['s','Plain']:['c','Crafted'];
-function equipSlot(k,id){
+const SLIC:Record<string,any>={Melee:'sword',Ranged:'shortbow',Magic:'wand',head:'helm',body:'chest',legs:'legs',neck:'amulet',ring1:'ring',ring2:'ring',trinket:'charm',off:'shield',cape:'cape'};
+let gtab='eq',gsel:any=null;
+const SLI:Record<string,any>={off:['🛡️','Off-hand'],Melee:['🗡️','Melee'],Ranged:['🏹','Ranged'],Magic:['🪄','Magic'],head:['⛑️','Helm'],body:['🦺','Chest'],legs:['👖','Legs'],neck:['📿','Necklace'],ring1:['💍','Ring'],ring2:['💍','Ring'],trinket:['🔮','Trinket'],cape:['🧣','Cape']};
+const grade=(it:Item)=>it.slot=='trinket'?['u','Unique']:it.q=='d'?['d','Heirloom']:it.q=='s'?['s','Plain']:['c','Crafted'];
+function equipSlot(k:string,id:string){
   if(!id){S.eq[k]=null}
   else{if(!S.own[id]||!IT[id]||!canEq(IT[id]))return;
     if(k=='ring1'&&S.eq.ring2==id)S.eq.ring2=S.eq.ring1||null;
@@ -46,13 +46,13 @@ function equipSlot(k,id){
     S.eq[k]=id}
   gearSync();
 }
-function tileHtml(k){
+function tileHtml(k:string){
   const lab=SLI[k][1],w3=false;let ic;
   if(k=='cape'){const c=S.cape;ic=icon('cape');return '<button class="gt'+(w3?' w3':'')+(c?' q-c':' empty')+'" data-gt="capes"><span class="ic">'+ic+'</span><span class="sl">'+lab+'</span><span class="nm">'+(c?capeLabel(c):'None')+'</span><span class="st">'+(c?'Tap to change':'Skill capes and cloaks')+'</span></button>'}
   const id=S.eq[k],it=id?IT[id]:null,g=it?grade(it):null;ic=icon(it?iconOf(it):SLIC[k]);
   return '<button class="gt'+(w3?' w3':'')+(it?' q-'+g[0]:' empty')+(gsel==k?' sel':'')+'" data-gs="'+k+'"><span class="ic">'+ic+'</span><span class="sl">'+lab+(SL.includes(k)&&S.style==k?' · style':'')+(it&&it.kind=='2h'?' · 2H':'')+'</span><span class="nm">'+(it?it.n:'Empty')+'</span>'+(it?'<span class="st">'+(k=='off'&&!offIt()?(is2h()?'Hands full (two-hander)':'Inactive: wrong style'):istat(it))+'</span><span class="badge '+g[0]+'">'+g[1]+'</span>':'<span class="st">Nothing equipped</span>')+'</button>';
 }
-function pickerHtml(k){
+function pickerHtml(k:string){
   const ot=k=='ring1'?S.eq.ring2:k=='ring2'?S.eq.ring1:null,cur=S.eq[k];
   const o=Object.keys(S.own).filter(i=>IT[i]&&IT[i].slot==skey(k)).sort((a,b)=>IT[b].tier-IT[a].tier||qrank(IT[b])-qrank(IT[a])||(IT[a].fam||0)-(IT[b].fam||0));
   let h='<h2>'+SLI[k][1]+' · choose</h2>';
@@ -62,7 +62,7 @@ function pickerHtml(k){
   return h;
 }
 function bonusSummary(){
-  const l=[];['neck','ring1','ring2'].forEach(k=>{const id=S.eq[k];if(id&&IT[id]&&IT[id].fx)IT[id].fx.forEach(e=>l.push([e[0],e[1]]))});
+  const l:any[]=[];['neck','ring1','ring2'].forEach(k=>{const id=S.eq[k];if(id&&IT[id]&&IT[id].fx)IT[id].fx.forEach(e=>l.push([e[0],e[1]]))});
   if(S.cape){if(S.cape.indexOf('I:')==0){const it=IT[S.cape.slice(2)];if(it&&it.fx)it.fx.forEach(e=>l.push([e[0],e[1]]))}}
   return l.length?fxTxt(l):'';
 }

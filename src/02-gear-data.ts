@@ -4,14 +4,14 @@ const PRE=['Twig','Hide','Moss','Moonsteel','Amber','Frostglass','Sunforged','St
 const GM=[1,1.5,2,2.6,3.2,4,4.8,5.8,7,8.5,10];
 const LGD=[3,6,11,17,25,35,46,59,74,96,124];
 const LGN=['Bark Leggings','Hide Greaves','Mossweave Leggings','Moonsteel Greaves','Amber Greaves','Frostglass Greaves','Sunforged Greaves','Starbound Greaves','Deepwood Greaves','Wyrmscale Greaves','Eclipse Greaves'];
-const AF={
+const AF:Record<string,any>={
 ring:[{n:'Band of Might',rs:'Strength',fx:[['dmgm',.006,null],['acc',.003,null]]},{n:'Band of Warding',rs:'Defense',fx:[['taken',.008,null],['hpm',.01,null]]},{n:'Band of the Harvest',rs:'gath',fx:[['spd',.008,'G'],['yld',.006,'G']]},{n:'Band of Craft',rs:'prod',fx:[['spd',.008,'P'],['save',.006,'P']]}],
 neck:[{n:'Pendant of Vigor',rs:'Vitality',fx:[['hpm',.015,null],['regen',.015,null]]},{n:'Pendant of Fortune',rs:'Attack',fx:[['drop',.02,null],['sell',.015,null]]},{n:'Pendant of Lore',rs:'Defense',fx:[['xpm',.012,null],['xp',.012,'A']]},{n:'Pendant of the Hunt',rs:'Attack',fx:[['crit',.006,null],['acc',.004,null]]}],
 cloak:[{n:'Cloak of the Warrior',rs:'Strength',fx:[['dmgm',.008,null],['crit',.005,null]]},{n:'Cloak of the Warden',rs:'Defense',fx:[['taken',.01,null],['hpm',.01,null]]},{n:'Cloak of the Forager',rs:'gath',fx:[['spd',.01,'G'],['xp',.01,'G'],['yld',.004,'G']]},{n:'Cloak of the Artisan',rs:'prod',fx:[['spd',.01,'P'],['xp',.01,'P'],['save',.006,'P'],['burn',.01,'Cooking']]}]};
-const ACCL={ring:'r',neck:'n',cloak:'c'};
+const ACCL:Record<string,any>={ring:'r',neck:'n',cloak:'c'};
 for(let t=0;t<11;t++){
   IT['g'+t]={n:LGN[t],slot:'legs',tier:t,stat:LGD[t],req:REQ[t]};
-  Object.keys(AF).forEach(sl=>AF[sl].forEach((f,i)=>{IT[ACCL[sl]+i+'_'+t]={n:PRE[t]+' '+f.n,slot:sl,tier:t,stat:0,req:REQ[t],rs:f.rs,cmb:['Strength','Defense','Vitality','Attack'].includes(f.rs),fam:i,fx:f.fx.map(e=>[e[0],Math.round(e[1]*GM[t]*10000)/10000,e[2]])}}));
+  Object.keys(AF).forEach(sl=>AF[sl].forEach((f:any,i:any)=>{IT[ACCL[sl]+i+'_'+t]={n:PRE[t]+' '+f.n,slot:sl,tier:t,stat:0,req:REQ[t],rs:f.rs,cmb:['Strength','Defense','Vitality','Attack'].includes(f.rs),fam:i,fx:f.fx.map((e:Enemy)=>[e[0],Math.round(e[1]*GM[t]*10000)/10000,e[2]])}}));
 }
 // weapon grips: two-handers, off-hand weapons (dual wield) and shields
 const N2=['Greataxe','Warbow','Great Staff'],NO=['Dirk','Hand Crossbow','Spell Tome'];
@@ -24,17 +24,17 @@ for(let t=0;t<11;t++){
 }
 // quality grades: Plain (shop, tiers 0-1) < crafted < Heirloom (zone, boss and raid drops)
 (function(){Object.keys(IT).slice().forEach(id=>{const b=IT[id];if(b.slot=='trinket')return;
-  const mk=(sfx,pre,m)=>{const o=Object.assign({},b);o.n=pre+' '+b.n;o.q=sfx;o.base=id;o.stat=Math.round(b.stat*m);if(b.fx)o.fx=b.fx.map(e=>[e[0],Math.round(e[1]*m*10000)/10000,e[2]]);IT[id+sfx]=o};
+  const mk=(sfx:any,pre:any,m:any)=>{const o=Object.assign({},b);o.n=pre+' '+b.n;o.q=sfx;o.base=id;o.stat=Math.round(b.stat*m);if(b.fx)o.fx=b.fx.map(e=>[e[0],Math.round(e[1]*m*10000)/10000,e[2]]);IT[id+sfx]=o};
   if(b.tier<=1)mk('s','Plain',.75);mk('d','Heirloom',1.25)})})();
-const qrank=it=>it.q=='s'?0:it.q=='d'?2:1;
-const rsLv=rs=>rs=='gath'?Math.max(...GSK.map(k=>lv(S.xp[k]))):rs=='prod'?Math.max(...PSK.map(k=>lv(S.xp[k]))):lv(S.xp[rs]);
-const skey=k=>k.replace(/\d$/,'');
-function itFx(it){const o=[];(it.fx||[]).forEach(e=>{const sc=e[2];if(sc==null)o.push({k:e[0],v:e[1],sk:null});else{const L=sc=='G'?GSK:sc=='P'?CRS.concat('Cooking'):sc=='A'?GSK.concat(CRS,'Cooking'):[sc];L.forEach(sk=>o.push({k:e[0],v:e[1],sk}))}});return o}
-function gearFx(){const o=[];['neck','ring1','ring2'].forEach(k=>{const id=S.eq&&S.eq[k];if(id&&IT[id])o.push(...itFx(IT[id]))});return o}
+const qrank=(it:Item)=>it.q=='s'?0:it.q=='d'?2:1;
+const rsLv=(rs:any)=>rs=='gath'?Math.max(...GSK.map(k=>lv(S.xp[k]))):rs=='prod'?Math.max(...PSK.map(k=>lv(S.xp[k]))):lv(S.xp[rs]);
+const skey=(k:string)=>k.replace(/\d$/,'');
+function itFx(it:any){const o:any[]=[];(it.fx||[]).forEach((e:any)=>{const sc=e[2];if(sc==null)o.push({k:e[0],v:e[1],sk:null});else{const L=sc=='G'?GSK:sc=='P'?CRS.concat('Cooking'):sc=='A'?GSK.concat(CRS,'Cooking'):[sc];L.forEach(sk=>o.push({k:e[0],v:e[1],sk}))}});return o}
+function gearFx(){const o:any[]=[];['neck','ring1','ring2'].forEach(k=>{const id=S.eq&&S.eq[k];if(id&&IT[id])o.push(...itFx(IT[id]))});return o}
 let GSIG='';
 function gearSync(){if(!S||!S.eq)return;const g=[S.eq.neck,S.eq.ring1,S.eq.ring2,S.cape].join('|');if(g!==GSIG){GSIG=g;refreshFx()}}
-const scopeTxt=it=>{const e=(it.fx||[])[0];if(!e||e[2]==null)return '';return {G:' (gathering)',P:' (crafting and cooking)',A:''}[e[2]]||''};
-const accScore=(it,kind,sk)=>{let v=0;itFx(it).forEach(e=>{const w=CW[kind][e.k];if(!w)return;let m=1;if(e.sk){if(sk){if(e.sk!=sk)return}else m=.2}v+=w*e.v*m});return v};
+const scopeTxt=(it:Item)=>{const e=(it.fx||[])[0];if(!e||e[2]==null)return '';return ({G:' (gathering)',P:' (crafting and cooking)',A:''} as any)[e[2]]||''};
+const accScore=(it:Item,kind:string,sk:string)=>{let v=0;itFx(it).forEach(e=>{const w=CW[kind][e.k];if(!w)return;let m=1;if(e.sk){if(sk){if(e.sk!=sk)return}else m=.2}v+=w*e.v*m});return v};
 
 const ZN:any[]=[
 ['Sunlit Meadow',1,['Magic','Melee','Ranged','Melee'],['Garden Slug','Thistle Shrew','Marsh Heron','Old Gnawtooth'],'meadow pelt'],
@@ -52,24 +52,24 @@ const H0=[200,696,2111,4259,9500,16382,31542,47988,74866,109780,160075],D0=[3.83
 const XK=[0.04444,0.02682,0.01895,0.01722,0.01368,0.01323,0.01078,0.01056,0.00997,0.00978,0.00937],AK=[0.00333,0.00134,0.00227,0.00459,0.0076,0.01628,0.02994,0.05279,0.1122,0.23279,0.17353];
 const E:Enemy[]=[];ZN.forEach((z,i)=>{[0,1,2,3].forEach(j=>{const hp=Math.round(H0[i]*[.8,1,1.25,6][j]);E.push({id:'z'+i+'m'+j,zone:i,n:z[3][j],type:z[2][j],hp,dps:D0[i]*[1.2,1,.8,1.5][j],xp:Math.round(hp*XK[i]),a:Math.round(hp*AK[i]),boss:j==3})})});
 ZN.forEach((z,i)=>V[z[4]]=MV[i]);
-const gateOk=n=>!n||!!(S&&S.gates&&S.gates[n]);
-const zoneOpen=i=>CL()>=ZN[i][1]&&gateOk(ZN[i][5]);
-const dropTier=z=>z<=7?Math.min(7,z+1):z;
-const elv=e=>e.lvl||ZN[e.zone][1];
+const gateOk=(n:any)=>!n||!!(S&&S.gates&&S.gates[n]);
+const zoneOpen=(i:any)=>CL()>=ZN[i][1]&&gateOk(ZN[i][5]);
+const dropTier=(z:any)=>z<=7?Math.min(7,z+1):z;
+const elv=(e:Enemy)=>e.lvl||ZN[e.zone][1];
 ZN.forEach((z,i)=>{if(z[6])V[z[6]]=MV[i]*20});
 D.forEach(d=>{if(V[d.tr]==null)V[d.tr]=Math.round(d.a[0]*.8)});
 const GSK=['Foraging','Woodcutting','Fishing','Mining','Hunting'],PSK=['Cooking','Smithing','Fletching','Enchanting','Tailoring'];
 // refined components for tier 8-10 gear
-const RF={Smithing:['Deepmetal Ingot','Wyrm Ingot','Eclipse Ingot'],Fletching:['Deepwood Plank','Wyrmwood Plank','Eclipse Plank'],Enchanting:['Deep Essence','Wyrm Essence','Eclipse Essence'],Tailoring:['Deepweave','Wyrmweave','Eclipse Weave']};
-const RFN={};Object.keys(RF).forEach(sk=>RF[sk].forEach((n,j)=>{const t=8+j;RFN['r'+sk[0]+t]={n,sk,t,req:REQ[t]};V[n]=[900,2400,6000][j]}));
-const ctime=id=>IT[id].tier>=8?[14,20,28][IT[id].tier-8]:4;
-function refRecipe(id){const f=RFN[id],q=6+2*(f.t-8),i=f.t-1,g=k=>GN[k][i][1],m={},add=(k,n)=>m[k]=(m[k]||0)+n;
+const RF:Record<string,any>={Smithing:['Deepmetal Ingot','Wyrm Ingot','Eclipse Ingot'],Fletching:['Deepwood Plank','Wyrmwood Plank','Eclipse Plank'],Enchanting:['Deep Essence','Wyrm Essence','Eclipse Essence'],Tailoring:['Deepweave','Wyrmweave','Eclipse Weave']};
+const RFN:Record<string,any>={};Object.keys(RF).forEach(sk=>RF[sk].forEach((n:any,j:any)=>{const t=8+j;RFN['r'+sk[0]+t]={n,sk,t,req:REQ[t]};V[n]=[900,2400,6000][j]}));
+const ctime=(id:string)=>IT[id].tier>=8?[14,20,28][IT[id].tier-8]:4;
+function refRecipe(id:string){const f=RFN[id],q=6+2*(f.t-8),i=f.t-1,g=(k:string)=>GN[k][i][1],m={},add=(k:string,n:any)=>(m as any)[k]=((m as any)[k]||0)+n;
   if(f.sk=='Smithing'){add(g('Mining'),2*q);add(g('Woodcutting'),q)}
   else if(f.sk=='Fletching'){add(g('Woodcutting'),2*q);add(g('Foraging'),q)}
   else if(f.sk=='Enchanting'){add(g('Foraging'),2*q);add(g('Mining'),q)}
   else{add(g('Hunting'),2*q);add(g('Fishing'),q)}
   return m}
-function refineDone(id,mk?:any){
+function refineDone(id:string,mk?:any){
   const f=RFN[id];
   if(!gateOk(f.t-7)||lv(S.xp[f.sk])<f.req){if(mk)S.mt[mk]={k:'idle'};else S.cur=null;return}
   if(!useMats(refRecipe(id),f.sk)){if(mk){S.mt[mk]={k:'idle'};say(H[mk].n+' ran out of materials for '+f.n+'.')}else{S.cur=null;say('Out of materials for '+f.n+'.')}return}
@@ -78,6 +78,6 @@ function refineDone(id,mk?:any){
   if(mk){mxp(mk,x*.6);ldx(x*.5)}else{const b=lv(S.xp[f.sk]);S.xp[f.sk]+=x*(1+cb('xp',f.sk));if(lv(S.xp[f.sk])>b)say(f.sk+' reaches level '+lv(S.xp[f.sk])+'.')}
 }
 // protected items
-const KP={};ZN.forEach(z=>{if(z[6])KP[z[6]]=1});Object.keys(RFN).forEach(id=>KP[RFN[id].n]=1);D.forEach(d=>KP[d.tr]=1);
-const KEEP=k=>!!FOOD[k]||!!KP[k];
+const KP:Record<string,any>={};ZN.forEach(z=>{if(z[6])KP[z[6]]=1});Object.keys(RFN).forEach(id=>KP[RFN[id].n]=1);D.forEach(d=>KP[d.tr]=1);
+const KEEP=(k:string)=>!!FOOD[k]||!!KP[k];
 

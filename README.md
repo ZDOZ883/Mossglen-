@@ -15,6 +15,8 @@ A woodland idle game. Single-file HTML output, written in TypeScript.
 - `npm test`          build + run tests (Node built-in runner)
 - `npm run check`     typecheck + tests (what CI runs)
 
+Type checking runs with `noImplicitAny` on (explicit `any` remains in places; see `src/00-types.ts` for the shared shapes).
+
 Balance guards in `tests/game.test.js` are intentional bounds; if you retune on purpose, update them.
 Tests load the built HTML into a sandbox with a seeded RNG, so runs are deterministic.
 

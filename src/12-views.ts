@@ -3,11 +3,11 @@ function skillsView(){
   if(skill)return skillPage(skill);
   return wxView()+'<div class="row" style="flex-direction:column;align-items:stretch"><span>'+S.sp+' traits<small>'+spTxt(S.sp)+'</small></span></div><p class="sub">Pick a skill to work on it. Party members can gather, cook and craft while you do something else.</p>'+SKG.map((g:any)=>'<h2>'+g[0]+'</h2><div class="pick">'+g[1].map(tile).join('')+'</div>').join('')+hrView()+gatesView();
 }
-function skillPage(k){
+function skillPage(k:string){
   const body=SK.includes(k)?gatherPage(k):k=='Cooking'?cookPage():CR.includes(k)?craftPage(k):k=='Slayer'?slayerView():leadView();
   return '<p style="margin:0 0 4px"><button class="btn" data-back="1">← Skills</button></p><h2 style="margin-top:8px">'+k+' · level '+lv(S.xp[k])+(SP[S.sp]==k?' <span class="mu" style="display:inline">(+15% xp)</span>':'')+'</h2><div class="bar xp"><i style="width:'+pcx(k)+'%"></i></div><p class="mu" style="margin:4px 0 0">'+Math.floor(S.xp[k]).toLocaleString()+' xp</p>'+capeRow(k)+body;
 }
-function gatherPage(k){
+function gatherPage(k:string){
   const chips=actorChips(),l=lv(S.xp[k]),sp=who=='you'?1:mspd(who);
   return wxView()+chips+toolRow(k)+A.filter(a=>a.sk==k).map(a=>{
     const gl=!gateOk(a.gate),lock=l<a.lv||gl,on=isOn('s',a.id),sec=Math.round(tt(a)/sp*10)/10;
@@ -24,22 +24,22 @@ function cookPage(){
   }).join('');
   return h;
 }
-const CGN={w0:'Melee weapons',w1:'Ranged weapons',w2:'Magic weapons',x0:'Melee two-handers',x1:'Ranged two-handers',x2:'Magic two-handers',o0:'Melee off-hands',o1:'Ranged off-hands',o2:'Magic off-hands',y:'Shields',b:'Chest armor',h:'Helms',g:'Legs',r:'Rings',n:'Necklaces',c:'Cloaks'};
-const cgOf=id=>'wxo'.includes(id[0])?id.slice(0,2):id[0];
-const CF={g:{},f:{}};
-const famLab=sl=>AF[sl].map(f=>f.n.replace(/^(Band|Pendant|Cloak) of (the )?/,''));
-function craftPage(sk){
+const CGN:Record<string,any>={w0:'Melee weapons',w1:'Ranged weapons',w2:'Magic weapons',x0:'Melee two-handers',x1:'Ranged two-handers',x2:'Magic two-handers',o0:'Melee off-hands',o1:'Ranged off-hands',o2:'Magic off-hands',y:'Shields',b:'Chest armor',h:'Helms',g:'Legs',r:'Rings',n:'Necklaces',c:'Cloaks'};
+const cgOf=(id:string)=>'wxo'.includes(id[0])?id.slice(0,2):id[0];
+const CF:Record<string,any>={g:{},f:{}};
+const famLab=(sl:string)=>AF[sl].map((f:any)=>f.n.replace(/^(Band|Pendant|Cloak) of (the )?/,''));
+function craftPage(sk:string){
   const l=lv(S.xp[sk]);
   let h='<p class="sub">Turn gathered goods and zone materials into gear. A craft repeats until you run out; spares are sold as scrap.</p>'+actorChips();
-  if(RF[sk]){const rl=Object.keys(RFN).filter(id=>RFN[id].sk==sk&&l>=REQ[RFN[id].t-1]);if(rl.length)h+='<h2>Refining</h2><p class="mu">Heavy components for the deepest gear. Slow, costly, and gated.</p>';rl.forEach(id=>{const f=RFN[id],r=refRecipe(id),gl=!gateOk(f.t-7),ok=l>=f.req&&!gl,on=isOn('r',id);h+='<button class="row'+(on?' on':'')+'" data-do="r:'+id+'"'+(ok?'':' disabled')+'><span>'+f.n+'<small>Refined component · in pack '+(S.inv[f.n]||0)+' · '+Object.keys(r).map(k=>k+' '+(S.inv[k]||0)+'/'+r[k]).join(', ')+'</small></span><small>'+(ok?'':gl?'Needs '+GATE[f.t-8].n:'Level '+f.req)+crew('r',id)+'</small></button>'})}
-  const all=Object.keys(IT).filter(id=>id[0]!='t'&&!IT[id].q&&CSK(id)==sk),grs=[];all.forEach(id=>{const g=cgOf(id);if(!grs.includes(g))grs.push(g)});
+  if(RF[sk]){const rl=Object.keys(RFN).filter(id=>RFN[id].sk==sk&&l>=REQ[RFN[id].t-1]);if(rl.length)h+='<h2>Refining</h2><p class="mu">Heavy components for the deepest gear. Slow, costly, and gated.</p>';rl.forEach(id=>{const f=RFN[id],r=refRecipe(id),gl=!gateOk(f.t-7),ok=l>=f.req&&!gl,on=isOn('r',id);h+='<button class="row'+(on?' on':'')+'" data-do="r:'+id+'"'+(ok?'':' disabled')+'><span>'+f.n+'<small>Refined component · in pack '+(S.inv[f.n]||0)+' · '+Object.keys(r).map(k=>k+' '+(S.inv[k]||0)+'/'+(r as any)[k]).join(', ')+'</small></span><small>'+(ok?'':gl?'Needs '+GATE[f.t-8].n:'Level '+f.req)+crew('r',id)+'</small></button>'})}
+  const all=Object.keys(IT).filter(id=>id[0]!='t'&&!IT[id].q&&CSK(id)==sk),grs:any=[];all.forEach(id=>{const g=cgOf(id);if(!grs.includes(g))grs.push(g)});
   const cg=CF.g[sk]||grs[0],sl=cg=='r'?'ring':cg=='n'?'neck':cg=='c'?'cloak':null,cf=CF.f[sk]==null?'all':CF.f[sk];
-  h+='<h2>Gear</h2><div class="chips">'+grs.map(g=>'<button class="'+(cg==g?'on':'')+'" data-cf="g:'+g+'">'+CGN[g]+'</button>').join('')+'<button class="'+(cg=='all'?'on':'')+'" data-cf="g:all">All</button></div>';
-  if(sl)h+='<div class="chips"><button class="'+(cf=='all'?'on':'')+'" data-cf="f:all">All types</button>'+famLab(sl).map((n,i)=>'<button class="'+(cf==i?'on':'')+'" data-cf="f:'+i+'">'+n+'</button>').join('')+'</div>';
+  h+='<h2>Gear</h2><div class="chips">'+grs.map((g:any)=>'<button class="'+(cg==g?'on':'')+'" data-cf="g:'+g+'">'+CGN[g]+'</button>').join('')+'<button class="'+(cg=='all'?'on':'')+'" data-cf="g:all">All</button></div>';
+  if(sl)h+='<div class="chips"><button class="'+(cf=='all'?'on':'')+'" data-cf="f:all">All types</button>'+famLab(sl).map((n:any,i:any)=>'<button class="'+(cf==i?'on':'')+'" data-cf="f:'+i+'">'+n+'</button>').join('')+'</div>';
   all.filter(id=>(cg=='all'||cgOf(id)==cg)&&(!sl||cf=='all'||IT[id].fam==cf)).sort((a,b)=>IT[a].tier-IT[b].tier||(IT[a].fam||0)-(IT[b].fam||0)).forEach(id=>{
     const it=IT[id];if(it.tier>0&&l<REQ[it.tier-1])return;
     const r=recipe(id),gl=it.tier>=8&&!gateOk(it.tier-7),ok=l>=it.req&&!gl,on=isOn('f',id);
-    h+='<button class="row'+(on?' on':'')+'" data-do="f:'+id+'"'+(ok?'':' disabled')+'><span>'+it.n+(S.own[id]?' ✓':'')+'<small>'+istat(it)+' · '+Object.keys(r).map(k=>k+' '+(S.inv[k]||0)+'/'+r[k]).join(', ')+'</small></span><small>'+(ok?'':gl?'Needs '+GATE[it.tier-8].n:'Level '+it.req)+crew('f',id)+'</small></button>';
+    h+='<button class="row'+(on?' on':'')+'" data-do="f:'+id+'"'+(ok?'':' disabled')+'><span>'+it.n+(S.own[id]?' ✓':'')+'<small>'+istat(it)+' · '+Object.keys(r).map(k=>k+' '+(S.inv[k]||0)+'/'+(r as any)[k]).join(', ')+'</small></span><small>'+(ok?'':gl?'Needs '+GATE[it.tier-8].n:'Level '+it.req)+crew('f',id)+'</small></button>';
   });
   return h;
 }
@@ -52,9 +52,9 @@ function leadView(){
   '<div class="row"><span>Fast ways to train<small>Turn on Command in Fight with members beside you, or keep members busy on skills.</small></span></div>'+
   '<p><button class="btn" data-tab="party">Manage party</button></p>';
 }
-const PKN={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['delves ','% faster'],loot:['+','% delve loot'],succ:['+','% delve odds']};
-function perkTxt(k){return Object.keys(H[k].pk).map(n=>{const v=H[k].pk[n]*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),x=n=='succ'?Math.round(v):Math.round(v*100);return PKN[n][0]+x+PKN[n][1]}).join(', ')}
-function memName(k){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(S.ex?S.ex.dur-S.ex.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+BRATE(buL('bar')).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id].n:t.k=='f'?'Crafting: '+IT[t.id].n:t.k=='r'?'Refining: '+RFN[t.id].n:'Resting. Send them to work from a skill page.'}
+const PKN:Record<string,any>={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['delves ','% faster'],loot:['+','% delve loot'],succ:['+','% delve odds']};
+function perkTxt(k:string){return Object.keys(H[k].pk).map(n=>{const v=H[k].pk[n]*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),x=n=='succ'?Math.round(v):Math.round(v*100);return PKN[n][0]+x+PKN[n][1]}).join(', ')}
+function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(S.ex?S.ex.dur-S.ex.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+BRATE(buL('bar')).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id].n:t.k=='f'?'Crafting: '+IT[t.id].n:t.k=='r'?'Refining: '+RFN[t.id].n:'Resting. Send them to work from a skill page.'}
 function partyView(){
   const hs=Object.keys(S.hired),l=LD(),sl=slots();
   let h='<h2>Your party</h2><p class="sub">Leadership '+l+' · '+nsl()+' of '+sl+' slots · members work at '+Math.round(bspd()*100)+'% of your speed. Raise Leadership for more slots and faster work.</p>';
@@ -97,7 +97,7 @@ function render(){
   app.innerHTML='<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">'+S.sp+' of the valley · total level '+SK.concat(CS).reduce((s,k)=>s+lv(S.xp[k]),0)+'</p>'+
   '<div class="stat sans">'+(cn?'<div style="display:flex;justify-content:space-between"><span>'+cn+(S.cur.k=='c'?' <small class="mu" id="se"></small>':'')+'</span><button class="btn" data-stop="1">Rest</button></div><div class="bar'+(S.cur.k=='c'?' hp':'')+'"><i id="pb"></i></div>':'<span class="mu">Resting. Pick something to do.</span>')+(hasWork()?'<div class="mu" style="font-size:14px;margin-top:4px">At work: '+workNames()+'</div>':'')+'</div>'+
   '<nav>'+[['skills','Skills','leaf'],['combat','Fight','swords'],['gear','Gear','shield'],['party','Party','paw'],['delve','Delve','lantern'],['burrow','Burrow','burrow'],['log','Log','tome'],['pack','Pack','satchel']].map(t=>'<button data-tab="'+t[0]+'" class="'+(tab==t[0]?'on':'')+'"><i>'+icon(t[2],25)+'</i>'+t[1]+'</button>').join('')+'</nav>'+
-  view()+'<div id="log">'+S.log.map(l=>'<p>'+l+'</p>').join('')+'</div>'+
+  view()+'<div id="log">'+S.log.map((l:any)=>'<p>'+l+'</p>').join('')+'</div>'+
   '<p class="mu" style="margin-top:24px"><button class="btn" data-reset="1" style="font-size:14px">Start over</button></p>';
   bars();
 }

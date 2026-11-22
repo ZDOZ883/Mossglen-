@@ -28,8 +28,8 @@ document.addEventListener('click',e=>{
   else if(d.tier){const [i,t]=d.tier.split(':');S.tier[i]=+t;if(S.cur&&S.cur.k=='d'&&S.cur.id==i)S.p=0}
   else if(d.lead)S.lead=d.lead;
   else if(d.exd)exSel={d:exSel.d==d.exd?null:d.exd,l:null,m:[],b:null};
-  else if(d.exl){exSel.l=exSel.l==d.exl?null:d.exl;exSel.m=exSel.m.filter(k=>k!=d.exl)}
-  else if(d.exm){exSel.m=exSel.m.includes(d.exm)?exSel.m.filter(k=>k!=d.exm):exSel.m.concat(d.exm)}
+  else if(d.exl){exSel.l=exSel.l==d.exl?null:d.exl;exSel.m=exSel.m.filter((k:string)=>k!=d.exl)}
+  else if(d.exm){exSel.m=exSel.m.includes(d.exm)?exSel.m.filter((k:string)=>k!=d.exm):exSel.m.concat(d.exm)}
   else if(d.exb)exSel.b=exSel.b==d.exb?null:d.exb;
   else if(d.exgo)exStart();
   else if(d.exrecall)exRecall();

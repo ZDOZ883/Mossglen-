@@ -1,11 +1,11 @@
 // Party helpers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 const fighters=()=>Object.keys(S.hired).filter(k=>asg(k).k=='war');
 const pm=()=>(FM[S.form]||FM.steady).party+cb('pmult');
-const pk=n=>Math.min({taken:.45,speed:.4}[n]||99,fighters().reduce((s,k)=>s+(H[k].pk[n]||0)*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),0));
-function mxp(k,x){const b=cl(k);S.cx[k]=(S.cx[k]||0)+x*(H[k].pet?1.5:1);if(cl(k)>b)say(H[k].n+' reaches level '+cl(k)+'.')}
-function ldx(x){const b=LD();S.xp.Leadership+=x;const a=LD();if(a>b){const u=HK.filter(k=>H[k].lt>b&&H[k].lt<=a).map(k=>H[k].n);say('Leadership reaches level '+a+'.'+(LT.some(l=>l>b&&l<=a)?' New party slot.':'')+(u.length?' Now available: '+u.join(', ')+'.':''))}}
-function validTask(t){return !!t&&(t.k=='war'||t.k=='idle'||t.k=='bar'||t.k=='exp'||(t.k=='s'&&!!A.find(a=>a.id==t.id))||(t.k=='k'&&!!DISH[t.id])||(t.k=='f'&&!!IT[t.id]&&t.id[0]!='t')||(t.k=='r'&&!!RFN[t.id]))}
-function assign(k,kind,id?:any){
+const pk=(n:any)=>Math.min(({taken:.45,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+(H[k].pk[n]||0)*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),0));
+function mxp(k:string,x:any){const b=cl(k);S.cx[k]=(S.cx[k]||0)+x*(H[k].pet?1.5:1);if(cl(k)>b)say(H[k].n+' reaches level '+cl(k)+'.')}
+function ldx(x:any){const b=LD();S.xp.Leadership+=x;const a=LD();if(a>b){const u=HK.filter(k=>H[k].lt>b&&H[k].lt<=a).map(k=>H[k].n);say('Leadership reaches level '+a+'.'+(LT.some(l=>l>b&&l<=a)?' New party slot.':'')+(u.length?' Now available: '+u.join(', ')+'.':''))}}
+function validTask(t:any){return !!t&&(t.k=='war'||t.k=='idle'||t.k=='bar'||t.k=='exp'||(t.k=='s'&&!!A.find(a=>a.id==t.id))||(t.k=='k'&&!!DISH[t.id])||(t.k=='f'&&!!IT[t.id]&&t.id[0]!='t')||(t.k=='r'&&!!RFN[t.id]))}
+function assign(k:string,kind:string,id?:any){
   if(!S.hired[k]||asg(k).k=='exp')return;
   const t=S.mt[k];
   if(kind=='bar'){if(buL('bar')>0)S.mt[k]={k:'bar'};return}
@@ -13,8 +13,8 @@ function assign(k,kind,id?:any){
   if(t&&t.k==kind&&t.id==id){S.mt[k]={k:'idle'};return}
   S.mt[k]={k:kind,id,p:0};
 }
-const mdur=(k,t)=>(t.k=='s'?tt(A.find(a=>a.id==t.id)):t.k=='k'?3.5*Math.max(.3,1-cb('spd','Cooking')):t.k=='r'?6*Math.max(.3,1-cb('spd',RFN[t.id].sk)):ctime(t.id)*Math.max(.3,1-cb('spd',CSK(t.id))))/(mspd(k)*pbs(k,skOf(t)));
-function memAct(k,t){
+const mdur=(k:string,t:any)=>(t.k=='s'?tt(A.find(a=>a.id==t.id)):t.k=='k'?3.5*Math.max(.3,1-cb('spd','Cooking')):t.k=='r'?6*Math.max(.3,1-cb('spd',RFN[t.id].sk)):ctime(t.id)*Math.max(.3,1-cb('spd',CSK(t.id))))/(mspd(k)*pbs(k,skOf(t)));
+function memAct(k:string,t:any){
   const bail=()=>{S.mt[k]={k:'idle'}};
   if(t.k=='s'){const a=A.find(x=>x.id==t.id);if(!a||lv(S.xp[a.sk])<a.lv||!gateOk(a.gate))return bail();skPet(a.sk);const yn=1+(Math.random()<lv(S.xp[a.sk])*.004+cb('yld',a.sk)+(pbs(k,a.sk)>1?.15:0)?1:0);const pn=famCut(k,yn);S.inv[a.item]=(S.inv[a.item]||0)+pn;hrCount(a,pn);mxp(k,a.xp*.6);ldx(a.xp*.5)}
   else if(t.k=='k')cookDone(t.id,k);
