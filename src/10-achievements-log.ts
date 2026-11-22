@@ -2,10 +2,10 @@ import { GATHERED, S, TASKS, say } from './00-state';
 import { X } from './registry';
 import { CS, D, IT, PETS, SK, SL, SP, TR, lv, skPet } from './01-species-pets';
 import { E, GSK, PSK, RFN, ZN, ctime, gateOk, refineDone } from './02-gear-data';
-import { HR, RD, hrCount } from './03-world-expeditions';
+import { HR, RD, exs, hrCount } from './03-world-expeditions';
 import { RT } from './04-loadout';
 import { cround } from './05-combat';
-import { A, CSK, LD, asg, cookDone, craftDone, tt, unlockText } from './07-gear-ui';
+import { A, CSK, LD, asg, cookDone, craftDone, mentor, tt, unlockText } from './07-gear-ui';
 import { mdur, memAct, mxp } from './08-party-state';
 import { BRATE, BU, buL } from './09-seasons-burrow';
 // Achievements and collection log. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
@@ -92,12 +92,12 @@ export function logView(){
   h+=AC.map(a=>'<div class="row"><span>'+(S.ach[a[0]]?'🏆 ':'')+a[1]+'<small>'+a[2]+(a[4]?' Reward: '+a[4].toLocaleString()+' acorns.':'')+'</small></span>'+(S.ach[a[0]]?'<span class="good">Done</span>':'')+'</div>').join('');
   return h;
 }
-export const famShare=()=>Math.min(.6,1/3+Math.min(1,LD()/99)/6+.02*buL('larder'));
+export const famShare=()=>Math.min(.68,1/3+Math.min(1,LD()/99)/6+.02*buL('larder')+(S.hired.magpie?.08:0));
 export function famCut(k:string,n:number){let g=0;for(let i=0;i<n;i++)if(Math.random()<famShare())g++;S.fam[k]=(S.fam[k]||0)+n-g;return g}
 export function memTick(dt:any){
-  if(S.ex)Object.keys(S.hired).forEach(k=>{if(asg(k).k!='exp'&&S.ex!.mem.includes(k))S.mt[k]={k:'exp'}});
+  exs().forEach(e=>Object.keys(S.hired).forEach(k=>{if(asg(k).k!='exp'&&e.mem.includes(k))S.mt[k]={k:'exp'}}));
   Object.keys(S.hired).forEach(k=>{
-    const t=asg(k);if(t.k=='exp')return;if(t.k=='bar'){mxp(k,dt*BRATE(buL('bar'))/3600);return}if(t.k=='idle'){if(buL('bar'))mxp(k,dt*BRATE(buL('bar'))/3600*.25);return}if(t.k=='war')return;
+    const t=asg(k);if(t.k=='exp')return;if(t.k=='bar'){mxp(k,dt*BRATE(buL('bar'))*mentor()/3600);return}if(t.k=='idle'){if(buL('bar'))mxp(k,dt*BRATE(buL('bar'))*mentor()/3600*.25);return}if(t.k=='war')return;
     t.p=(t.p||0)+dt;const d=mdur(k,t);let n=0;
     while(S.mt[k]===t&&t.p!>=d&&n<5000){t.p!-=d;memAct(k,t);n++}
   });

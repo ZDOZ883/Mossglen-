@@ -313,7 +313,7 @@ describe('expeditions', () => {
     g.ev(`S.mt.hare={k:'idle'}`);
     g.ev(`exSel={d:'hollow',l:'mole',m:['hare'],b:'fortune'}`);
     g.click({ exgo: '1' });
-    assert.ok(g.ev('!!S.ex'));
+    assert.ok(g.ev('S.exs.length>0'));
     assert.equal(g.ev('S.mt.mole.k'), 'exp');
     assert.equal(g.ev(`fighters().includes('mole')||fighters().includes('hare')`), false);
     g.click({ assign: 'mole:idle' });
@@ -321,22 +321,22 @@ describe('expeditions', () => {
     g.click({ dismiss: 'mole' });
     assert.ok(g.ev('!!S.hired.mole'), 'cannot dismiss a member who is away');
     assert.ok(g.ev('hasWork()'), 'the game keeps ticking while an expedition is out');
-    g.ev('tick(S.ex.dur+1,true)');
-    assert.equal(g.ev('S.ex'), null);
+    g.ev('tick(S.exs[0].dur+1,true)');
+    assert.equal(g.ev('S.exs.length'), 0);
     assert.equal(g.ev('S.mt.mole.k'), 'war');
     assert.equal(g.ev('S.mt.hare.k'), 'idle', 'previous task is restored');
   });
 
-  it('only one expedition at a time, and recall returns everyone with no reward', () => {
+  it('one expedition at low Leadership, and recall returns everyone with no reward', () => {
     const g = party();
     g.ev(`exSel={d:'hollow',l:'mole',m:[],b:null}`);
     g.click({ exgo: '1' });
     const a0 = g.ev('S.a');
     g.ev(`exSel={d:'hollow',l:'hare',m:[],b:null}`);
     g.click({ exgo: '1' });
-    assert.equal(g.ev('S.ex.leader'), 'mole');
-    g.click({ exrecall: '1' });
-    assert.equal(g.ev('S.ex'), null);
+    assert.equal(g.ev('S.exs[0].leader'), 'mole');
+    g.click({ exrecall: '0' });
+    assert.equal(g.ev('S.exs.length'), 0);
     assert.equal(g.ev('S.mt.mole.k'), 'war');
     assert.equal(g.ev('S.a'), a0);
   });
@@ -350,7 +350,7 @@ describe('expeditions', () => {
       g.ev(`exSel={d:'hollow',l:'mole',m:['hare','owl','otter'],b:'fortune'}`);
       g.click({ exgo: '1' });
       const a0 = g.ev('S.a');
-      g.ev('tick(S.ex.dur+1,true)');
+      g.ev('tick(S.exs[0].dur+1,true)');
       if (g.ev(`S.best.hollow||0`) >= 1) {
         wins++;
         assert.ok(g.ev('S.a') > a0);
@@ -459,7 +459,7 @@ describe('save and load', () => {
     g.click({ exgo: '1' });
     g.ev('save()');
     const g2 = load({ seed: 6, save: g.store.hollowbrook1, awaySec: 3 * 3600 });
-    assert.equal(g2.ev('S.ex'), null, 'the expedition should have finished while away');
+    assert.equal(g2.ev('S.exs.length'), 0, 'the expedition should have finished while away');
     assert.equal(g2.ev('S.mt.mole.k'), 'war');
     assert.equal(g2.ev('S.mt.hare.k'), 'war');
   });
@@ -549,7 +549,7 @@ describe('render smoke', () => {
   });
 
   it('the expedition builder renders clean in every state', () => {
-    g.ev(`exSel={d:'sett',l:'mole',m:['hare'],b:'might'};S.ex=null`);
+    g.ev(`exSel={d:'sett',l:'mole',m:['hare'],b:'might'};S.exs=[]`);
     assert.ok(!bad.test(g.view('delve')));
     g.ev(`exSel={d:null,l:null,m:[],b:null}`);
     assert.ok(!bad.test(g.view('delve')));
@@ -723,5 +723,78 @@ describe('farmhands', () => {
     assert.ok(g.ev('plots()[0].ready') < t0, 'the plot ripens sooner');
     g.ev("farmAct('tend:mole')");
     assert.equal(g.ev('farmhands().length'), 1, 'tapping again sends them back to rest');
+  });
+});
+
+describe('leadership past 70', () => {
+  it('slots, recruits and unlock levels line up', () => {
+    const g = load({ seed: 9 });
+    assert.equal(JSON.stringify(g.ev('LT')), '[1,10,25,40,55,70,85,100,115]');
+    assert.equal(g.ev('HK.length'), 9);
+    assert.equal(g.ev("HK.map(k=>H[k].lt).join()"), '1,10,25,40,55,70,85,100,115');
+    g.ev('S.xp.Leadership=XT[85]');
+    assert.equal(g.ev('slots()'), 7);
+  });
+
+  it('specialists fight at 40% so a wider party is not just a stronger one', () => {
+    const g = load({ seed: 9 });
+    g.ev("S.cx.mole=XT[50];S.cx.dormouse=XT[50]");
+    assert.equal(g.ev('fw("mole")'), 1);
+    assert.equal(g.ev('fw("dormouse")'), 0.4);
+    const a = g.ev('mdmg("mole",E[0])'), b = g.ev('mdmg("dormouse",E[0])');
+    assert.ok(b < a * 0.7, 'a specialist of the same level does far less damage');
+  });
+
+  it('specialist perks do their unique jobs', () => {
+    const g = load({ seed: 9 });
+    const fs0 = g.ev('famShare()'), pot0 = g.ev("(()=>{S.inv[POT.p0.n]=1;S.inv.berries=0;alchAct('drink:p0');return buffs().p0-Date.now()})()");
+    g.ev("S.hired={magpie:1,shrew:1};S.mt={magpie:{k:'idle'},shrew:{k:'idle'}};S.inv[POT.p1.n]=1");
+    assert.ok(g.ev('famShare()') > fs0);
+    const pot1 = g.ev("(()=>{alchAct('drink:p1');return buffs().p1-Date.now()})()");
+    assert.ok(pot1 > pot0 * 1.15, 'the brewer stretches potion duration');
+    const r0 = g.ev("(()=>{S.hired={mole:1};S.mt={mole:{k:'m'}};return tendRate()})()");
+    const r1 = g.ev("(()=>{S.hired={mole:1,dormouse:1};S.mt={mole:{k:'m'},dormouse:{k:'idle'}};return tendRate()})()");
+    assert.ok(Math.abs(r1 / r0 - 1.5) < 1e-6, 'the gardener speeds every farmhand');
+  });
+
+  it('parallel expeditions unlock with Leadership and extra ones pay less', () => {
+    const g = load({ seed: 9 });
+    assert.equal(g.ev('exSlots()'), 1);
+    g.ev('S.xp.Leadership=XT[85]');
+    assert.equal(g.ev('exSlots()'), 2);
+    g.ev('S.xp.Leadership=XT[105]');
+    assert.equal(g.ev('exSlots()'), 3);
+    g.ev(`S.sp='Badger';S.hired={mole:1,hare:1};S.mt={mole:{k:'war'},hare:{k:'war'}};S.cx.mole=XT[60];S.cx.hare=XT[60];
+      ['Attack','Strength','Defense','Vitality'].forEach(k=>S.xp[k]=XT[80]);S.xp.Leadership=XT[85];refreshFx()`);
+    g.ev("exSel={d:'hollow',l:'mole',m:[],b:null}");g.click({ exgo: '1' });
+    g.ev("exSel={d:'hollow',l:'hare',m:[],b:null}");g.click({ exgo: '1' });
+    assert.equal(g.ev('exs().length'), 2);
+    assert.equal(g.ev('exs()[1].par'), 0.6);
+    assert.equal(g.ev('asg("mole").k + asg("hare").k'), 'expexp');
+    g.ev('tick(Math.max(...exs().map(e=>e.dur))+1,true)');
+    assert.equal(g.ev('exs().length'), 0);
+    assert.equal(g.ev('S.mt.mole.k + S.mt.hare.k'), 'warwar');
+  });
+
+  it('mentoring and the offline window grow only past level 70', () => {
+    const g = load({ seed: 9 });
+    g.ev('S.xp.Leadership=XT[70]');
+    assert.equal(g.ev('mentor()'), 1);
+    assert.equal(g.ev('offlineCap()'), 8 * 3600e3);
+    g.ev('S.xp.Leadership=XT[100]');
+    assert.ok(Math.abs(g.ev('mentor()') - 1.3) < 1e-9);
+    assert.equal(g.ev('offlineCap()'), 11 * 3600e3);
+    g.ev('S.xp.Leadership=XT[120]');
+    assert.equal(g.ev('offlineCap()'), 12 * 3600e3);
+    assert.equal(g.ev('mentor()'), 1.5);
+  });
+
+  it('old saves with a single expedition are carried into the list', () => {
+    const old = JSON.parse(OLD_SAVE);
+    old.hired = { mole: 1 }; old.mt = { mole: { k: 'exp' } }; old.cx = { mole: 100000 };
+    old.ex = { id: 'hollow', tier: 1, leader: 'mole', mem: ['mole'], boon: null, p: 0, dur: 5000, odds: 0.5, prev: { mole: { k: 'war' } } };
+    const g = load({ seed: 9, save: JSON.stringify(old), awaySec: 0 });
+    assert.equal(g.ev('S.exs.length'), 1);
+    assert.equal(g.ev("'ex' in S"), false);
   });
 });

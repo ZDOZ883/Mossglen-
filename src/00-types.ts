@@ -13,7 +13,7 @@ interface Enemy {
 interface Task { k: 'idle' | 'war' | 'bar' | 'exp' | string; id?: string; p?: number; [k: string]: any }
 interface Expedition {
   id: string; tier: number; leader: string; mem: string[]; boon: string | null;
-  p: number; dur: number; odds: number; prev: Record<string, Task>;
+  p: number; dur: number; odds: number; prev: Record<string, Task>; par?: number;
 }
 interface SaveState {
   sp: string | null; a: number; hp: number; xp: Record<string, number>; inv: Record<string, number>;
@@ -23,7 +23,7 @@ interface SaveState {
 }
 interface Member {
   n: string; c: number; p: number; st: string; role: string; d: string;
-  pk: Record<string, number>; pet?: boolean; [k: string]: any;
+  pk: Record<string, number>; pet?: boolean; spec?: boolean; [k: string]: any;
 }
 interface Formation { n: string; cl: number; d: string; dmg?: number; taken?: number; regen?: number; [k: string]: any }
 type Zone = [string, number, string[], string[], string, number?, string?];

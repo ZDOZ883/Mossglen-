@@ -69,22 +69,27 @@ export function exOdds(d:Delve,t:number,lead:any,mem:any,boon:any){
   return{p:Math.max(.03,Math.min(.97,p+exPk(all,'succ')/100)),ok,rho,dur:Math.round(exDur(d,t)*(1-Math.min(.4,exPk(all,'speed')))),lb,need,n:all.length};
 }
 export function exStart(){
-  const d=D.find(x=>x.id==exSel.d);if(!d||S.ex||!exSel.l)return;
+  const d=D.find(x=>x.id==exSel.d);if(!d||exs().length>=exSlots()||!exSel.l)return;
   const t=X.T(d),mem=[exSel.l].concat(exSel.m.filter((k:string)=>k!=exSel.l)).filter(k=>exEligible(d,k)),o=exOdds(d,t,exSel.l,mem,exSel.b);
   if(!o.ok||mem.length<o.need)return;
   const prev:Record<string,any>={};mem.forEach(k=>{prev[k]=S.mt[k]||{k:'war'};S.mt[k]={k:'exp'}});
-  S.ex={id:d.id,tier:t,leader:exSel.l,mem,boon:exSel.b,p:0,dur:o.dur,odds:o.p,prev};
+  exs().push({id:d.id,tier:t,leader:exSel.l,mem,boon:exSel.b,p:0,dur:o.dur,odds:o.p,prev,par:EXPAR[exs().length]||.5});
   say('Expedition sent to '+d.n+' (tier '+t+'), led by '+H[exSel.l].n+'. Back in '+exFmt(o.dur)+'.');
   exSel={d:null,l:null,m:[],b:null};
 }
-export function exRestore(){const e=S.ex;if(!e)return;e.mem.forEach(k=>{if(!S.hired[k])return;const pv=e.prev&&e.prev[k];S.mt[k]=pv&&X.validTask(pv)&&pv.k!='exp'?pv:{k:'war'}});}
-export function exRecall(){const e=S.ex;if(!e)return;const d=D.find(x=>x.id==e.id)!;exRestore();S.ex=null;say('The expedition to '+d.n+' is called home early. Nothing was gained.')}
-export function exFinish(quiet:any){
-  const e=S.ex;if(!e)return;const d=D.find(x=>x.id==e.id)!,t=e.tier,win=Math.random()<e.odds;
+// Leadership lets you run several expeditions at once (2nd at 85, 3rd at 105). Each extra one pays a smaller share of acorns.
+export const exs=():Expedition[]=>S.exs=S.exs||[];
+export const exSlots=()=>{const l=lv(S.xp.Leadership);return 1+(l>=85?1:0)+(l>=105?1:0)};
+export const EXPAR=[1,.6,.4];
+export const exOf=(k:string)=>exs().find(e=>e.mem.includes(k));
+export function exRestore(e:Expedition){e.mem.forEach(k=>{if(!S.hired[k])return;const pv=e.prev&&e.prev[k];S.mt[k]=pv&&X.validTask(pv)&&pv.k!='exp'?pv:{k:'war'}});}
+export function exRecall(i:number){const e=exs()[i];if(!e)return;const d=D.find(x=>x.id==e.id)!;exRestore(e);exs().splice(i,1);say('The expedition to '+d.n+' is called home early. Nothing was gained.')}
+export function exFinish(quiet:any,e:Expedition){
+  const d=D.find(x=>x.id==e.id)!,t=e.tier,win=Math.random()<e.odds;
   const bn=e.boon=='fortune'?.25:0,lead=e.leader,scale=e.dur/600;
   const m=(1+exPk(e.mem,'loot'))*(1+bn)*(1+.6*(t-1))*(1+exLead(lead)/2);
   const full=Math.round(E.filter(x=>x.dv==d.id&&x.tier==t).reduce((q,x)=>q+x.a,0)*.8*m*(2+e.dur/7200));
-  const g=win?full:Math.round(full*.25);S.a+=g;
+  const g=Math.round((win?full:Math.round(full*.25))*(e.par||1));S.a+=g;
   let s=(win?'Expedition to '+d.n+' (tier '+t+') returned in triumph! +':'Expedition to '+d.n+' (tier '+t+') was driven back. +')+g.toLocaleString()+' acorns.';
   if(win){
     const mat=ZN[d.zb][4],q=3+t*2+Math.floor(Math.random()*(t+1));S.inv[mat]=(S.inv[mat]||0)+q;s+=' +'+q+' '+mat+'.';
@@ -95,15 +100,17 @@ export function exFinish(quiet:any){
   }
   e.mem.forEach(k=>{if(S.hired[k])X.mxp(k,12*t*scale*(win?1:.4)*(k==lead?1.5:1))});
   X.ldx(30*t*e.mem.length*(scale/2)*(win?1:.4));
-  say(s);exRestore();S.ex=null;
+  say(s);exRestore(e);exs().splice(exs().indexOf(e),1);
 }
 export function exView(){
-  if(S.ex){
-    const e=S.ex,d=D.find(x=>x.id==e.id),left=e.dur-e.p;
-    return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+d!.n+' · tier '+e.tier+'<small>Led by '+H[e.leader].n+' with '+e.mem.filter(k=>k!=e.leader).map(k=>H[k].n.split(" ")[0]).join(', ')+(e.mem.length==1?' (alone)':'')+(e.boon?' · '+EXB[e.boon][0]:'')+'</small></span><small>Odds when they set out: '+Math.round(e.odds*100)+'%. They return in '+exFmt(left)+', and these members are away until then.</small><div class="bar"><i id="exb"></i></div><div style="margin-top:8px"><button class="btn" data-exrecall="1">Recall party</button></div></div>';
-  }
+  let run='';
+  exs().forEach((e,i)=>{
+    const d=D.find(x=>x.id==e.id),left=e.dur-e.p;
+    run+='<div class="row" style="flex-direction:column;align-items:stretch"><span>'+d!.n+' · tier '+e.tier+'<small>Led by '+H[e.leader].n+' with '+e.mem.filter(k=>k!=e.leader).map(k=>H[k].n.split(" ")[0]).join(', ')+(e.mem.length==1?' (alone)':'')+(e.boon?' · '+EXB[e.boon][0]:'')+((e.par||1)<1?' · pays '+Math.round((e.par||1)*100)+'%':'')+'</small></span><small>Odds when they set out: '+Math.round(e.odds*100)+'%. They return in '+exFmt(left)+', and these members are away until then.</small><div class="bar"><i id="exb_'+i+'"></i></div><div style="margin-top:8px"><button class="btn" data-exrecall="'+i+'">Recall party</button></div></div>';
+  });
+  if(exs().length>=exSlots())return run+(exSlots()<3?'<p class="mu">Leadership '+(exSlots()<2?85:105)+' lets you run another expedition at the same time.</p>':'');
   const hs=Object.keys(S.hired);
-  let h='<p class="sub">Send your party on an expedition without you. A leader gives the group a bonus. Everyone who goes is away until they return, so they cannot fight, work or train meanwhile. You stay free to do anything else, even while you are offline.</p>';
+  let h=run+'<p class="sub">Send your party on an expedition without you'+(exSlots()>1?' (up to '+exSlots()+' at once, extra ones pay less)':'')+'. A leader gives the group a bonus. Everyone who goes is away until they return, so they cannot fight, work or train meanwhile. You stay free to do anything else, even while you are offline.</p>';
   if(!hs.length)return h+'<p class="mu">Recruit a party member in the Party tab first.</p>';
   const sel=exSel.d?D.find(x=>x.id==exSel.d):null;
   h+=D.map(d=>{

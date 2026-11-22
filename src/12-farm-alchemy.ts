@@ -23,7 +23,7 @@ export const cropXp = (i: number) => Math.round(CROPSECS[i] * (1 + i * 1.6));
 export const growMs = (i: number, mulch: boolean) => Math.round(CROPSECS[i] * 1000 * Math.max(.3, 1 - cb('spd', 'Farming')) * (mulch ? .75 : 1));
 // Party members can tend the farm: each one adds a share of your speed to every growing plot, up to double speed.
 export const farmhands = () => Object.keys(S.hired).filter(k => S.mt[k] && S.mt[k].k == 'm');
-export const tendRate = () => Math.min(1, farmhands().reduce((s, k) => s + mspd(k) * .4, 0));
+export const tendRate = () => Math.min(1, farmhands().reduce((s, k) => s + mspd(k) * .4, 0) * (S.hired.dormouse ? 1.5 : 1));
 TASKS.m = { sk: 'Farming', dur: () => 30, done: () => {}, name: () => 'Tending the farm', valid: () => true, mname: () => 'Tending the farm', mdur: (k: string) => 30 / mspd(k), mact: (k: string) => { X.mxp(k, 8); X.ldx(4); } };
 export const plots = () => { const a: any[] = S.farm = S.farm || []; while (a.length < PLOT_LV.length) a.push(null); return a; };
 
@@ -138,7 +138,7 @@ export function alchAct(arg: string) {
   const p = POT[id], b = buffs();
   if (!p || (S.inv[p.n] || 0) < 1) return;
   if (!activeBuffs().includes(id) && activeBuffs().length >= POTMAX) { say('Your stomach can only take ' + POTMAX + ' potions at once.'); return; }
-  S.inv[p.n]--; b[id] = Date.now() + Math.round(POTSECS * 1000 * (1 + cb('pot')));
+  S.inv[p.n]--; b[id] = Date.now() + Math.round(POTSECS * 1000 * (1 + cb('pot') + (S.hired.shrew ? .2 : 0)));
   refreshFx(); say('You drink the ' + p.n + '. ' + p.d);
 }
 export function potStatus() {

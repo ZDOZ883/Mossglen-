@@ -104,6 +104,9 @@ export const cl=(k:string)=>lv(S.cx[k]||0);
 export const hp=(k:string)=>H[k].p+(cl(k)-1)*(k==S.lead?2:1);
 export const LD=()=>lv(S.xp.Leadership);
 export const slots=()=>LT.filter(l=>l<=LD()).length;
+// Leadership past 70: mentoring speeds barracks training, and the offline window stretches an hour per ten levels (to 12h).
+export const mentor=()=>1+Math.min(.5,Math.max(0,LD()-70)*.01);
+export const offlineCap=()=>(8+Math.min(4,Math.max(0,Math.floor((LD()-70)/10))))*3600e3;
 export const bspd=()=>(.25+.0075*LD())*(1+X.cb('mspd'));
 export const mspd=(k:string)=>bspd()*(1+.01*(cl(k)-1));
 export const asg=(k:string)=>S.mt[k]||{k:'war'};

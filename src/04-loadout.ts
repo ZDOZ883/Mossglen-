@@ -90,7 +90,8 @@ export const shT=()=>shieldOn()?.08:0;
 export const maxHit=(e:Enemy)=>Math.max(1,Math.floor((1+lv(S.xp.Strength)*1+wst()*3.2)*3*(1+FM![S.form].dmg)*(is2h()?1.3:1)*(1+spAff())*(1+.25*adv(S.style,e.type))*(1+X.pk('dmg'))*(1+ef('dmg'))*(1+X.cb('dmgm'))*(X.onTask(e)?1.1+(S.su.keen?.15:0)+X.cb('tdmg'):1)));
 export const eDef=(e:Enemy)=>elv(e)*.9+5+(e.boss?10:0);
 export const eAtk=(e:Enemy)=>elv(e)*.8+5+(e.boss?10:0);
-export const mdmg=(k:string,e:Enemy)=>{const c=X.cl(k);return c*(1.5+c/60)*(H[k].pet?1.25:1)*(1+.25*adv(H[k].st,e.type))};
+export const fw=(k:string)=>H[k].spec?.4:1;// specialists fight at 40%, so a bigger party is wider rather than stronger
+export const mdmg=(k:string,e:Enemy)=>{const c=X.cl(k);return fw(k)*c*(1.5+c/60)*(H[k].pet?1.25:1)*(1+.25*adv(H[k].st,e.type))};
 export const memDpr=(e:Enemy)=>X.fighters().reduce((q,k)=>q+mdmg(k,e),0)*X.pm()*.9;
 export const emax=(e:Enemy)=>Math.max(1,Math.round(e.dps*3*enr(e)));
 export const hitP=(e:Enemy)=>{const A=(lv(S.xp.Attack)+8)*(1+wst()/45),D=eDef(e);return clampH(1.5*A/(A+D)+(dwf()>0?.03:0)+X.cb('acc')+X.pk('acc'))};

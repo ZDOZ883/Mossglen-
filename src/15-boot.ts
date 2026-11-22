@@ -5,7 +5,7 @@ import { exRecall, exSel, exStart, openGate, set_exSel, startHR, startRaid } fro
 import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadout';
 import { cycle, shopBuy } from './05-combat';
 import { equipSlot, gsel, set_gsel, set_gtab } from './06-icons';
-import { LD, asg, buy, buyTool, set_skill, set_tab, set_who, skill, slBuy, slots, tab, taskAct, who } from './07-gear-ui';
+import { LD, asg, buy, buyTool, offlineCap, set_skill, set_tab, set_who, skill, slBuy, slots, tab, taskAct, who } from './07-gear-ui';
 import { assign, validTask } from './08-party-state';
 import { buUp, sgBuy } from './09-seasons-burrow';
 import { bars, cb, clampXp, hasWork, refreshFx, tick } from './11-engine';
@@ -48,7 +48,7 @@ document.addEventListener('click',e=>{
   else if(d.exm){exSel.m=exSel.m.includes(d.exm)?exSel.m.filter((k:string)=>k!=d.exm):exSel.m.concat(d.exm)}
   else if(d.exb)exSel.b=exSel.b==d.exb?null:d.exb;
   else if(d.exgo)exStart();
-  else if(d.exrecall)exRecall();
+  else if(d.exrecall)exRecall(+d.exrecall);
   else if(d.bu)buUp(d.bu);
   else if(d.sgbuy)sgBuy(d.sgbuy);
   else if(d.cf){const q=d.cf.split(':');if(q[0]=='g'){CF.g[skill]=q[1];CF.f[skill]='all'}else CF.f[skill]=q[1]=='all'?'all':+q[1]}
@@ -69,7 +69,7 @@ document.addEventListener('click',e=>{
 import { OPEN } from './03-world-expeditions';
 import { migrate } from './14-migrate';
 migrate();
-export const away=Math.min(Date.now()-S.t,8*3600e3);
+export const away=Math.min(Date.now()-S.t,offlineCap());
 if(S.sp&&(S.cur||hasWork())&&away>20000){const a0=S.a;tick(away/1000,true);say('You were away '+Math.round(away/60000)+' min. Your work carried on.')}
 S.t=Date.now();
 export let last=Date.now(),sv=0;

@@ -2,7 +2,7 @@ import { FXSRC, S, TASKS, TICKS, save, say } from './00-state';
 import { X } from './registry';
 import { D, FXC, H, IT, SK, XT, lv, maxhp, nsl, set_FXC, spFx } from './01-species-pets';
 import { E, RFN, gearFx, gearSync, itFx, qrank } from './02-gear-data';
-import { exFinish, hrFx } from './03-world-expeditions';
+import { exFinish, exs, hrFx } from './03-world-expeditions';
 import { hits, hitsStr, set_hitsStr } from './04-loadout';
 import { canEq, istat, reqText } from './05-combat';
 import { A, CSK, DISH, asg, mspd, set_who, slots, who } from './07-gear-ui';
@@ -13,7 +13,7 @@ import { checkAch, dur, famShare, finish, memTick } from './10-achievements-log'
 export function tick(dt:any,quiet:any){
   if(dt<=0)return;
   if(S.cur){S.p+=dt;const d=dur();let n=0;while(S.cur&&S.p>=d&&n<20000){S.p-=d;finish(quiet);n++}}
-  if(S.ex){S.ex.p+=dt;if(S.ex.p>=S.ex.dur)exFinish(quiet)}
+  for(const e of exs().slice()){e.p+=dt;if(e.p>=e.dur)exFinish(quiet,e)}
   TICKS.forEach(f=>f(dt,quiet));memTick(dt);clampXp();checkCapes();checkAch();wxCheck();gearSync();
 }
 export function bars(){
@@ -34,7 +34,7 @@ export function bars(){
   if(hl){const t=hits.join('<br>')||(c?'Waiting for the first strike.':'');if(t!==hitsStr){set_hitsStr(t);hl.innerHTML=t}}
   const hb=document.getElementById('hp');if(hb)hb.style.width=Math.max(0,Math.min(100,S.hp/maxhp()*100))+'%';
   Object.keys(S.hired).forEach(k=>{const t=asg(k),e=document.getElementById('mp_'+k);if(e&&t.k!='war'&&t.k!='idle'&&t.k!='bar'&&t.k!='exp')e.style.width=Math.max(0,Math.min(100,(t.p||0)/mdur(k,t)*100))+'%'});
-  const xb=document.getElementById('exb');if(xb&&S.ex)xb.style.width=Math.max(0,Math.min(100,S.ex.p/S.ex.dur*100))+'%';
+  exs().forEach((e,i)=>{const xb=document.getElementById('exb_'+i);if(xb)xb.style.width=Math.max(0,Math.min(100,e.p/e.dur*100))+'%'});
   const o=document.getElementById('ac');if(o)o.textContent='🌰 '+Math.floor(S.a).toLocaleString();
 }
 export function curName(){return S.cur?taskName(S.cur):null}
@@ -117,7 +117,7 @@ export const pcx=(k:string)=>{const l=lv(S.xp[k]);if(l>=120)return Math.max(0,Ma
 export const isOn=(k:string,id:string)=>{const t=who=='you'?S.cur:asg(who);return !!t&&t.k==k&&t.id==id};
 export const crew=(k:string,id:string)=>{const n=Object.keys(S.hired).filter(m=>{const t=asg(m);return t.k==k&&t.id==id}).map(m=>H[m].n.split(' ')[0]);return n.length?'<br>'+n.join(', ')+' working':''};
 export const working=()=>Object.keys(S.hired).filter(k=>asg(k).k!='war'&&asg(k).k!='idle'&&asg(k).k!='exp');
-export const hasWork=()=>!!S.ex||working().length>0||(buL('bar')>0&&Object.keys(S.hired).some(k=>asg(k).k=='idle'));
+export const hasWork=()=>exs().length>0||working().length>0||(buL('bar')>0&&Object.keys(S.hired).some(k=>asg(k).k=='idle'));
 const ING:Record<string,string>=Object.fromEntries('Pick Picking,Dig Digging,Sniff Sniffing,Gather Gathering,Find Finding,Pluck Plucking,Reach Reaching,Cut Cutting,Harvest Harvesting,Gnaw Gnawing,Fell Felling,Hew Hewing,Claim Claiming,Catch Catching,Spear Spearing,Hook Hooking,Trap Trapping,Net Netting,Lure Luring,Land Landing,Collect Collecting,Chip Chipping,Pry Prying,Free Freeing,Mine Mining,Quarry Quarrying,Snare Snaring'.split(',').map(x=>x.split(' ')));
 export const ing=(n:string)=>{const w=n.split(' ');return (ING[w[0]]||w[0])+(w.length>1?' '+w.slice(1).join(' '):'')};
 export function taskName(c:any):string{return TASKS[c.k]?TASKS[c.k].name(c):c.k=='bar'?'Training in the barracks':c.k=='s'?ing(A.find(a=>a.id==c.id)!.n):c.k=='k'?'Cooking '+DISH[c.id].n:c.k=='f'?'Crafting '+IT[c.id].n:c.k=='r'?'Refining '+RFN[c.id].n:'Fighting '+E.find(e=>e.id==c.id)!.n}

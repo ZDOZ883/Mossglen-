@@ -2,11 +2,11 @@ import { S, TASKS } from './00-state';
 import { X } from './registry';
 import { CS, FOOD, H, HK, IT, LT, PETS, REQ, SK, SP, SPX, V, lv, nsl, spTxt } from './01-species-pets';
 import { AF, KEEP, KP, RF, RFN, gateOk, refRecipe } from './02-gear-data';
-import { GATE, exFmt, exView, gatesView, hrView, raidView } from './03-world-expeditions';
+import { GATE, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
 import { combatView, istat } from './05-combat';
 import { icon } from './06-icons';
-import { A, CR, CSK, DISH, GL, LD, asg, bspd, burn, cl, gearView, mspd, power, recipe, skill, slayerView, slots, tab, toolRow, tt, who } from './07-gear-ui';
+import { A, CR, CSK, DISH, GL, LD, asg, bspd, burn, cl, gearView, mentor, mspd, power, recipe, skill, slayerView, slots, tab, toolRow, tt, who } from './07-gear-ui';
 import { pm } from './08-party-state';
 import { BRATE, buL, burrowView, wxView } from './09-seasons-burrow';
 import { famShare, logView } from './10-achievements-log';
@@ -68,7 +68,7 @@ export function leadView(){
 }
 export const PKN:Record<string,string[]>={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['expeditions ','% faster'],loot:['+','% expedition loot'],succ:['+','% expedition odds']};
 export function perkTxt(k:string){return Object.keys(H[k].pk).map(n=>{const v=H[k].pk[n]*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),x=n=='succ'?Math.round(v):Math.round(v*100);return PKN[n][0]+x+PKN[n][1]}).join(', ')}
-export function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(S.ex?S.ex.dur-S.ex.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+BRATE(buL('bar')).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id!].n:t.k=='f'?'Crafting: '+IT[t.id!].n:t.k=='r'?'Refining: '+RFN[t.id!].n:TASKS[t.k]&&TASKS[t.k].mname?TASKS[t.k].mname!(t):'Resting. Send them to work from a skill page.'}
+export function memName(k:string){const t=asg(k);return t.k=='exp'?'On expedition · back in '+exFmt(exOf(k)?exOf(k)!.dur-exOf(k)!.p:0):t.k=='war'?'Fighting beside you':t.k=='bar'?'Training in the barracks · '+Math.round(BRATE(buL('bar'))*mentor()).toLocaleString()+' xp/h':t.k=='s'?'Gathering: '+A.find(a=>a.id==t.id).n:t.k=='k'?'Cooking: '+DISH[t.id!].n:t.k=='f'?'Crafting: '+IT[t.id!].n:t.k=='r'?'Refining: '+RFN[t.id!].n:TASKS[t.k]&&TASKS[t.k].mname?TASKS[t.k].mname!(t):'Resting. Send them to work from a skill page.'}
 export function partyView(){
   const hs=Object.keys(S.hired),l=LD(),sl=slots();
   let h='<h2>Your party</h2><p class="sub">Leadership '+l+' · '+nsl()+' of '+sl+' slots · members work at '+Math.round(bspd()*100)+'% of your speed. Raise Leadership for more slots and faster work.</p>';
@@ -83,7 +83,7 @@ export function partyView(){
   h+='<h2>Recruit</h2>'+(rec.length?rec.map(k=>{
     const m=H[k],unl=l>=m.lt,full=nsl()>=sl;
     return '<div class="row"><span>'+m.n+'<small>'+m.role+' · '+m.st+' · '+(unl?m.d:'Unlocks at Leadership '+m.lt)+'</small></span>'+(unl?'<button class="btn" data-hire="'+k+'"'+(S.a<m.c||full?' disabled':'')+'>'+m.c+'</button>':'<small>Level '+m.lt+'</small>')+'</div>';
-  }).join('')+(nsl()>=sl?'<p class="mu">Your slots are full. Leadership levels 10, 25, 40, 55 and 70 each open another.</p>':''):'<p class="mu">Everyone in the valley has joined.</p>');
+  }).join('')+(nsl()>=sl?'<p class="mu">Your slots are full. Leadership levels 10, 25, 40, 55, 70, 85, 100 and 115 each open another.</p>':''):'<p class="mu">Everyone in the valley has joined.</p>');
   const pr=Object.keys(S.pets).filter(k=>!S.hired[k]);
   if(pr.length)h+='<h2>Pets at home</h2>'+pr.map(k=>'<div class="row"><span>'+H[k].n+'<small>Pet · '+H[k].st+' · '+perkTxt(k)+'</small></span><button class="btn" data-hire="'+k+'"'+(nsl()>=sl?' disabled':'')+'>Call back</button></div>').join('');
   h+='<h2>Pet collection <span class="mu" style="display:inline">· '+Object.keys(S.pets).length+'/'+PETS.length+'</span></h2><p class="mu">Extremely rare drops, found only once each, modelled on RuneScape: skill pets roll about 1 in 100,000 per action (slightly better at higher levels, 15× better at 200M xp), boss pets 1 in 1,000 to 1 in 5,000 per boss kill, raid pets 1 in 80 to 1 in 150 per clear. Skill pets can drop while you or a member trains that skill. Boss pets drop from zone bosses. Raid pets drop when you clear a raid. Pets take a party slot like any member, but fight and work better than the members you can recruit.</p><p class="mu">'+PETS.map(q=>S.pets[q[0]]?'<b>'+q[1]+'</b>':'???').join(' · ')+'</p>';
