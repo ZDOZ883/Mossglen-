@@ -2588,7 +2588,7 @@ nav button.on i{opacity:1}
     }
     return h;
   }
-  var SKG = [["Gathering", ["Foraging", "Woodcutting", "Fishing", "Mining", "Hunting"]], ["Artisan", ["Cooking", "Smithing", "Fletching", "Enchanting", "Tailoring"]], ["Combat", ["Slayer"]], ["Command", ["Leadership"]]];
+  var SKG = [["Gathering", ["Foraging", "Woodcutting", "Fishing", "Mining", "Hunting"]], ["Artisan", ["Cooking", "Smithing", "Fletching", "Enchanting", "Tailoring"]], ["Specialist", ["Slayer", "Leadership"]]];
   var skOf = (t) => !t ? null : t.k == "s" ? (A.find((a) => a.id == t.id) || {}).sk : t.k == "k" ? "Cooking" : t.k == "f" ? CSK(t.id) : t.k == "r" ? RFN[t.id].sk : null;
   var pcx = (k) => {
     const l = lv(S.xp[k]);

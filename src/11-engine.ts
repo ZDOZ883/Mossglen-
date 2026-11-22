@@ -111,7 +111,7 @@ export function capesView(){
   if(cl.length){h+='<h2>Crafted cloaks</h2>';h+=cl.map(i=>{const it=IT[i],id='I:'+i,ok=canEq(it);return '<div class="row'+(S.cape==id?' on':'')+'"><span>'+it.n+'<small>'+istat(it)+(ok?'':' · needs '+reqText(it))+'</small></span>'+(S.cape==id?'<span class="good">Worn</span>':ok?'<button class="btn" data-cape="'+id+'">Wear</button>':'')+'</div>'}).join('')}
   return h;
 }
-export const SKG=[['Gathering',['Foraging','Woodcutting','Fishing','Mining','Hunting']],['Artisan',['Cooking','Smithing','Fletching','Enchanting','Tailoring']],['Combat',['Slayer']],['Command',['Leadership']]];
+export const SKG=[['Gathering',['Foraging','Woodcutting','Fishing','Mining','Hunting']],['Artisan',['Cooking','Smithing','Fletching','Enchanting','Tailoring']],['Specialist',['Slayer','Leadership']]];
 export const skOf=(t:any)=>!t?null:t.k=='s'?(A.find(a=>a.id==t.id)||{}).sk:t.k=='k'?'Cooking':t.k=='f'?CSK(t.id):t.k=='r'?RFN[t.id].sk:null;
 export const pcx=(k:string)=>{const l=lv(S.xp[k]);if(l>=120)return Math.max(0,Math.min(100,(S.xp[k]-XT[120])/(2e8-XT[120])*100));const lo=XT[l];return Math.max(0,Math.min(100,(S.xp[k]-lo)/(XT[l+1]-lo)*100))};
 export const isOn=(k:string,id:string)=>{const t=who=='you'?S.cur:asg(who);return !!t&&t.k==k&&t.id==id};
