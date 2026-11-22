@@ -4,7 +4,7 @@ import { MEMBERS, IT, XT, asg, lv, maxhp, nsl, roster, set_FXC, spFx } from './0
 import { CAPN, CE, ENEMIES, GE, GRP, RFN, TNAME, capeFx, capeLabel, capeName, capeOk, capeTier, cumFx, fxTxt, gcumFx, gearFx, gearSync, grpName, grpTier, qrank, gw } from './02-gear-data';
 import { exFinish, exs, hrFx } from './03-world-expeditions';
 import { hits, hitsStr, set_hitsStr } from './04-loadout';
-import { canEq, istat, reqText } from './05-combat';
+import { canEq, istat, partyHp, reqText } from './05-combat';
 import { ACHIEVEMENTS, CSK, DISH, mspd, set_who, slots, who } from './07-gear-ui';
 import { mdur } from './08-party-state';
 import { buFx, buL, sgFx, wxCheck, wxFx } from './09-seasons-burrow';
@@ -23,7 +23,7 @@ export function bars(){
     if(c){const cur=gameState.ehid==c.id&&gameState.ehp!=null?Math.max(0,gameState.ehp):c.hp;b.style.width=Math.max(0,Math.min(100,cur/c.hp*100))+'%'}
     else b.style.width=Math.max(0,Math.min(100,gameState.p/dur()*100))+'%';
   }
-  const ph=document.getElementById('ph');if(ph)ph.textContent=Math.max(0,Math.round(gameState.hp))+' / '+maxhp();
+  const py=document.getElementById('pty');if(py)py.textContent=partyHp();const ph=document.getElementById('ph');if(ph)ph.textContent=Math.max(0,Math.round(gameState.hp))+' / '+maxhp();
   if(c){
     const cur=gameState.ehid==c.id&&gameState.ehp!=null?Math.max(0,Math.ceil(gameState.ehp)):c.hp,rest=gameState.p<0,txt=rest?'recovering':cur+' / '+c.hp;
     const eh=document.getElementById('eh');if(eh)eh.textContent=txt;

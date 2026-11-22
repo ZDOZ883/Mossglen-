@@ -85,7 +85,7 @@ export const fw=(k:string)=>MEMBERS[k].spec?.4:1;// specialists fight at 40%, so
 export const LD=()=>lv(gameState.xp.Leadership);
 export const asg=(k:string)=>gameState.mt[k]||{k:'war'};
 // Party helpers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
-export const fighters=()=>Object.keys(gameState.hired).filter(k=>asg(k).k=='war');
+export const fighters=()=>Object.keys(gameState.hired).filter(k=>asg(k).k=='war'&&!(gameState.down&&gameState.down[k]));
 export const pm=()=>(FM[gameState.form]||FM.steady).party+cb('pmult');
 // Member combat stats are their level shaped by role: [Attack, Defense, Vitality] multipliers, so a party's overall strength stays the same while roles matter.
 export const STAT_MULT:Record<string,[number,number,number]>={Tank:[.9,1.05,1.05],Striker:[1.1,.85,.85],Healer:[.9,.95,1.15],Scout:[1,.9,.9],Specialist:[1,1,1],Pet:[1,1,1]};

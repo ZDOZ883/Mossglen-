@@ -436,7 +436,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   var fw = (k) => MEMBERS[k].spec ? 0.4 : 1;
   var LD = () => lv(gameState.xp.Leadership);
   var asg = (k) => gameState.mt[k] || { k: "war" };
-  var fighters = () => Object.keys(gameState.hired).filter((k) => asg(k).k == "war");
+  var fighters = () => Object.keys(gameState.hired).filter((k) => asg(k).k == "war" && !(gameState.down && gameState.down[k]));
   var pm = () => (FM[gameState.form] || FM.steady).party + cb("pmult");
   var STAT_MULT = { Tank: [0.9, 1.05, 1.05], Striker: [1.1, 0.85, 0.85], Healer: [0.9, 0.95, 1.15], Scout: [1, 0.9, 0.9], Specialist: [1, 1, 1], Pet: [1, 1, 1] };
   var KITSIG = {
@@ -1724,7 +1724,11 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     healers: () => healers,
     istat: () => istat,
     loot: () => loot,
+    memFrac: () => memFrac,
+    memHp: () => memHp,
+    memRecover: () => memRecover,
     onKill: () => onKill,
+    partyHp: () => partyHp,
     price: () => price,
     reqText: () => reqText,
     rndGear: () => rndGear,
@@ -1892,10 +1896,52 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     ["Attack", "Strength", "Ranged", "Magic", "Defense", "Vitality"].forEach(skPet);
     if (e.boss && !e.inst) petRoll("p_z" + e.zone, 1e3 + 400 * e.zone);
     if (!quiet) hit("<b>You defeat " + e.n + ". +" + g + " acorns.</b>");
+    memRecover();
     if (e.raid) raidKill(e, quiet);
     else loot(e);
   }
   var HEAL_IN = 0.55;
+  var memMax = (k) => mhpx(k);
+  var memHp = (k) => {
+    const g = gameState;
+    g.mh = g.mh || {};
+    if (g.mh[k] == null) g.mh[k] = memMax(k);
+    return g.mh[k];
+  };
+  var memFrac = (k) => memHp(k) / memMax(k);
+  function memStrike(e, quiet) {
+    const f = fighters();
+    if (!f.length || Math.random() > eHitP(e) * 0.6) return;
+    const k = f[Math.floor(Math.random() * f.length)], d = Math.max(1, Math.round((1 + Math.floor(Math.random() * emax(e))) * 0.5));
+    const h = memHp(k) - d;
+    gameState.mh[k] = Math.max(0, h);
+    if (h <= 0) {
+      gameState.down = gameState.down || {};
+      gameState.down[k] = 1;
+      if (!quiet) hit("<b>" + MEMBERS[k].n + " is knocked out of the fight.</b>");
+    }
+  }
+  function memMend(frac) {
+    const f = fighters().filter((k) => memFrac(k) < 1).sort((a, b) => memFrac(a) - memFrac(b))[0];
+    if (!f) return;
+    gameState.mh[f] = Math.min(memMax(f), memHp(f) + frac * memMax(f));
+  }
+  function memRegen() {
+    fighters().forEach((k) => {
+      gameState.mh[k] = Math.min(memMax(k), memHp(k) + memMax(k) * 0.01 * RT);
+    });
+  }
+  function memRecover() {
+    const g = gameState;
+    g.mh = g.mh || {};
+    Object.keys(g.hired).forEach((k) => {
+      if (!MEMBERS[k]) return;
+      const mx = memMax(k);
+      g.mh[k] = Math.min(mx, (g.down && g.down[k] ? mx * 0.25 : memHp(k)) + mx * 0.2);
+    });
+    g.down = {};
+  }
+  var partyHp = () => Object.keys(gameState.hired).filter((k) => MEMBERS[k] && asg(k).k == "war").map((k) => MEMBERS[k].n.split(" ")[0] + " " + (gameState.down && gameState.down[k] ? "down" : Math.round(memFrac(k) * 100) + "%")).join(" \xB7 ");
   var healers = () => {
     const n = fighters().filter((k) => (MEMBERS[k].pk.heal || 0) > 0).map((k) => MEMBERS[k].n.split(" ")[0]);
     return n.length > 1 ? n.slice(0, -1).join(", ") + " and " + n[n.length - 1] : n[0] || "Your party";
@@ -1916,6 +1962,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       gameState.ehid = e.id;
       gameState.ehp = e.hp;
       gameState.rr = 0;
+      Object.keys(gameState.down || {}).forEach((k) => {
+        gameState.mh[k] = memMax(k) * 0.25;
+      });
+      gameState.down = {};
       gameState.hrr = Math.max(1, e.hp / Math.max(0.01, hitP(e) * (maxHit(e) + 1) / 2 * (1 + dwf()) + memDpr(e)));
       if (!quiet) set_hits([]);
     }
@@ -1951,6 +2001,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       gameState.hp -= d;
       if (!quiet) hit(e.n + " hits you for " + d + ".");
     } else if (!quiet) hit(e.n + " misses.");
+    memStrike(e, quiet);
     if (gameState.hp <= 0 && cb("ls") > 0 && !gameState.lsu) {
       gameState.lsu = true;
       gameState.hp = 1;
@@ -1959,6 +2010,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     if (gameState.hp <= 0) {
       gameState.lsu = false;
       gameState.hp = m / 2;
+      gameState.down = {};
+      gameState.mh = {};
       gameState.p = -15;
       gameState.ehp = null;
       say(e.n + " overpowers you. You limp off to rest a while.");
@@ -1970,11 +2023,17 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       return;
     }
     const hr = pk("heal") * HEAL_IN;
-    if (hr > 0 && gameState.hp > 0 && gameState.hp < m) {
-      const h = Math.max(0.5, m * hr / Math.max(1, gameState.hrr || 8));
-      gameState.hp = Math.min(m, gameState.hp + h);
-      if (!quiet && h >= 1) hit(healers() + " mends you (+" + Math.round(h) + ").");
+    if (hr > 0) {
+      const h = m * hr / Math.max(1, gameState.hrr || 8), need2 = m - gameState.hp;
+      const toP = gameState.hp < m * 0.65 ? h : Math.min(need2, h * 0.5), rest = h - toP;
+      if (toP > 0 && gameState.hp > 0 && gameState.hp < m) {
+        const q = Math.max(0.5, toP);
+        gameState.hp = Math.min(m, gameState.hp + q);
+        if (!quiet && q >= 1) hit(healers() + " mends you (+" + Math.round(q) + ").");
+      }
+      if (rest > 0) memMend(rest / m);
     }
+    memRegen();
     gameState.hp = Math.min(m, gameState.hp + m * 0.01 * RT * (1 + FM[gameState.form].regen + cb("regen")));
   }
   function cycle(k) {
@@ -2011,7 +2070,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   }
   function arenaView() {
     const c = gameState.cur && gameState.cur.k == "c" ? ENEMIES.find((e) => e.id == gameState.cur.id) : null, food = Object.keys(FOOD).reduce((s, k) => s + (gameState.inv[k] || 0), 0);
-    let h = '<div class="arena"><div class="nm"><b>You</b><span id="ph" class="mu"></span></div><div class="bar"><i id="hp"></i></div><small class="mu">' + gameState.style + (c ? " \xB7 hit " + Math.round(hitP(c) * 100) + "% \xB7 max hit " + maxHit(c) + (adv(gameState.style, c.type) > 0 ? " \xB7 type advantage" : adv(gameState.style, c.type) < 0 ? " \xB7 type disadvantage" : "") : "") + " \xB7 food " + food + " (eaten below 55% hp)</small>";
+    let h = '<div class="arena"><div class="nm"><b>You</b><span id="ph" class="mu"></span></div><div class="bar"><i id="hp"></i></div><small class="mu" id="pty" style="display:block;margin:4px 0">' + partyHp() + '</small><small class="mu">' + gameState.style + (c ? " \xB7 hit " + Math.round(hitP(c) * 100) + "% \xB7 max hit " + maxHit(c) + (adv(gameState.style, c.type) > 0 ? " \xB7 type advantage" : adv(gameState.style, c.type) < 0 ? " \xB7 type disadvantage" : "") : "") + " \xB7 food " + food + " (eaten below 55% hp)</small>";
     if (c) h += '<div class="nm" style="margin-top:12px"><b>' + (c.boss ? "Boss: " : "") + c.n + '</b><span id="eh" class="mu"></span></div><div class="bar hp"><i id="ehb"></i></div><small class="mu">' + c.type + " \xB7 weak to " + weak(c.type) + " \xB7 hit " + Math.round(eHitP(c) * 100) + "% \xB7 max hit " + emax(c) + (c.raid ? " \xB7 enrages after " + c.soft + " rounds (round " + (gameState.rr || 0) + ")" : "") + "</small>" + dropPanel(c);
     else h += '<p class="mu" style="margin:12px 0 0">Not fighting. Pick an enemy below.</p>';
     return h + '<div id="hits" class="hits"></div></div>';
@@ -2989,6 +3048,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
         b.style.width = Math.max(0, Math.min(100, cur / c.hp * 100)) + "%";
       } else b.style.width = Math.max(0, Math.min(100, gameState.p / dur() * 100)) + "%";
     }
+    const py = document.getElementById("pty");
+    if (py) py.textContent = partyHp();
     const ph = document.getElementById("ph");
     if (ph) ph.textContent = Math.max(0, Math.round(gameState.hp)) + " / " + maxhp();
     if (c) {

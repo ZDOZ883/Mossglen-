@@ -1324,3 +1324,15 @@ describe('tutorial and item directory', () => {
     g.view('log'); g.click({ logsub: 'guide' });
   });
 });
+
+describe('party hp', () => {
+  it('a downed ally sits out the fight, then returns after the kill', () => {
+    const g = load({ seed: 3 });
+    expectedSetup(g, 6, { members: 2 });
+    g.ev(`(function(){gameState.mh={};gameState.down={};const k=fighters()[0];gameState.mh[k]=1;gameState.down[k]=1;globalThis.__k=k})()`);
+    assert.equal(g.ev(`fighters().includes(__k)`), false);
+    g.ev(`memRecover()`);
+    assert.equal(g.ev(`fighters().includes(__k)`), true);
+    assert.ok(g.ev(`memFrac(__k)`) > 0.2);
+  });
+});

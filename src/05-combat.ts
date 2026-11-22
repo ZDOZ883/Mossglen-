@@ -1,9 +1,9 @@
 import { gameState, say } from './00-state';
 import { X } from './registry';
-import { FM, FOOD, GP, MEMBERS, IT, SL, XS, adv, cb, fighters, ldx, lv, maxhp, mxp, onTask, petRoll, pk, skPet, weak , OFF } from './01-species-pets';
+import { FM, FOOD, GP, MEMBERS, IT, SL, XS, adv, asg, cb, fighters, ldx, lv, maxhp, mxp, onTask, petRoll, pk, skPet, weak , OFF } from './01-species-pets';
 import { OUT_BOSS_N, OUT_BOSS_PITY, outLine, outZoneTier, outfitRoll } from './02-outfits';
 import { ACCL, BWEAPONS, ENEMIES, PRE, ZN, uniqLine, uniqTry, dropTier, elv, fxTxt, gearSync, qrank, rsLv, scopeTxt, skey, zoneOpen } from './02-gear-data';
-import { RD, raidKill, raidOk } from './03-world-expeditions';
+import { RD, mhpx, raidKill, raidOk } from './03-world-expeditions';
 import { CL, RT, armor, dwf, eHitP, ef, emax, hit, hitP, maxHit, memDpr, set_hits, shT } from './04-loadout';
 // Fight maths, loot, combat rounds, combat view. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 export function fight(e:Enemy){
@@ -68,14 +68,34 @@ export function onKill(e:Enemy,quiet?:boolean){
   ['Attack','Strength','Ranged','Magic','Defense','Vitality'].forEach(skPet);
   if(e.boss&&!e.inst)petRoll('p_z'+e.zone,1000+400*e.zone);
   if(!quiet)hit('<b>You defeat '+e.n+'. +'+g+' acorns.</b>');
+  memRecover();
   if(e.raid)raidKill(e,quiet);else loot(e);
 }
 export const HEAL_IN=.55;
+const memMax=(k:string)=>mhpx(k);
+export const memHp=(k:string)=>{const g=gameState;g.mh=g.mh||{};if(g.mh[k]==null)g.mh[k]=memMax(k);return g.mh[k]};
+export const memFrac=(k:string)=>memHp(k)/memMax(k);
+// Allies get their own hp. An enemy sometimes swings at one of them instead of you; a downed ally is out until the fight ends.
+function memStrike(e:Enemy,quiet?:boolean){
+  const f=fighters();if(!f.length||Math.random()>eHitP(e)*.6)return;
+  const k=f[Math.floor(Math.random()*f.length)],d=Math.max(1,Math.round((1+Math.floor(Math.random()*emax(e)))*.5));
+  const h=memHp(k)-d;gameState.mh![k]=Math.max(0,h);
+  if(h<=0){gameState.down=gameState.down||{};gameState.down[k]=1;if(!quiet)hit('<b>'+MEMBERS[k].n+' is knocked out of the fight.</b>')}
+}
+function memMend(frac:number){
+  const f=fighters().filter(k=>memFrac(k)<1).sort((a,b)=>memFrac(a)-memFrac(b))[0];if(!f)return;
+  gameState.mh![f]=Math.min(memMax(f),memHp(f)+frac*memMax(f));
+}
+function memRegen(){fighters().forEach(k=>{gameState.mh![k]=Math.min(memMax(k),memHp(k)+memMax(k)*.01*RT)})}
+// After a kill the fallen get back up and the whole party catches its breath.
+export function memRecover(){const g=gameState;g.mh=g.mh||{};Object.keys(g.hired).forEach(k=>{if(!MEMBERS[k])return;const mx=memMax(k);g.mh![k]=Math.min(mx,(g.down&&g.down[k]?mx*.25:memHp(k))+mx*.2)});g.down={}}
+
+export const partyHp=()=>Object.keys(gameState.hired).filter(k=>MEMBERS[k]&&asg(k).k=='war').map(k=>MEMBERS[k].n.split(' ')[0]+' '+(gameState.down&&gameState.down[k]?'down':Math.round(memFrac(k)*100)+'%')).join(' · ');
 export const healers=()=>{const n=fighters().filter(k=>(MEMBERS[k].pk.heal||0)>0).map(k=>MEMBERS[k].n.split(' ')[0]);return n.length>1?n.slice(0,-1).join(', ')+' and '+n[n.length-1]:n[0]||'Your party'};
 export function cround(e:Enemy,quiet?:boolean){
   const m=maxhp();
   if(e.raid){const r=RD.find(x=>x.id==e.raid)!;if(!raidOk(r)){gameState.cur=null;gameState.ehp=null;say('The raid party broke up. You pull out of '+r.n+'.');return}gameState.rr=(gameState.rr||0)+1}
-  if(gameState.ehid!==e.id||gameState.ehp==null){gameState.ehid=e.id;gameState.ehp=e.hp;gameState.rr=0;gameState.hrr=Math.max(1,e.hp/Math.max(.01,hitP(e)*(maxHit(e)+1)/2*(1+dwf())+memDpr(e)));if(!quiet)set_hits([])}
+  if(gameState.ehid!==e.id||gameState.ehp==null){gameState.ehid=e.id;gameState.ehp=e.hp;gameState.rr=0;Object.keys(gameState.down||{}).forEach(k=>{gameState.mh![k]=memMax(k)*.25});gameState.down={};gameState.hrr=Math.max(1,e.hp/Math.max(.01,hitP(e)*(maxHit(e)+1)/2*(1+dwf())+memDpr(e)));if(!quiet)set_hits([])}
   if(gameState.hp<m*.55){
     const hl=1+ef('heal')+cb('heal')+lv(gameState.xp.Cooking)*.004,fk=Object.keys(FOOD).filter(k=>gameState.inv[k]>0).sort((a,b)=>FOOD[a]-FOOD[b]),k=fk.find(q=>FOOD[q]*hl>=m*.15)||fk[fk.length-1];
     if(k){gameState.inv[k]--;const h=Math.round(FOOD[k]*hl);gameState.hp=Math.min(m,gameState.hp+h);if(!quiet)hit('You eat '+k+' (+'+h+').')}
@@ -84,10 +104,17 @@ export function cround(e:Enemy,quiet?:boolean){
   if(gameState.ehp>0&&dwf()>0&&Math.random()<hitP(e)){const od=1+Math.floor(Math.random()*Math.max(1,Math.floor(maxHit(e)*dwf())));gameState.ehp-=od;if(!quiet)hit('Your off-hand hits for '+od+'.')}
   if(gameState.ehp<=0){gameState.ehp=null;onKill(e,quiet);return}
   if(Math.random()<eHitP(e)){const d=Math.max(1,Math.round((1+Math.floor(Math.random()*emax(e)))*(1-armor())*(1+FM![gameState.form].taken)*(1-Math.min(.6,pk('taken')+cb('taken')+shT()+(onTask(e)?cb('ttaken'):0)))));gameState.hp-=d;if(!quiet)hit(e.n+' hits you for '+d+'.')}else if(!quiet)hit(e.n+' misses.');
+  memStrike(e,quiet);
   if(gameState.hp<=0&&cb('ls')>0&&!gameState.lsu){gameState.lsu=true;gameState.hp=1;if(!quiet)hit('Last stand! You hold on with 1 hp.')}
-  if(gameState.hp<=0){gameState.lsu=false;gameState.hp=m/2;gameState.p=-15;gameState.ehp=null;say(e.n+' overpowers you. You limp off to rest a while.');if(e.raid){gameState.cur=null;say('The raid is lost. Resupply, then try again.')}if(!quiet)hit('You are knocked out.');return}
+  if(gameState.hp<=0){gameState.lsu=false;gameState.hp=m/2;gameState.down={};gameState.mh={};gameState.p=-15;gameState.ehp=null;say(e.n+' overpowers you. You limp off to rest a while.');if(e.raid){gameState.cur=null;say('The raid is lost. Resupply, then try again.')}if(!quiet)hit('You are knocked out.');return}
   // Healers mend you every round of the fight. Over a typical fight it adds up to the same total they used to give after each kill.
-  const hr=pk('heal')*HEAL_IN;if(hr>0&&gameState.hp>0&&gameState.hp<m){const h=Math.max(.5,m*hr/Math.max(1,gameState.hrr||8));gameState.hp=Math.min(m,gameState.hp+h);if(!quiet&&h>=1)hit(healers()+' mends you (+'+Math.round(h)+').')}
+  const hr=pk('heal')*HEAL_IN;
+  if(hr>0){const h=m*hr/Math.max(1,gameState.hrr||8),need=m-gameState.hp;
+    // The player comes first: below 65% hp every mend goes to you. Above that, the surplus tends the weakest ally.
+    const toP=gameState.hp<m*.65?h:Math.min(need,h*.5),rest=h-toP;
+    if(toP>0&&gameState.hp>0&&gameState.hp<m){const q=Math.max(.5,toP);gameState.hp=Math.min(m,gameState.hp+q);if(!quiet&&q>=1)hit(healers()+' mends you (+'+Math.round(q)+').')}
+    if(rest>0)memMend(rest/m);}
+  memRegen();
   gameState.hp=Math.min(m,gameState.hp+m*.01*RT*(1+FM![gameState.form].regen+cb('regen')));
 }
 export function cycle(k:string){const ot=k=='ring1'?gameState.eq.ring2:k=='ring2'?gameState.eq.ring1:null;const o=Object.keys(gameState.own).filter(i=>IT[i].slot==skey(k)&&canEq(IT[i])&&i!=ot).sort((a,b)=>IT[a].tier-IT[b].tier||qrank(IT[a])-qrank(IT[b])||(IT[a].fam||0)-(IT[b].fam||0));if(!o.length)return;gameState.eq[k]=o[(o.indexOf(gameState.eq[k])+1)%o.length];gearSync()}
@@ -97,7 +124,7 @@ export function istat(it:Item){if(it.eff){const N:Record<string,any>={gold:'acor
 export function reqText(it:Item){if(it.rs)return ({gath:'any gathering skill',prod:'any production skill'}[it.rs]||it.rs)+' '+it.req;return it.slot=='body'||it.slot=='head'||it.slot=='legs'?'Defense '+it.req:'Attack '+it.req}
 export function arenaView(){
   const c=gameState.cur&&gameState.cur.k=='c'?ENEMIES.find(e=>e.id==gameState.cur.id):null,food=Object.keys(FOOD).reduce((s,k)=>s+(gameState.inv[k]||0),0);
-  let h='<div class="arena"><div class="nm"><b>You</b><span id="ph" class="mu"></span></div><div class="bar"><i id="hp"></i></div><small class="mu">'+gameState.style+(c?' · hit '+Math.round(hitP(c)*100)+'% · max hit '+maxHit(c)+(adv(gameState.style,c.type)>0?' · type advantage':adv(gameState.style,c.type)<0?' · type disadvantage':''):'')+' · food '+food+' (eaten below 55% hp)</small>';
+  let h='<div class="arena"><div class="nm"><b>You</b><span id="ph" class="mu"></span></div><div class="bar"><i id="hp"></i></div><small class="mu" id="pty" style="display:block;margin:4px 0">'+partyHp()+'</small><small class="mu">'+gameState.style+(c?' · hit '+Math.round(hitP(c)*100)+'% · max hit '+maxHit(c)+(adv(gameState.style,c.type)>0?' · type advantage':adv(gameState.style,c.type)<0?' · type disadvantage':''):'')+' · food '+food+' (eaten below 55% hp)</small>';
   if(c)h+='<div class="nm" style="margin-top:12px"><b>'+(c.boss?'Boss: ':'')+c.n+'</b><span id="eh" class="mu"></span></div><div class="bar hp"><i id="ehb"></i></div><small class="mu">'+c.type+' · weak to '+weak(c.type)+' · hit '+Math.round(eHitP(c)*100)+'% · max hit '+emax(c)+(c.raid?' · enrages after '+c.soft+' rounds (round '+(gameState.rr||0)+')':'')+'</small>'+dropPanel(c);
   else h+='<p class="mu" style="margin:12px 0 0">Not fighting. Pick an enemy below.</p>';
   return h+'<div id="hits" class="hits"></div></div>';
