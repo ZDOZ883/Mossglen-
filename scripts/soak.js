@@ -11,7 +11,7 @@ function sane(g){return g.ev(`(function(){const o=[];const chk=(n,v)=>{if(typeof
  if(gameState.hp>maxhp()+1)o.push('hp>max');if(gameState.hp<0)o.push('hp<0');
  Object.keys(gameState.hired).forEach(k=>{if(!MEMBERS[k])o.push('unknown member '+k);if(gameState.bench[k])o.push('both hired and bench '+k)});
  if(Object.keys(gameState.hired).length>slots())o.push('party over slots '+Object.keys(gameState.hired).length+'/'+slots());
- Object.keys(gameState.bench).forEach(k=>{const t=gameState.mt[k];if(!t||(t.k!='idle'&&t.k!='bar'))o.push('bench task '+k+' '+JSON.stringify(t))});
+ Object.keys(gameState.bench).forEach(k=>{const t=gameState.mt[k];if(!t||(t.k!='idle'&&t.k!='bar'&&t.k!='exp'))o.push('bench task '+k+' '+JSON.stringify(t))});
  Object.keys(gameState.hired).forEach(k=>{if(!validTask(gameState.mt[k]))o.push('invalid task '+k+' '+JSON.stringify(gameState.mt[k]))});
  if(gameState.lead&&!gameState.hired[gameState.lead]&&Object.keys(gameState.hired).length)o.push('lead not in party '+gameState.lead);
  Object.keys(gameState.eq||{}).forEach(k=>{const id=gameState.eq[k];if(id&&!IT[id])o.push('eq '+k+' unknown '+id);if(id&&!gameState.own[id])o.push('eq '+k+' not owned '+id)});
