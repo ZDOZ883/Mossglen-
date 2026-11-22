@@ -117,7 +117,7 @@ function alchDone(c: any) {
 TASKS.a = { sk: 'Alchemy', dur: () => 5 * Math.max(.3, 1 - cb('spd', 'Alchemy')), done: alchDone, name: (c: any) => 'Brewing ' + POT[c.id].n, valid: (c: any) => !!POT[c.id] };
 
 FXSRC.push(() => {
-  const o: any[] = [], b = buffs(), now = Date.now();
+  const o: FxEntry[] = [], b = buffs(), now = Date.now();
   Object.keys(b).forEach(id => { if (b[id] > now && POT[id]) POT[id].fx.forEach((e: any) => (e[2] == null ? [null] : e[2]).forEach((sk: string | null) => o.push({ k: e[0], v: e[1], sk }))); });
   return o;
 });

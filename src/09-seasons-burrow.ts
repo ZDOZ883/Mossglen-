@@ -1,4 +1,4 @@
-import { S, save, say } from './00-state';
+import { S, say } from './00-state';
 import { X } from './registry';
 import { CRS, GN, lv } from './01-species-pets';
 import { GSK, ZN } from './02-gear-data';
@@ -29,7 +29,7 @@ export function wxAt(sl:any){return WX[((sl%4)+4)%4]}
 export const wxNow=()=>wxAt(wxSlot());
 export function wxFx(){const o:any[]=[];wxNow().fx.forEach((e:any)=>e[2].forEach((sk:string)=>o.push({k:e[0],v:e[1],sk})));return o}
 export function wxCheck(){const sl=wxSlot();if(S.wxs!==sl){const first=S.wxs==null;S.wxs=sl;X.refreshFx();if(!first)say(wxNow().i+' The season turns: '+wxNow().n+' begins.')}}
-export const wxTxt=(w:any)=>w.fx.map((e:Enemy)=>e[2].map((sk:string)=>sk+' '+(e[1]>0?'+':'−')+Math.round(Math.abs(e[1])*100)+'% '+(e[0]=='burn'?(e[1]>0?'less burning':'more burning'):({spd:'speed',yld:'double yields',xp:'xp'} as any)[e[0]]||e[0])).join(', ')).join(' · ');
+export const wxTxt=(w:any)=>w.fx.map((e:FxDef)=>(e[2] as string[]).map((sk:string)=>sk+' '+(e[1]>0?'+':'−')+Math.round(Math.abs(e[1])*100)+'% '+(e[0]=='burn'?(e[1]>0?'less burning':'more burning'):({spd:'speed',yld:'double yields',xp:'xp'} as any)[e[0]]||e[0])).join(', ')).join(' · ');
 export function wxView(){
   const w=wxNow(),s0=wxSlot(),left=Math.max(0,(s0+1)*WS*1000-Date.now()),m=Math.ceil(left/60000),nx=wxAt(s0+1),n2=wxAt(s0+2);
   const ends=(m>=60?Math.floor(m/60)+'h ':'')+m%60+'m';

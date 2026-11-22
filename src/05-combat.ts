@@ -1,6 +1,6 @@
 import { S, say } from './00-state';
 import { X } from './registry';
-import { FM, FOOD, GP, H, IT, SL, XS, adv, cb, cl, fighters, ldx, lv, maxhp, mxp, onTask, petRoll, pk, skPet, weak } from './01-species-pets';
+import { FM, FOOD, GP, H, IT, SL, XS, adv, cb, fighters, ldx, lv, maxhp, mxp, onTask, petRoll, pk, skPet, weak } from './01-species-pets';
 import { ACCL, E, ZN, dropTier, elv, gearSync, qrank, rsLv, scopeTxt, skey, zoneOpen } from './02-gear-data';
 import { RD, raidKill, raidOk } from './03-world-expeditions';
 import { CL, RT, armor, dwf, eHitP, ef, emax, hit, hitP, maxHit, memDpr, set_hits, shT } from './04-loadout';

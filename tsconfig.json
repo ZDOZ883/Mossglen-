@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022", "module": "ES2022", "lib": ["ES2022", "DOM"],
-    "strict": false, "strictNullChecks": true, "noImplicitThis": true, "strictFunctionTypes": true, "strictBindCallApply": true, "noImplicitAny": true, "noEmit": true,
+    "strict": true, "noUnusedLocals": true, "noEmit": true,
     "skipLibCheck": true, "allowJs": false
   },
   "include": ["src/**/*.ts"]

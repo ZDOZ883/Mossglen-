@@ -1,8 +1,8 @@
 import { S, say } from './00-state';
 import { X } from './registry';
-import { AR, CS, FOOD, GL, GN, GP, H, IT, LD, LT, SK, SP, V, W, XT, asg, cb, cl, fighters, ldx, lv, mxp, onTask, petRoll, skPet, useMats, weak } from './01-species-pets';
+import { AR, CS, FOOD, GL, GN, GP, H, IT, LD, LT, SK, SP, V, W, XT, cb, cl, fighters, ldx, lv, mxp, petRoll, skPet, useMats, weak } from './01-species-pets';
 import { E, RF, ZN, gateOk, zoneOpen } from './02-gear-data';
-import { CL, armor, loadoutView } from './04-loadout';
+import { armor, loadoutView } from './04-loadout';
 import { autoEq, istat, price, reqText } from './05-combat';
 import { bonusSummary, gsel, gtab, icon, iconOf, pickerHtml, tileHtml } from './06-icons';
 // Gear screen. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
@@ -47,7 +47,7 @@ export function craftDone(id:string,mk?:any){
   if(!S.own[id]){S.own[id]=1;say((mk?H[mk].n+' crafted ':'Crafted ')+it.n+'.');autoEq(id)}else S.a+=scrap(it.tier);
 }
 export function newTask(){
-  const sl=lv(S.xp.Slayer),cl=CL(),zm=ZN.reduce((m,z,i)=>zoneOpen(i)?i:m,0);
+  const sl=lv(S.xp.Slayer),zm=ZN.reduce((m,z,i)=>zoneOpen(i)?i:m,0);
   const c=E.filter(e=>!e.boss&&e.zone>=zm-2&&zoneOpen(e.zone)&&!e.inst&&Math.floor(ZN[e.zone][1]*.5)<=sl);
   const e=c[Math.floor(Math.random()*c.length)],n=20+Math.floor(Math.random()*21);
   S.task={id:e.id,n,left:n};say('New task: defeat '+n+' × '+e.n+'.');
@@ -65,7 +65,7 @@ export function taskAct(a:string){
 }
 export function slBuy(k:string){const c=({keen:60,fort:100} as Record<string,number>)[k];if(!S.su[k]&&S.pt>=c){S.pt-=c;S.su[k]=1;say('Unlocked '+(k=='keen'?'Keen Instinct':'Hunter’s Fortune')+'.')}}
 export function slayerView(){
-  const x=S.xp.Slayer,l=lv(x),lo=need(l-1),pc=Math.min(100,(x-lo)/(need(l)-lo)*100),t=S.task,e=t&&E.find(q=>q.id==t.id);
+  const t=S.task,e=t&&E.find(q=>q.id==t.id);
   let h='<p class="sub">Warden Thistle posts hunts on the Burrow Board. Points: <b>'+S.pt+'</b> · streak '+S.str+' (bonus points on every 5th and 10th task). Party members fighting beside you help clear tasks.</p>';
   if(t)h+='<div class="row"><span>Defeat '+t.left+' more '+e.n+'<small>'+ZN[e.zone][0]+' · '+e.type+' · weak to '+weak(e.type)+'. On task: +10% damage, +10% rare drops, Slayer xp.</small></span><button class="btn" data-task="fight">Fight</button></div><p><button class="btn" data-task="reroll"'+(S.pt<10?' disabled':'')+'>Reroll (10 pts)</button></p>';
   else h+='<p><button class="btn" data-task="new">Get a task</button></p><p class="mu">Tasks come from zones you can fight. Harder zones need a higher Slayer level.</p>';

@@ -1,14 +1,14 @@
 import { S, save, say } from './00-state';
-import { FM, H, IT, LD, LT, V, XS, XT, asg, cb, nsl } from './01-species-pets';
+import { FM, H, LD, V, asg, cb, nsl } from './01-species-pets';
 import { KEEP } from './02-gear-data';
 import { exRecall, exSel, exStart, openGate, set_exSel, startHR, startRaid } from './03-world-expeditions';
 import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadout';
 import { cycle, shopBuy } from './05-combat';
 import { equipSlot, gsel, set_gsel, set_gtab } from './06-icons';
 import { buy, buyTool, offlineCap, set_skill, set_tab, set_who, skill, slBuy, slots, tab, taskAct, who } from './07-gear-ui';
-import { assign, validTask } from './08-party-state';
+import { assign } from './08-party-state';
 import { buUp, sgBuy } from './09-seasons-burrow';
-import { bars, clampXp, hasWork, refreshFx, tick } from './11-engine';
+import { bars, hasWork, refreshFx, tick } from './11-engine';
 import { CF, render, set_logSub } from './13-views';
 import { alchAct, farmAct } from './12-farm-alchemy';
 // Input handling, boot and timers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
@@ -70,12 +70,12 @@ import { OPEN } from './03-world-expeditions';
 import { migrate } from './14-migrate';
 migrate();
 export const away=Math.min(Date.now()-S.t,offlineCap());
-if(S.sp&&(S.cur||hasWork())&&away>20000){const a0=S.a;tick(away/1000,true);say('You were away '+Math.round(away/60000)+' min. Your work carried on.')}
+if(S.sp&&(S.cur||hasWork())&&away>20000){tick(away/1000,true);say('You were away '+Math.round(away/60000)+' min. Your work carried on.')}
 S.t=Date.now();
 export let last=Date.now(),sv=0;
 setInterval(()=>{
   const n=Date.now(),dt=(n-last)/1000;last=n;S.t=n;
-  if(S.sp&&(S.cur||hasWork())){const lg=S.log[0],a=S.a,k=Object.keys(S.inv).length;tick(dt,false);if(S.log[0]!==lg||S.a!==a)render();}
+  if(S.sp&&(S.cur||hasWork())){const lg=S.log[0],a=S.a;tick(dt,false);if(S.log[0]!==lg||S.a!==a)render();}
   bars();
   if(++sv%25==0)save();
 },200);

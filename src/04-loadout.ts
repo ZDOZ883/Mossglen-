@@ -1,4 +1,4 @@
-import { S, TASKS, save, say } from './00-state';
+import { S, TASKS, say } from './00-state';
 import { X } from './registry';
 import { FM, H, IT, SL, XS, adv, cb, cl, fighters, fw, lv, maxhp, onTask, pk, pm, spAff } from './01-species-pets';
 import { E, GSK, PSK, RFN, accScore, elv, gearSync } from './02-gear-data';

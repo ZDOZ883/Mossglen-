@@ -34,3 +34,7 @@ type Ach = [string, string, string, () => boolean, number];
 interface Dish { n: string; raw: string; q: number; side: string | null; lv: number; gate?: number; heal: number; xp: number }
 interface LoadCtx { kind: string; sk?: string; label?: string; e?: Enemy | null; [k: string]: any }
 type Effect = { k: string; v: number; sk?: string | null };
+
+// An effect as written in the data tables: [key, value, optional skill list or 'P' for production]; and as applied: one entry per skill.
+type FxDef = [string, number, (string[] | string | null)?];
+interface FxEntry { k: string; v: number; sk: string | null | undefined }

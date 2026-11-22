@@ -1,8 +1,8 @@
-import { S, save, say } from './00-state';
+import { S, say } from './00-state';
 import { X } from './registry';
 // Species traits and pets. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 export const SK=['Foraging','Woodcutting','Fishing','Mining','Hunting'];
-export let FXC:any[]=[];
+export let FXC:FxEntry[]=[];
 export const V:Record<string,number>={berries:2,mushrooms:5,truffles:15,twigs:1,'birch logs':4,'oak limbs':12,minnows:2,trout:6,pike:18,pebbles:1,flint:5,amber:20,'Hollow Heart':40,'Badger Claw':120,'Crow Feather':300,pelts:8};
 export const SP:Record<string,string>={Hedgehog:'Foraging',Beaver:'Woodcutting',Otter:'Fishing',Badger:'Mining',Fox:'Hunting',Mouse:'Cooking'};
 // small species flavour: one perk, one drawback, one combat affinity (a style and a grip)
@@ -14,7 +14,7 @@ Badger:{t:'Stout: 3% more max health.',fx:[['hpm',.03,null]],w:'Fishing 4% slowe
 Fox:{t:'Sharp eyes: 3% more rare drops.',fx:[['drop',.03,null]],w:'Woodcutting 4% slower.',wf:[['spd',-.04,['Woodcutting']]],st:'Magic',gp:'dw',gt:'dual wield'},
 Mouse:{t:'Light fingers: 5% less burning when cooking.',fx:[['burn',.05,['Cooking']]],w:'Mining 4% slower.',wf:[['spd',-.04,['Mining']]],st:'Magic',gp:'sh',gt:'shield'}};
 export const spTxt=(n:any)=>{const x=SPX[n];return x.t+' '+x.w+' '+x.st+' style +4% damage, and +3% more with a '+x.gt+'.'};
-export function spFx(){const o:any[]=[];const x=SPX[(S&&S.sp)!];if(!x)return o;x.fx.concat(x.wf).forEach((e:Enemy)=>{const L=e[2]==null?[null]:e[2]=='P'?['Smithing','Fletching','Enchanting','Tailoring']:e[2];L.forEach((sk:string)=>o.push({k:e[0],v:e[1],sk}))});return o}
+export function spFx(){const o:any[]=[];const x=SPX[(S&&S.sp)!];if(!x)return o;x.fx.concat(x.wf).forEach((e:FxDef)=>{const L:(string|null)[]=e[2]==null?[null]:e[2]=='P'?['Smithing','Fletching','Enchanting','Tailoring']:([] as string[]).concat(e[2]);L.forEach(sk=>o.push({k:e[0],v:e[1],sk}))});return o}
 export const spAff=()=>{const x=SPX[S.sp!];if(!x)return 0;let v=S.style==x.st?.04:0;const gp=X.is2h()?'2h':X.dwf()>0?'dw':X.shieldOn()?'sh':'';if(gp&&gp==x.gp)v+=.03;return v};
 export const LT=[1,10,25,40,55,70,85,100,115];
 export const H:Record<string,Member>={mole:{n:'Mole Sapper',c:100,p:6,st:'Melee',role:'Tank',pk:{dmg:.03,taken:.06},d:'Tunnels past traps and soaks up hits.'},hare:{n:'Hare Courier',c:400,p:3,st:'Ranged',role:'Striker',pk:{dmg:.08,speed:.15},d:'Quick paws. Expeditions return sooner.'},owl:{n:'Owl Scout',c:1500,p:2,st:'Magic',role:'Scout',pk:{dmg:.05,loot:.25},d:'Spots hidden stashes. Expeditions bring back more.'},otter:{n:'Otter Medic',c:5000,p:4,st:'Magic',role:'Healer',pk:{dmg:.02,heal:.02,succ:5},d:'Patches you up after every kill.'},badger:{n:'Badger Warden',c:15000,p:8,st:'Melee',role:'Tank',pk:{dmg:.04,taken:.1,succ:3},d:'Holds the line against anything.'},fox:{n:'Fox Skirmisher',c:40000,p:6,st:'Ranged',role:'Striker',pk:{dmg:.12},d:'Strikes hard from the flank.'},
@@ -71,7 +71,7 @@ for(let t=0;t<11;t++){SL.forEach((s,i)=>IT['w'+i+t]={n:WNM[i][t],slot:s,tier:t,s
 export const TR=[['Acorn Charm',{gold:.1}],['Thornjaw’s Tooth',{dmg:.05}],['Healer’s Bell',{heal:.5}],['Clover Ring',{drop:.25}],['Scholar’s Quill',{xp:.08}],['Frostfang Totem',{dmg:.08}],['Sunglass Charm',{gold:.25,drop:.1}],['Starcrown',{dmg:.1,xp:.1,drop:.1}],['Rootheart Idol',{dmg:.12,gold:.2},100],['Wyrmtooth Pendant',{dmg:.15,heal:.4},110],['Eclipse Sigil',{dmg:.18,xp:.15,drop:.15},120],['Warren Matriarch’s Crest',{dmg:.2,heal:.3},85],['Thornspire Banner',{dmg:.22,drop:.2},100],['Gloamwyrm Eye',{dmg:.25,heal:.5},110],['Citadel Crown of Dusk',{dmg:.3,xp:.2,drop:.2,heal:.4,gold:.3},118]];;
 TR.forEach((t:any,i)=>IT['t'+i]={n:t[0],slot:'trinket',tier:i,eff:t[1],req:t[2]||1,stat:0});
 
-export function set_FXC(v:any){FXC=v}
+export function set_FXC(v:FxEntry[]){FXC=v}
 // Shared helpers every module needs, kept here so they can be imported directly instead of going through the registry.
 export function cb(k:string,sk?:string){let v=0;for(let i=0;i<FXC.length;i++){const e=FXC[i];if(e.k==k&&(e.sk==null||e.sk=='*'||e.sk==sk))v+=e.v}return v}
 export const cl=(k:string)=>lv(S.cx[k]||0);

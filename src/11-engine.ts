@@ -1,6 +1,6 @@
-import { FXSRC, S, TASKS, TICKS, save, say } from './00-state';
+import { FXSRC, S, TASKS, TICKS, say } from './00-state';
 import { X } from './registry';
-import { D, FXC, H, IT, SK, XT, asg, cb, cl, lv, maxhp, nsl, set_FXC, spFx } from './01-species-pets';
+import { H, IT, SK, XT, asg, lv, maxhp, nsl, set_FXC, spFx } from './01-species-pets';
 import { E, RFN, gearFx, gearSync, itFx, qrank } from './02-gear-data';
 import { exFinish, exs, hrFx } from './03-world-expeditions';
 import { hits, hitsStr, set_hitsStr } from './04-loadout';
@@ -70,7 +70,7 @@ export const gw=(g:string)=>g=='Max'?'skill':g.toLowerCase();
 export const CTX=['yld','xp','spd','save','burn'];
 export const pc=(v:number)=>Math.round(v*100);
 export const FXT:Record<string,(v:number)=>string>={pot:(v:number)=>'+'+pc(v)+'% potion duration',yld:(v:number)=>pc(v)+'% chance of a double yield',xp:(v:number)=>'+'+pc(v)+'% xp',spd:(v:number)=>pc(v)+'% faster work',save:(v:number)=>pc(v)+'% chance to save materials',burn:(v:number)=>pc(v)+'% less burning',heal:(v:number)=>'+'+pc(v)+'% food healing',sell:(v:number)=>'+'+pc(v)+'% acorns from sales',drop:(v:number)=>'+'+pc(v)+'% rare drops',regen:(v:number)=>'+'+pc(v)+'% health regeneration',taken:(v:number)=>'−'+pc(v)+'% damage taken',acc:(v:number)=>'+'+pc(v)+'% hit chance',dmgm:(v:number)=>'+'+pc(v)+'% max hit',crit:(v:number)=>pc(v)+'% chance to hit twice as hard',lsteal:(v:number)=>'heal '+pc(v)+'% of damage dealt',ls:(v:number)=>'survive one lethal hit per fight',hpm:(v:number)=>'+'+pc(v)+'% max health',xpm:(v:number)=>'+'+pc(v)+'% combat xp',ttaken:(v:number)=>'−'+pc(v)+'% damage taken on task',txp:(v:number)=>'+'+pc(v)+'% Slayer xp',tdmg:(v:number)=>'+'+pc(v)+'% damage on Slayer tasks',tdrop:(v:number)=>'+'+pc(v)+'% rare drops on task',pts:(v:number)=>'+'+pc(v)+'% slayer points',mspd:(v:number)=>'+'+pc(v)+'% member work speed',pmult:(v:number)=>'+'+pc(v)+'% member perks'};
-export const fxTxt=(arr:any)=>{const m:Record<string,any>={},o:any=[];arr.forEach((e:Enemy)=>{if(!(e[0] in m)){m[e[0]]=0;o.push(e[0])}m[e[0]]+=e[1]});return o.map((k:string)=>FXT[k](m[k])).join(', ')};
+export const fxTxt=(arr:any)=>{const m:Record<string,any>={},o:any=[];arr.forEach((e:FxDef)=>{if(!(e[0] in m)){m[e[0]]=0;o.push(e[0])}m[e[0]]+=e[1]});return o.map((k:string)=>FXT[k](m[k])).join(', ')};
 export const cumFx=(k:string,t:number)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(CE[k][i]);return fxTxt(a)};
 export const gcumFx=(g:string,t:number)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(GE[g][i]);return fxTxt(a)};
 export const capeTier=(k:string)=>{const x=S.xp[k],l=lv(x);return x>=2e8?4:x>=1.5e8?3:l>=120?2:l>=99?1:0};
@@ -82,7 +82,7 @@ export const capeOk=(id:string)=>id.indexOf('I:')==0?(!!IT[id.slice(2)]&&!!S.own
 export function capeFx(){
   const id=S.cape,out:any=[];if(!id)return out;
   if(id.indexOf('I:')==0)return itFx(IT[id.slice(2)]);
-  const add=(arr:any,sk:string)=>arr.forEach((e:Enemy)=>out.push({k:e[0],v:e[1],sk:CTX.includes(e[0])?sk:null}));
+  const add=(arr:any,sk:string)=>arr.forEach((e:FxDef)=>out.push({k:e[0],v:e[1],sk:CTX.includes(e[0])?sk:null}));
   if(id.indexOf('G:')==0){const g=id.slice(2),t=grpTier(g);for(let i=0;i<t;i++){GRP[g].forEach((sk:string)=>add(CE[sk][i],sk));add(GE[g][i],'*');if(g=='Max')['Combat','Gathering','Production','Cultivation'].forEach(q=>add(GE[q][i],'*'))}}
   else{const t=capeTier(id);for(let i=0;i<t;i++)add(CE[id][i],id)}
   return out;

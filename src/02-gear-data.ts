@@ -14,7 +14,7 @@ cloak:[{n:'Cloak of the Warrior',rs:'Strength',fx:[['dmgm',.008,null],['crit',.0
 export const ACCL:Record<string,string>={ring:'r',neck:'n',cloak:'c'};
 for(let t=0;t<11;t++){
   IT['g'+t]={n:LGN[t],slot:'legs',tier:t,stat:LGD[t],req:REQ[t]};
-  Object.keys(AF).forEach(sl=>AF[sl].forEach((f:any,i:number)=>{IT[ACCL[sl]+i+'_'+t]={n:PRE[t]+' '+f.n,slot:sl,tier:t,stat:0,req:REQ[t],rs:f.rs,cmb:['Strength','Defense','Vitality','Attack'].includes(f.rs),fam:i,fx:f.fx.map((e:Enemy)=>[e[0],Math.round(e[1]*GM[t]*10000)/10000,e[2]])}}));
+  Object.keys(AF).forEach(sl=>AF[sl].forEach((f:any,i:number)=>{IT[ACCL[sl]+i+'_'+t]={n:PRE[t]+' '+f.n,slot:sl,tier:t,stat:0,req:REQ[t],rs:f.rs,cmb:['Strength','Defense','Vitality','Attack'].includes(f.rs),fam:i,fx:f.fx.map((e:FxDef)=>[e[0],Math.round(e[1]*GM[t]*10000)/10000,e[2]])}}));
 }
 // weapon grips: two-handers, off-hand weapons (dual wield) and shields
 export const N2=['Greataxe','Warbow','Great Staff'],NO=['Dirk','Hand Crossbow','Spell Tome'];

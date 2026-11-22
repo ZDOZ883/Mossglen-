@@ -1,6 +1,6 @@
-import { S, TASKS, say } from './00-state';
+import { S, TASKS } from './00-state';
 import { X } from './registry';
-import { FM, H, HK, IT, LT, asg, cb, cl, fighters, ldx, lv, mxp, pbs, pk, pm, skPet } from './01-species-pets';
+import { IT, asg, cb, ldx, lv, mxp, pbs, skPet } from './01-species-pets';
 import { RFN, ctime, gateOk, refineDone } from './02-gear-data';
 
 import { hrCount } from './03-world-expeditions';

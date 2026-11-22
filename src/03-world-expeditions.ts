@@ -1,6 +1,6 @@
 import { S, say } from './00-state';
 import { X } from './registry';
-import { D, FM, GL, GN, H, IT, T, asg, cb, cl, fighters, ldx, lv, maxhp, mxp, petRoll, pm } from './01-species-pets';
+import { D, FM, GL, H, IT, T, asg, cb, cl, fighters, ldx, lv, maxhp, mxp, petRoll, pm } from './01-species-pets';
 import { AK, D0, E, GSK, H0, PSK, XK, ZN, gateOk } from './02-gear-data';
 // Gates, raids, expeditions, harvest raids. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- ancient gates
@@ -164,7 +164,7 @@ export const HR:Harvest[]=[
 {id:'h3',n:'The Eclipse Reaping',gate:3,tier:9,q:300,fx:[['yld',.12],['spd',.1],['xp',.1],['sell',.15]]}];
 export const hrOk=(r:any)=>gateOk(r.gate)&&GSK.every(k=>lv(S.xp[k])>=GL[r.tier]);
 export const hrTxt=(r:any)=>X.fxTxt(r.fx)+' on every gathering skill';
-export function hrFx(){const o:any[]=[];HR.forEach(r=>{if(!(S.hrc&&S.hrc[r.id]))return;r.fx.forEach((e:Enemy)=>{if(X.CTX.includes(e[0]))GSK.forEach(sk=>o.push({k:e[0],v:e[1],sk}));else o.push({k:e[0],v:e[1],sk:null})})});return o}
+export function hrFx(){const o:any[]=[];HR.forEach(r=>{if(!(S.hrc&&S.hrc[r.id]))return;r.fx.forEach((e:FxDef)=>{if(X.CTX.includes(e[0]))GSK.forEach(sk=>o.push({k:e[0],v:e[1],sk}));else o.push({k:e[0],v:e[1],sk:null})})});return o}
 export function hrCount(a:any,n:number){
   const h=S.hr;if(!h)return;const r=HR.find(x=>x.id==h.id);if(!r||+a.id.slice(2)<r.tier)return;
   h.q[a.sk]=Math.min(r.q,(h.q[a.sk]||0)+n);
@@ -176,7 +176,7 @@ export function hrCount(a:any,n:number){
 export function startHR(id:string){const r=HR.find(x=>x.id==id);if(!r||!hrOk(r))return;if(S.hr&&S.hr.id==id){S.hr=null;return}S.hr={id,q:{}};say(r.n+' begins. Gather tier '+(r.tier+1)+' goods or better, alone or with your party.')}
 export function hrView(){
   return fold('hr','Harvest raids','<p class="sub">A raid for gatherers. Collect a quota from every gathering skill, at or above the stated tier. You and your party members all count. The first clear of each grants a permanent blessing.</p>'+HR.map(r=>{
-    const on=S.hr&&S.hr.id==r.id,ok=hrOk(r),n=S.hrc[r.id]||0,it=GN.Foraging[r.tier][1];
+    const on=S.hr&&S.hr.id==r.id,ok=hrOk(r),n=S.hrc[r.id]||0;
     return '<div class="row" style="flex-direction:column;align-items:stretch"><span>'+r.n+(n?' · cleared ×'+n:'')+'<small>'+r.q+' from each gathering skill at tier '+(r.tier+1)+' ('+GL[r.tier]+'+) or better. Blessing: '+hrTxt(r)+'.</small></span>'+
     (on?'<small>'+GSK.map(k=>k+' '+(S.hr.q[k]||0)+'/'+r.q).join(' · ')+'</small>':(ok?'':'<small>'+(gateOk(r.gate)?'':'✗ '+GATE[r.gate!-1].n+' open<br>')+(GSK.every(k=>lv(S.xp[k])>=GL[r.tier])?'':'✗ Every gathering skill at '+GL[r.tier])+'</small>'))+
     '<div style="margin-top:8px"><button class="btn" data-hraid="'+r.id+'"'+(ok||on?'':' disabled')+'>'+(on?'Abandon':'Begin')+'</button></div></div>'}).join(''));

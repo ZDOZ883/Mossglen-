@@ -113,6 +113,7 @@ nav button.on i{opacity:1}
 <body>
 <div id="app"></div>
 <script>
+"use strict";
 (() => {
   var __defProp = Object.defineProperty;
   var __export = (target, all) => {
@@ -243,7 +244,7 @@ nav button.on i{opacity:1}
     const x = SPX[S && S.sp];
     if (!x) return o;
     x.fx.concat(x.wf).forEach((e) => {
-      const L = e[2] == null ? [null] : e[2] == "P" ? ["Smithing", "Fletching", "Enchanting", "Tailoring"] : e[2];
+      const L = e[2] == null ? [null] : e[2] == "P" ? ["Smithing", "Fletching", "Enchanting", "Tailoring"] : [].concat(e[2]);
       L.forEach((sk) => o.push({ k: e[0], v: e[1], sk }));
     });
     return o;
@@ -992,7 +993,7 @@ nav button.on i{opacity:1}
   }
   function hrView() {
     return fold("hr", "Harvest raids", '<p class="sub">A raid for gatherers. Collect a quota from every gathering skill, at or above the stated tier. You and your party members all count. The first clear of each grants a permanent blessing.</p>' + HR.map((r) => {
-      const on = S.hr && S.hr.id == r.id, ok = hrOk(r), n = S.hrc[r.id] || 0, it = GN.Foraging[r.tier][1];
+      const on = S.hr && S.hr.id == r.id, ok = hrOk(r), n = S.hrc[r.id] || 0;
       return '<div class="row" style="flex-direction:column;align-items:stretch"><span>' + r.n + (n ? " \xB7 cleared \xD7" + n : "") + "<small>" + r.q + " from each gathering skill at tier " + (r.tier + 1) + " (" + GL[r.tier] + "+) or better. Blessing: " + hrTxt(r) + ".</small></span>" + (on ? "<small>" + GSK.map((k) => k + " " + (S.hr.q[k] || 0) + "/" + r.q).join(" \xB7 ") + "</small>" : ok ? "" : "<small>" + (gateOk(r.gate) ? "" : "\u2717 " + GATE[r.gate - 1].n + " open<br>") + (GSK.every((k) => lv(S.xp[k]) >= GL[r.tier]) ? "" : "\u2717 Every gathering skill at " + GL[r.tier]) + "</small>") + '<div style="margin-top:8px"><button class="btn" data-hraid="' + r.id + '"' + (ok || on ? "" : " disabled") + ">" + (on ? "Abandon" : "Begin") + "</button></div></div>";
     }).join(""));
   }
@@ -1255,12 +1256,12 @@ nav button.on i{opacity:1}
   var memDpr = (e) => fighters().reduce((q, k) => q + mdmg(k, e), 0) * pm() * 0.9;
   var emax = (e) => Math.max(1, Math.round(e.dps * 3 * enr(e)));
   var hitP = (e) => {
-    const A2 = (lv(S.xp.Attack) + 8) * (1 + wst() / 45), D3 = eDef(e);
-    return clampH(1.5 * A2 / (A2 + D3) + (dwf() > 0 ? 0.03 : 0) + cb("acc") + pk("acc"));
+    const A2 = (lv(S.xp.Attack) + 8) * (1 + wst() / 45), D2 = eDef(e);
+    return clampH(1.5 * A2 / (A2 + D2) + (dwf() > 0 ? 0.03 : 0) + cb("acc") + pk("acc"));
   };
   var eHitP = (e) => {
-    const A2 = eAtk(e), D3 = lv(S.xp.Defense) + 8;
-    return clampH(1.5 * A2 / (A2 + D3));
+    const A2 = eAtk(e), D2 = lv(S.xp.Defense) + 8;
+    return clampH(1.5 * A2 / (A2 + D2));
   };
   function armor() {
     const d = ["body", "head", "legs"].reduce((s, k) => s + (S.eq[k] ? IT[S.eq[k]].stat : 0), 0) + (shieldOn() ? offIt().stat : 0);
@@ -1529,15 +1530,15 @@ nav button.on i{opacity:1}
     return '<div class="pick">' + ["Attack", "Strength", "Defense", "Vitality"].map((k, i) => '<div class="row' + (xs[i + 1] > 0 ? " on" : "") + '" style="flex-direction:column;align-items:flex-start;gap:2px"><span>' + k + " \xB7 " + lv(S.xp[k]) + "</span><small>" + note[k] + '</small><div class="bar xp" style="width:100%"><i style="width:' + X.pcx(k) + '%"></i></div></div>').join("") + "</div>";
   }
   function combatView() {
-    const m = maxhp(), st = S.style, z = S.zone, zz = ZN[z], cl5 = CL(), fgn = fighters();
-    let h = "<h2>Combat \xB7 level " + cl5 + "</h2>" + arenaView();
+    const m = maxhp(), st = S.style, z = S.zone, zz = ZN[z], cl2 = CL(), fgn = fighters();
+    let h = "<h2>Combat \xB7 level " + cl2 + "</h2>" + arenaView();
     h += '<p class="sub">Melee beats Ranged, Ranged beats Magic, Magic beats Melee: counter an enemy for +25% damage.</p>';
     h += '<div class="pick" style="grid-template-columns:repeat(3,1fr)">' + SL.map((s) => '<button class="row' + (st == s ? " on" : "") + '" data-style="' + s + '">' + s + "<small>" + (S.eq[s] ? IT[S.eq[s]].n : "No weapon") + "</small></button>").join("") + "</div>";
     h += "<h2>Combat stats</h2>" + statTiles();
     h += '<h2>Stance <span class="mu" style="display:inline">\xB7 where xp goes</span></h2><div class="chips">' + Object.keys(XS).map((k) => '<button class="' + (S.stance == k ? "on" : "") + '" data-stance="' + k + '">' + XS[k][0] + "</button>").join("") + '</div><p class="mu">' + XS[S.stance][6] + '</p><div class="chips"><button class="' + (S.cmd ? "on" : "") + '" data-cmd="1">Command: ' + (S.cmd ? "on" : "off") + '</button></div><p class="mu">Command splits your xp with Leadership. While members fight beside you, your stat xp drops to 60% and Leadership gains 2.4\xD7 a kill\u2019s base xp.' + (S.cmd && !fgn.length ? " No members are fighting with you, so Command is doing nothing and you keep full xp." : "") + "</p>";
-    h += '<h2>Form <span class="mu" style="display:inline">\xB7 combat buffs</span></h2><div class="chips">' + Object.keys(FM).map((k) => '<button class="' + (S.form == k ? "on" : "") + '" data-form="' + k + '"' + (cl5 < FM[k].cl ? " disabled" : "") + ">" + FM[k].n + (cl5 < FM[k].cl ? " (CL " + FM[k].cl + ")" : "") + "</button>").join("") + '</div><p class="mu">' + FM[S.form].d + "</p>";
+    h += '<h2>Form <span class="mu" style="display:inline">\xB7 combat buffs</span></h2><div class="chips">' + Object.keys(FM).map((k) => '<button class="' + (S.form == k ? "on" : "") + '" data-form="' + k + '"' + (cl2 < FM[k].cl ? " disabled" : "") + ">" + FM[k].n + (cl2 < FM[k].cl ? " (CL " + FM[k].cl + ")" : "") + "</button>").join("") + '</div><p class="mu">' + FM[S.form].d + "</p>";
     h += '<p class="mu">Fighting beside you: ' + (fgn.length ? fgn.map((k) => H[k].n).join(", ") : "no one. Recruit members in the Party tab.") + "</p>";
-    h += '<h2>Zones</h2><div class="chips">' + ZN.map((q, i) => '<button class="' + (z == i ? "on" : "") + '" data-zone="' + i + '"' + (zoneOpen(i) ? "" : " disabled") + ">" + q[0] + (zoneOpen(i) ? "" : cl5 < q[1] ? " (CL " + q[1] + ")" : " (Gate " + q[5] + ")") + "</button>").join("") + "</div>";
+    h += '<h2>Zones</h2><div class="chips">' + ZN.map((q, i) => '<button class="' + (z == i ? "on" : "") + '" data-zone="' + i + '"' + (zoneOpen(i) ? "" : " disabled") + ">" + q[0] + (zoneOpen(i) ? "" : cl2 < q[1] ? " (CL " + q[1] + ")" : " (Gate " + q[5] + ")") + "</button>").join("") + "</div>";
     const kills2 = E.filter((x) => x.zone == z && !x.boss && !x.inst).reduce((s, x) => s + (S.kc[x.id] || 0), 0);
     h += E.filter((e) => e.zone == z && !e.inst).map((e) => {
       const f = fight(e), on = S.cur && S.cur.k == "c" && S.cur.id == e.id, lock = e.boss && kills2 < 30;
@@ -1806,7 +1807,7 @@ nav button.on i{opacity:1}
     } else S.a += scrap(it.tier);
   }
   function newTask() {
-    const sl = lv(S.xp.Slayer), cl5 = CL(), zm = ZN.reduce((m, z, i) => zoneOpen(i) ? i : m, 0);
+    const sl = lv(S.xp.Slayer), zm = ZN.reduce((m, z, i) => zoneOpen(i) ? i : m, 0);
     const c = E.filter((e2) => !e2.boss && e2.zone >= zm - 2 && zoneOpen(e2.zone) && !e2.inst && Math.floor(ZN[e2.zone][1] * 0.5) <= sl);
     const e = c[Math.floor(Math.random() * c.length)], n = 20 + Math.floor(Math.random() * 21);
     S.task = { id: e.id, n, left: n };
@@ -1851,7 +1852,7 @@ nav button.on i{opacity:1}
     }
   }
   function slayerView() {
-    const x = S.xp.Slayer, l = lv(x), lo = need(l - 1), pc2 = Math.min(100, (x - lo) / (need(l) - lo) * 100), t = S.task, e = t && E.find((q) => q.id == t.id);
+    const t = S.task, e = t && E.find((q) => q.id == t.id);
     let h = '<p class="sub">Warden Thistle posts hunts on the Burrow Board. Points: <b>' + S.pt + "</b> \xB7 streak " + S.str + " (bonus points on every 5th and 10th task). Party members fighting beside you help clear tasks.</p>";
     if (t) h += '<div class="row"><span>Defeat ' + t.left + " more " + e.n + "<small>" + ZN[e.zone][0] + " \xB7 " + e.type + " \xB7 weak to " + weak(e.type) + '. On task: +10% damage, +10% rare drops, Slayer xp.</small></span><button class="btn" data-task="fight">Fight</button></div><p><button class="btn" data-task="reroll"' + (S.pt < 10 ? " disabled" : "") + ">Reroll (10 pts)</button></p>";
     else h += '<p><button class="btn" data-task="new">Get a task</button></p><p class="mu">Tasks come from zones you can fight. Harder zones need a higher Slayer level.</p>';
@@ -2639,10 +2640,10 @@ nav button.on i{opacity:1}
       const t = capeTier(k);
       return '<div class="row' + (S.cape == k ? " on" : "") + '"><span>' + (t ? capeName(k, t) : CAPN[k] + "\u2019s Cape") + "<small>" + (t ? cumFx(k, t) : k + " level " + lv(S.xp[k]) + " of 99") + "</small></span>" + wear(k, t) + "</div>";
     }).join("");
-    const cl5 = Object.keys(S.own).filter((i) => IT[i] && IT[i].slot == "cloak").sort((a, b) => IT[a].tier - IT[b].tier || qrank(IT[a]) - qrank(IT[b]));
-    if (cl5.length) {
+    const cl2 = Object.keys(S.own).filter((i) => IT[i] && IT[i].slot == "cloak").sort((a, b) => IT[a].tier - IT[b].tier || qrank(IT[a]) - qrank(IT[b]));
+    if (cl2.length) {
       h += "<h2>Crafted cloaks</h2>";
-      h += cl5.map((i) => {
+      h += cl2.map((i) => {
         const it = IT[i], id = "I:" + i, ok = canEq(it);
         return '<div class="row' + (S.cape == id ? " on" : "") + '"><span>' + it.n + "<small>" + istat(it) + (ok ? "" : " \xB7 needs " + reqText(it)) + "</small></span>" + (S.cape == id ? '<span class="good">Worn</span>' : ok ? '<button class="btn" data-cape="' + id + '">Wear</button>' : "") + "</div>";
       }).join("");
@@ -3367,7 +3368,6 @@ nav button.on i{opacity:1}
   migrate();
   var away = Math.min(Date.now() - S.t, offlineCap());
   if (S.sp && (S.cur || hasWork()) && away > 2e4) {
-    const a0 = S.a;
     tick(away / 1e3, true);
     say("You were away " + Math.round(away / 6e4) + " min. Your work carried on.");
   }
@@ -3378,7 +3378,7 @@ nav button.on i{opacity:1}
     last = n;
     S.t = n;
     if (S.sp && (S.cur || hasWork())) {
-      const lg = S.log[0], a = S.a, k = Object.keys(S.inv).length;
+      const lg = S.log[0], a = S.a;
       tick(dt, false);
       if (S.log[0] !== lg || S.a !== a) render();
     }
