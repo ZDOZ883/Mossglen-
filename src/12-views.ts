@@ -27,15 +27,15 @@ function cookPage(){
 const CGN:Record<string,string>={w0:'Melee weapons',w1:'Ranged weapons',w2:'Magic weapons',x0:'Melee two-handers',x1:'Ranged two-handers',x2:'Magic two-handers',o0:'Melee off-hands',o1:'Ranged off-hands',o2:'Magic off-hands',y:'Shields',b:'Chest armor',h:'Helms',g:'Legs',r:'Rings',n:'Necklaces',c:'Cloaks'};
 const cgOf=(id:string)=>'wxo'.includes(id[0])?id.slice(0,2):id[0];
 const CF:Record<string,any>={g:{},f:{}};
-const famLab=(sl:string)=>AF[sl].map((f:any)=>f.n.replace(/^(Band|Pendant|Cloak) of (the )?/,''));
+const famLab=(sl:string)=>AF[sl].map((f:Item)=>f.n.replace(/^(Band|Pendant|Cloak) of (the )?/,''));
 function craftPage(sk:string){
   const l=lv(S.xp[sk]);
   let h='<p class="sub">Turn gathered goods and zone materials into gear. A craft repeats until you run out; spares are sold as scrap.</p>'+actorChips();
   if(RF[sk]){const rl=Object.keys(RFN).filter(id=>RFN[id].sk==sk&&l>=REQ[RFN[id].t-1]);if(rl.length)h+='<h2>Refining</h2><p class="mu">Heavy components for the deepest gear. Slow, costly, and gated.</p>';rl.forEach(id=>{const f=RFN[id],r=refRecipe(id),gl=!gateOk(f.t-7),ok=l>=f.req&&!gl,on=isOn('r',id);h+='<button class="row'+(on?' on':'')+'" data-do="r:'+id+'"'+(ok?'':' disabled')+'><span>'+f.n+'<small>Refined component · in pack '+(S.inv[f.n]||0)+' · '+Object.keys(r).map(k=>k+' '+(S.inv[k]||0)+'/'+(r as any)[k]).join(', ')+'</small></span><small>'+(ok?'':gl?'Needs '+GATE[f.t-8].n:'Level '+f.req)+crew('r',id)+'</small></button>'})}
   const all=Object.keys(IT).filter(id=>id[0]!='t'&&!IT[id].q&&CSK(id)==sk),grs:any=[];all.forEach(id=>{const g=cgOf(id);if(!grs.includes(g))grs.push(g)});
   const cg=CF.g[sk]||grs[0],sl=cg=='r'?'ring':cg=='n'?'neck':cg=='c'?'cloak':null,cf=CF.f[sk]==null?'all':CF.f[sk];
-  h+='<h2>Gear</h2><div class="chips">'+grs.map((g:any)=>'<button class="'+(cg==g?'on':'')+'" data-cf="g:'+g+'">'+CGN[g]+'</button>').join('')+'<button class="'+(cg=='all'?'on':'')+'" data-cf="g:all">All</button></div>';
-  if(sl)h+='<div class="chips"><button class="'+(cf=='all'?'on':'')+'" data-cf="f:all">All types</button>'+famLab(sl).map((n:any,i:any)=>'<button class="'+(cf==i?'on':'')+'" data-cf="f:'+i+'">'+n+'</button>').join('')+'</div>';
+  h+='<h2>Gear</h2><div class="chips">'+grs.map((g:string)=>'<button class="'+(cg==g?'on':'')+'" data-cf="g:'+g+'">'+CGN[g]+'</button>').join('')+'<button class="'+(cg=='all'?'on':'')+'" data-cf="g:all">All</button></div>';
+  if(sl)h+='<div class="chips"><button class="'+(cf=='all'?'on':'')+'" data-cf="f:all">All types</button>'+famLab(sl).map((n:number,i:number)=>'<button class="'+(cf==i?'on':'')+'" data-cf="f:'+i+'">'+n+'</button>').join('')+'</div>';
   all.filter(id=>(cg=='all'||cgOf(id)==cg)&&(!sl||cf=='all'||IT[id].fam==cf)).sort((a,b)=>IT[a].tier-IT[b].tier||(IT[a].fam||0)-(IT[b].fam||0)).forEach(id=>{
     const it=IT[id];if(it.tier>0&&l<REQ[it.tier-1])return;
     const r=recipe(id),gl=it.tier>=8&&!gateOk(it.tier-7),ok=l>=it.req&&!gl,on=isOn('f',id);
@@ -97,7 +97,7 @@ function render(){
   app!.innerHTML='<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">'+S.sp+' of the valley · total level '+SK.concat(CS).reduce((s,k)=>s+lv(S.xp[k]),0)+'</p>'+
   '<div class="stat sans">'+(cn?'<div style="display:flex;justify-content:space-between"><span>'+cn+(S.cur.k=='c'?' <small class="mu" id="se"></small>':'')+'</span><button class="btn" data-stop="1">Rest</button></div><div class="bar'+(S.cur.k=='c'?' hp':'')+'"><i id="pb"></i></div>':'<span class="mu">Resting. Pick something to do.</span>')+(hasWork()?'<div class="mu" style="font-size:14px;margin-top:4px">At work: '+workNames()+'</div>':'')+'</div>'+
   '<nav>'+[['skills','Skills','leaf'],['combat','Fight','swords'],['gear','Gear','shield'],['party','Party','paw'],['delve','Delve','lantern'],['burrow','Burrow','burrow'],['log','Log','tome'],['pack','Pack','satchel']].map(t=>'<button data-tab="'+t[0]+'" class="'+(tab==t[0]?'on':'')+'"><i>'+icon(t[2],25)+'</i>'+t[1]+'</button>').join('')+'</nav>'+
-  view()+'<div id="log">'+S.log.map((l:any)=>'<p>'+l+'</p>').join('')+'</div>'+
+  view()+'<div id="log">'+S.log.map((l:number)=>'<p>'+l+'</p>').join('')+'</div>'+
   '<p class="mu" style="margin-top:24px"><button class="btn" data-reset="1" style="font-size:14px">Start over</button></p>';
   bars();
 }

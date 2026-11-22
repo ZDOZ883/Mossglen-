@@ -55,17 +55,17 @@ Combat:[[['xpm',.05],['taken',.04]],[['dmgm',.05],['acc',.04]],[['crit',.05],['r
 Gathering:[[['yld',.1]],[['xp',.05]],[['spd',.05]],[['yld',.1],['sell',.1]]],
 Production:[[['save',.1]],[['xp',.05]],[['spd',.05]],[['save',.1],['burn',.25],['sell',.1]]]};
 GRP.Max=Object.keys(CE);GE.Max=[[['xp',.05],['xpm',.05]],[['yld',.05],['save',.05],['drop',.05]],[['spd',.05],['crit',.05]],[['xp',.1],['xpm',.1],['sell',.1],['mspd',.1]]];
-const gw=(g:any)=>g=='Max'?'skill':g.toLowerCase();
+const gw=(g:string)=>g=='Max'?'skill':g.toLowerCase();
 const CTX=['yld','xp','spd','save','burn'];
-const pc=(v:any)=>Math.round(v*100);
-const FXT:Record<string,(v:number)=>string>={yld:(v:any)=>pc(v)+'% chance of a double yield',xp:(v:any)=>'+'+pc(v)+'% xp',spd:(v:any)=>pc(v)+'% faster work',save:(v:any)=>pc(v)+'% chance to save materials',burn:(v:any)=>pc(v)+'% less burning',heal:(v:any)=>'+'+pc(v)+'% food healing',sell:(v:any)=>'+'+pc(v)+'% acorns from sales',drop:(v:any)=>'+'+pc(v)+'% rare drops',regen:(v:any)=>'+'+pc(v)+'% health regeneration',taken:(v:any)=>'−'+pc(v)+'% damage taken',acc:(v:any)=>'+'+pc(v)+'% hit chance',dmgm:(v:any)=>'+'+pc(v)+'% max hit',crit:(v:any)=>pc(v)+'% chance to hit twice as hard',lsteal:(v:any)=>'heal '+pc(v)+'% of damage dealt',ls:(v:any)=>'survive one lethal hit per fight',hpm:(v:any)=>'+'+pc(v)+'% max health',xpm:(v:any)=>'+'+pc(v)+'% combat xp',ttaken:(v:any)=>'−'+pc(v)+'% damage taken on task',txp:(v:any)=>'+'+pc(v)+'% Slayer xp',tdmg:(v:any)=>'+'+pc(v)+'% damage on Slayer tasks',tdrop:(v:any)=>'+'+pc(v)+'% rare drops on task',pts:(v:any)=>'+'+pc(v)+'% slayer points',mspd:(v:any)=>'+'+pc(v)+'% member work speed',pmult:(v:any)=>'+'+pc(v)+'% member perks'};
+const pc=(v:number)=>Math.round(v*100);
+const FXT:Record<string,(v:number)=>string>={yld:(v:number)=>pc(v)+'% chance of a double yield',xp:(v:number)=>'+'+pc(v)+'% xp',spd:(v:number)=>pc(v)+'% faster work',save:(v:number)=>pc(v)+'% chance to save materials',burn:(v:number)=>pc(v)+'% less burning',heal:(v:number)=>'+'+pc(v)+'% food healing',sell:(v:number)=>'+'+pc(v)+'% acorns from sales',drop:(v:number)=>'+'+pc(v)+'% rare drops',regen:(v:number)=>'+'+pc(v)+'% health regeneration',taken:(v:number)=>'−'+pc(v)+'% damage taken',acc:(v:number)=>'+'+pc(v)+'% hit chance',dmgm:(v:number)=>'+'+pc(v)+'% max hit',crit:(v:number)=>pc(v)+'% chance to hit twice as hard',lsteal:(v:number)=>'heal '+pc(v)+'% of damage dealt',ls:(v:number)=>'survive one lethal hit per fight',hpm:(v:number)=>'+'+pc(v)+'% max health',xpm:(v:number)=>'+'+pc(v)+'% combat xp',ttaken:(v:number)=>'−'+pc(v)+'% damage taken on task',txp:(v:number)=>'+'+pc(v)+'% Slayer xp',tdmg:(v:number)=>'+'+pc(v)+'% damage on Slayer tasks',tdrop:(v:number)=>'+'+pc(v)+'% rare drops on task',pts:(v:number)=>'+'+pc(v)+'% slayer points',mspd:(v:number)=>'+'+pc(v)+'% member work speed',pmult:(v:number)=>'+'+pc(v)+'% member perks'};
 const fxTxt=(arr:any)=>{const m:Record<string,any>={},o:any=[];arr.forEach((e:Enemy)=>{if(!(e[0] in m)){m[e[0]]=0;o.push(e[0])}m[e[0]]+=e[1]});return o.map((k:string)=>FXT[k](m[k])).join(', ')};
-const cumFx=(k:string,t:any)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(CE[k][i]);return fxTxt(a)};
-const gcumFx=(g:any,t:any)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(GE[g][i]);return fxTxt(a)};
+const cumFx=(k:string,t:number)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(CE[k][i]);return fxTxt(a)};
+const gcumFx=(g:string,t:number)=>{let a:any[]=[];for(let i=0;i<t;i++)a=a.concat(GE[g][i]);return fxTxt(a)};
 const capeTier=(k:string)=>{const x=S.xp[k],l=lv(x);return x>=2e8?4:x>=1.5e8?3:l>=120?2:l>=99?1:0};
-const grpTier=(g:any)=>Math.min.apply(null,GRP[g].map(capeTier));
-const capeName=(k:string,t:any)=>CAPN[k]+'’s '+TNAME[t];
-const grpName=(g:any,t:any)=>g+' '+(t==1?'Cape':TNAME[t]);
+const grpTier=(g:string)=>Math.min.apply(null,GRP[g].map(capeTier));
+const capeName=(k:string,t:number)=>CAPN[k]+'’s '+TNAME[t];
+const grpName=(g:string,t:number)=>g+' '+(t==1?'Cape':TNAME[t]);
 const capeLabel=(id:string)=>id.indexOf('I:')==0?IT[id.slice(2)].n:id.indexOf('G:')==0?grpName(id.slice(2),grpTier(id.slice(2))):capeName(id,capeTier(id));
 const capeOk=(id:string)=>id.indexOf('I:')==0?(!!IT[id.slice(2)]&&!!S.own[id.slice(2)]):id.indexOf('G:')==0?grpTier(id.slice(2))>=1:capeTier(id)>=1;
 function capeFx(){
@@ -91,7 +91,7 @@ function capeRow(k:string){
   return '<div class="row"><span>'+(t?capeName(k,t):'No cape yet')+(t?'<small>'+cumFx(k,t)+'</small>':'')+'<small>'+nx+'</small></span></div>';
 }
 function capesView(){
-  const wear=(id:string,t:any)=>t?(S.cape==id?'<span class="good">Worn</span>':'<button class="btn" data-cape="'+id+'">Wear</button>'):'';
+  const wear=(id:string,t:number)=>t?(S.cape==id?'<span class="good">Worn</span>':'<button class="btn" data-cape="'+id+'">Wear</button>'):'';
   let h='<h2>Capes</h2><p class="sub">Wear one cape at a time. A skill cape unlocks at level 99, upgrades at level 120, then at 150M and 200M xp, adding a bonus each time. A group cape wears every bonus of its skills, plus extras, once all of them reach the same tier.</p>';
   h+='<div class="row"><span>Worn<small>'+(S.cape?capeLabel(S.cape):'No cape')+'</small></span>'+(S.cape?'<button class="btn" data-cape="">Remove</button>':'')+'</div>';
   h+=Object.keys(GRP).map(g=>{const t=grpTier(g),id='G:'+g;return '<div class="row'+(S.cape==id?' on':'')+'"><span>'+(t?grpName(g,t):g+' Cape')+'<small>'+(t?'Every '+gw(g)+' cape bonus, plus '+gcumFx(g,t):'Needs every '+(g=='Max'?'one of the 16':gw(g))+' skill at level 99')+'</small></span>'+wear(id,t)+'</div>'}).join('');

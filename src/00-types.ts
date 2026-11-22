@@ -32,3 +32,5 @@ interface Raid { id: string; n: string; cl: number; party: number; mlv: number; 
 interface Harvest { id: string; n: string; gate?: number; tier: number; q?: any; fx: any[]; [k: string]: any }
 type Ach = [string, string, string, () => boolean, number];
 interface Dish { n: string; raw: string; q: number; side: string | null; lv: number; gate?: number; heal: number; xp: number }
+interface LoadCtx { kind: string; sk?: string; label?: string; e?: Enemy | null; [k: string]: any }
+type Effect = { k: string; v: number; sk?: string | null };

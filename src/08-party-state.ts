@@ -1,9 +1,9 @@
 // Party helpers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 const fighters=()=>Object.keys(S.hired).filter(k=>asg(k).k=='war');
 const pm=()=>(FM[S.form]||FM.steady).party+cb('pmult');
-const pk=(n:any)=>Math.min(({taken:.45,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+(H[k].pk[n]||0)*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),0));
-function mxp(k:string,x:any){const b=cl(k);S.cx[k]=(S.cx[k]||0)+x*(H[k].pet?1.5:1);if(cl(k)>b)say(H[k].n+' reaches level '+cl(k)+'.')}
-function ldx(x:any){const b=LD();S.xp.Leadership+=x;const a=LD();if(a>b){const u=HK.filter(k=>H[k].lt>b&&H[k].lt<=a).map(k=>H[k].n);say('Leadership reaches level '+a+'.'+(LT.some(l=>l>b&&l<=a)?' New party slot.':'')+(u.length?' Now available: '+u.join(', ')+'.':''))}}
+const pk=(n:string)=>Math.min(({taken:.45,speed:.4} as any)[n]||99,fighters().reduce((s,k)=>s+(H[k].pk[n]||0)*(1+(cl(k)-1)*.02)*pm()*(H[k].pet?1.25:1),0));
+function mxp(k:string,x:number){const b=cl(k);S.cx[k]=(S.cx[k]||0)+x*(H[k].pet?1.5:1);if(cl(k)>b)say(H[k].n+' reaches level '+cl(k)+'.')}
+function ldx(x:number){const b=LD();S.xp.Leadership+=x;const a=LD();if(a>b){const u=HK.filter(k=>H[k].lt>b&&H[k].lt<=a).map(k=>H[k].n);say('Leadership reaches level '+a+'.'+(LT.some(l=>l>b&&l<=a)?' New party slot.':'')+(u.length?' Now available: '+u.join(', ')+'.':''))}}
 function validTask(t:any){return !!t&&(t.k=='war'||t.k=='idle'||t.k=='bar'||t.k=='exp'||(t.k=='s'&&!!A.find(a=>a.id==t.id))||(t.k=='k'&&!!DISH[t.id])||(t.k=='f'&&!!IT[t.id]&&t.id[0]!='t')||(t.k=='r'&&!!RFN[t.id]))}
 function assign(k:string,kind:string,id?:any){
   if(!S.hired[k]||asg(k).k=='exp')return;

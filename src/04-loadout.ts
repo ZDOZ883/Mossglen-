@@ -1,25 +1,25 @@
 // Smart loadout optimizer. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- loadouts
 const CW:Record<string,Record<string,number>>={combat:{dmgm:3,acc:2,crit:1.5,taken:3,hpm:2,regen:.6,heal:.6,lsteal:2,ls:.4,xpm:.8,drop:.6,tdmg:1.5,tdrop:.5},gather:{yld:3,xp:2,spd:3,sell:.4,mspd:.8},craft:{save:3,xp:2,spd:3,burn:2,sell:.3,mspd:.8}};
-function capeScore(id:string,kind:string,sk:string){
+function capeScore(id:string,kind:string,sk?:string){
   const s0=S.cape;S.cape=id;const fx=capeFx();S.cape=s0;let v=0;
-  fx.forEach((e:any)=>{const w=CW[kind][e.k];if(!w)return;let m=1;if(e.sk&&e.sk!='*'){if(sk){if(e.sk!=sk)return}else m=.2}v+=w*e.v*m});
+  fx.forEach((e:Effect)=>{const w=CW[kind][e.k];if(!w)return;let m=1;if(e.sk&&e.sk!='*'){if(sk){if(e.sk!=sk)return}else m=.2}v+=w*e.v*m});
   return v}
-function bestCape(kind:string,sk:string){
+function bestCape(kind:string,sk?:string){
   const c=['G:Max'].concat(Object.keys(GRP).filter(g=>g!='Max').map(g=>'G:'+g),Object.keys(CE),Object.keys(S.own).filter(i=>IT[i]&&IT[i].slot=='cloak'&&canEq(IT[i])).map(i=>'I:'+i)).filter(capeOk);
   let b:any=null,bs=0;c.forEach(id=>{const v=capeScore(id,kind,sk);if(v>bs+1e-9){bs=v;b=id}});return b}
-const bestOwned=(slot:any)=>Object.keys(S.own).filter(i=>IT[i].slot==slot&&canEq(IT[i])).sort((a,b)=>IT[b].stat-IT[a].stat)[0];
+const bestOwned=(slot:string)=>Object.keys(S.own).filter(i=>IT[i].slot==slot&&canEq(IT[i])).sort((a,b)=>IT[b].stat-IT[a].stat)[0];
 const trScore=(it:Item)=>{const e=it.eff||{};return (e.dmg||0)*100+(e.heal||0)*40+(e.drop||0)*30+(e.xp||0)*20+(e.gold||0)*10};
-function optimize(c:any){
+function optimize(c:LoadCtx){
   const out:any[]=[];
   if(c.kind=='combat'){
     const e=c.enemy,s0=S.style,e0=Object.assign({},S.eq);
-    const own=Object.keys(S.own).filter(i=>IT[i]&&canEq(IT[i])),by=(f:any)=>own.filter(f).sort((a,b)=>IT[b].stat-IT[a].stat)[0]||null;
-    const shield=by((i:any)=>IT[i].kind=='shield'),m0=maxhp();
-    SL.forEach(sl=>{const w=by((i:any)=>IT[i].slot==sl&&!IT[i].kind)||by((i:any)=>IT[i].slot==sl&&IT[i].kind=='2h');if(w)S.eq[sl]=w});
+    const own=Object.keys(S.own).filter(i=>IT[i]&&canEq(IT[i])),by=(f:(i:string)=>boolean)=>own.filter(f).sort((a,b)=>IT[b].stat-IT[a].stat)[0]||null;
+    const shield=by((i:string)=>IT[i].kind=='shield'),m0=maxhp();
+    SL.forEach(sl=>{const w=by((i:string)=>IT[i].slot==sl&&!IT[i].kind)||by((i:string)=>IT[i].slot==sl&&IT[i].kind=='2h');if(w)S.eq[sl]=w});
     let bk:any=null,bc=null;
     SL.forEach(sl=>{
-      const h1=by((i:any)=>IT[i].slot==sl&&!IT[i].kind),h2=by((i:any)=>IT[i].slot==sl&&IT[i].kind=='2h'),of=by((i:any)=>IT[i].kind=='off'&&IT[i].st==sl),cd=[];
+      const h1=by((i:string)=>IT[i].slot==sl&&!IT[i].kind),h2=by((i:string)=>IT[i].slot==sl&&IT[i].kind=='2h'),of=by((i:string)=>IT[i].kind=='off'&&IT[i].st==sl),cd=[];
       if(h1){cd.push([h1,shield]);if(of)cd.push([h1,of]);cd.push([h1,null])}
       if(h2)cd.push([h2,null]);
       cd.forEach(q=>{
@@ -56,7 +56,7 @@ function optNow(k:string){
   else if(PSK.includes(k))optimize({kind:'craft',sk:k,label:k});
 }
 function autoLoad(){const c=ctxNow();if(c)optimize(c)}
-function loadoutSl(v:any){
+function loadoutSl(v:string){
   const [a,n]=v.split(':');
   if(a=='save'){S.lo[n]={eq:Object.assign({},S.eq),cape:S.cape,style:S.style,form:S.form,stance:S.stance};say('Saved loadout '+n+'.')}
   else{const l=S.lo[n];if(!l)return;Object.keys(l.eq).forEach(k=>{const id=l.eq[k];if(!id)S.eq[k]=null;else if(S.own[id]&&canEq(IT[id]))S.eq[k]=id});
@@ -74,8 +74,8 @@ const CL=()=>Math.floor((lv(S.xp.Attack)+lv(S.xp.Strength)+lv(S.xp.Defense)+lv(S
 const ef=(k:string)=>{const t=S.eq.trinket;return t&&IT[t].eff[k]||0};
 const RT=1.2;
 let hits:any[]=[],hitsStr:any=null;
-function hit(t:any){hits.unshift(t);if(hits.length>6)hits.pop()}
-const clampH=(x:any)=>Math.min(.95,Math.max(.1,x));
+function hit(t:string){hits.unshift(t);if(hits.length>6)hits.pop()}
+const clampH=(x:number)=>Math.min(.95,Math.max(.1,x));
 const wst=()=>{const w=S.eq[S.style];return w?IT[w].stat:0};
 const mainIt=()=>S.eq[S.style]?IT[S.eq[S.style]]:null;
 const is2h=()=>{const m=mainIt();return !!m&&m.kind=='2h'};

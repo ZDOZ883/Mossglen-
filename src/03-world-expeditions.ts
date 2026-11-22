@@ -4,7 +4,7 @@ const GATE=[
 {n:'The Rootgate',gather:95,prod:90,cl:95,sk:{},items:{'Hollow Heart':5,'Badger Claw':5,'Crow Feather':5,'star dust':250},a:2000000,d:'Sealed roots wall off the deep wood. Opens Deepwood Hollow, level 100 gathering, tier 8 gear, the first Moonlit raid and the Rootgate Descent.'},
 {n:'The Wyrmgate',gather:105,prod:100,cl:105,sk:{Slayer:90},items:{'Deepwood Core':15,'deep root':200,'Crow Feather':15},a:12000000,d:'A scaled door under the ridge. Opens Wyrmscale Ridge, level 110 gathering, tier 9 gear and tougher raids.'},
 {n:'The Eclipse Gate',gather:115,prod:110,cl:115,sk:{Slayer:105,Leadership:90},items:{'Wyrm Core':20,'wyrm scale':300,'Deepwood Core':20},a:48000000,d:'The last seal. Opens Eclipse Sanctum, level 120 gathering, tier 10 gear and the Eclipse Citadel.'}];
-function gateChecks(i:any){const g=GATE[i-1],c=[];
+function gateChecks(i:number){const g=GATE[i-1],c=[];
   if(i>1)c.push([GATE[i-2].n+' open',gateOk(i-1)]);
   c.push(['Gathering skills at '+g.gather,GSK.every(k=>lv(S.xp[k])>=g.gather)]);
   c.push(['Production skills at '+g.prod,PSK.every(k=>lv(S.xp[k])>=g.prod)]);
@@ -12,7 +12,7 @@ function gateChecks(i:any){const g=GATE[i-1],c=[];
   Object.keys(g.sk).forEach(k=>c.push([k+' level '+(g.sk as any)[k],lv(S.xp[k])>=(g.sk as any)[k]]));
   Object.keys(g.items).forEach(k=>c.push([(g.items as any)[k]+' × '+k+' ('+(S.inv[k]||0)+')',(S.inv[k]||0)>=(g.items as any)[k]]));
   c.push([g.a.toLocaleString()+' acorns',S.a>=g.a]);return c}
-function openGate(i:any){
+function openGate(i:number){
   if(S.gates[i]||!GATE[i-1]||!gateChecks(i).every(c=>c[1]))return;
   const g=GATE[i-1];Object.keys(g.items).forEach(k=>S.inv[k]-=(g.items as any)[k]);S.a-=g.a;S.gates[i]=1;
   say(g.n+' grinds open!'+ZN.filter(z=>z[5]==i).map(z=>' New zone: '+z[0]+'.').join(''));
@@ -28,7 +28,7 @@ const RD:Raid[]=[
 {id:'r1',n:'Thornspire Keep',cl:100,gate:1,party:3,mlv:50,lvl:105,H:310720,D:101.5,ref:2113,rw:150000,core:['Deepwood Core',2],tr:'t12',st:[['Thorn Wardens','Melee',1,1],['Keep Sappers','Ranged',1.1,1.1],['Spire Hexcaller','Magic',1.4,1.2],['Barbfang the Gatekeeper','Melee',1.8,1.4],['Queen Bramblethorn','Ranged',4.5,1.8]]},
 {id:'r2',n:'The Gloamwyrm Lair',cl:110,gate:2,party:4,mlv:75,lvl:115,H:752120,D:195.8,ref:3487,rw:540000,core:['Wyrm Core',2],tr:'t13',st:[['Scale Cultists','Magic',1,1],['Ashen Drakelings','Ranged',1.1,1.1],['Gloam Brood Mother','Melee',1.5,1.25],['Twin Wyrmguards','Melee',1.8,1.4],['Ember Oracle','Magic',2,1.5],['Gloamwyrm Vaerath','Ranged',5,2]]},
 {id:'r3',n:'The Eclipse Citadel',cl:118,gate:3,party:5,mlv:100,lvl:125,H:1842473,D:237.6,ref:5873,rw:1800000,core:['Eclipse Core',3],tr:'t14',st:[['Citadel Vanguard','Melee',1,1],['Dusk Archers','Ranged',1.1,1.1],['Umbral Magi','Magic',1.3,1.25],['Eclipse Knight-Commander','Melee',1.7,1.4],['The Hollow Choir','Magic',1.9,1.5],['Warden of the Last Light','Ranged',2.2,1.6],['The Eclipse Sovereign','Melee',5.5,2.1]]}];
-RD.forEach(r=>r.st.forEach((st:any,j:any)=>{const hp=Math.round(r.H*st[2]);E.push({id:r.id+'s'+j,zone:7,raid:r.id,inst:1,stage:j,lvl:r.lvl,n:st[0],type:st[1],hp,dps:r.D*st[3],soft:Math.round(hp/r.ref),xp:Math.round(hp*XK[10]*.5),a:Math.round(hp*AK[10]*.3),boss:j==r.st.length-1})}));
+RD.forEach(r=>r.st.forEach((st:any,j:number)=>{const hp=Math.round(r.H*st[2]);E.push({id:r.id+'s'+j,zone:7,raid:r.id,inst:1,stage:j,lvl:r.lvl,n:st[0],type:st[1],hp,dps:r.D*st[3],soft:Math.round(hp/r.ref),xp:Math.round(hp*XK[10]*.5),a:Math.round(hp*AK[10]*.3),boss:j==r.st.length-1})}));
 
 // ---------- delves: short raids with boons
 const DX:Record<string,Partial<Delve>>={hollow:{cl:10,party:0,mlv:0,zb:1,st:[['Oak Gnawers','Melee'],['Rot Sprites','Magic'],['The Hollow Heart','Magic']]},
@@ -37,18 +37,18 @@ roost:{cl:58,party:2,mlv:30,zb:5,st:[['Roost Scouts','Ranged'],['Carrion Mystics
 root:{cl:92,party:3,mlv:60,zb:8,st:[['Rootbound Wardens','Melee'],['Gloom Weavers','Magic'],['The Rootgate Keeper','Ranged']]},
 wyrmc:{cl:104,party:3,mlv:80,zb:9,st:[['Cellar Drakes','Magic'],['Scale Brutes','Melee'],['The Wyrm Warden','Melee']]},
 vault:{cl:114,party:4,mlv:100,zb:10,st:[['Vault Sentinels','Melee'],['Umbral Casters','Magic'],['The Eclipse Curator','Ranged']]}};
-const DHM=[1.5,2,4],DDM=[1.2,1.3,1.8],dvTm=(t:any)=>[1,1.4,1.9,2.5,3.2][t-1],dvTd=(t:any)=>[1,1.25,1.55,1.9,2.3][t-1];
-D.forEach(d=>{const x=DX[d.id];Object.assign(d,x);for(let t=1;t<=5;t++)x.st.forEach((st:any,j:any)=>{const hp=Math.round(H0[x.zb!]*DHM[j]*dvTm(t));E.push({id:'d_'+d.id+'_'+t+'_'+j,zone:x.zb!,inst:1,dv:d.id,tier:t,stage:j,lvl:ZN[x.zb!][1],n:st[0],type:st[1],hp,dps:D0[x.zb!]*DDM[j]*dvTd(t),xp:Math.round(hp*XK[x.zb!]*1.2),a:Math.round(hp*AK[x.zb!]*.8),boss:j==2})})});
+const DHM=[1.5,2,4],DDM=[1.2,1.3,1.8],dvTm=(t:number)=>[1,1.4,1.9,2.5,3.2][t-1],dvTd=(t:number)=>[1,1.25,1.55,1.9,2.3][t-1];
+D.forEach(d=>{const x=DX[d.id];Object.assign(d,x);for(let t=1;t<=5;t++)x.st.forEach((st:any,j:number)=>{const hp=Math.round(H0[x.zb!]*DHM[j]*dvTm(t));E.push({id:'d_'+d.id+'_'+t+'_'+j,zone:x.zb!,inst:1,dv:d.id,tier:t,stage:j,lvl:ZN[x.zb!][1],n:st[0],type:st[1],hp,dps:D0[x.zb!]*DDM[j]*dvTd(t),xp:Math.round(hp*XK[x.zb!]*1.2),a:Math.round(hp*AK[x.zb!]*.8),boss:j==2})})});
 // ---------- expeditions (delves sent out on a timer)
 let exSel:Record<string,any>={d:null,l:null,m:[],b:null};
 const EXB:Record<string,string[]>={might:['Might','+12% party damage'],stone:['Stone Skin','−10% damage taken'],focus:['Keen Eye','+8% party damage'],vigor:['Vigor','+10% party health'],crit:['Killer Instinct','+10% party damage'],fortune:['Fortune','+25% rewards'],wind:['Second Wind','+10% party health']};
-const exDur=(d:any,t:any)=>Math.min(7*3600,Math.round([2400,4500,7200,10800,16200][t-1]*(1+d.zb*.06)));
+const exDur=(d:Delve,t:number)=>Math.min(7*3600,Math.round([2400,4500,7200,10800,16200][t-1]*(1+d.zb*.06)));
 const exFmt=(sec:any)=>{sec=Math.max(0,Math.round(sec));const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);return (h?h+'h ':'')+m+'m'};
 const EXK=12;
 const mhpx=(k:string)=>(30+cl(k)*10)*(H[k].pet?1.25:1);
 const exLead=(k:string)=>k?Math.min(.35,.08+cl(k)/500):0;
-function exEligible(d:any,k:string){return !!S.hired[k]&&asg(k).k!='exp'&&cl(k)>=d.mlv}
-function exOdds(d:any,t:any,lead:any,mem:any,boon:any){
+function exEligible(d:Delve,k:string){return !!S.hired[k]&&asg(k).k!='exp'&&cl(k)>=d.mlv}
+function exOdds(d:Delve,t:number,lead:any,mem:any,boon:any){
   const all=(lead?[lead]:[]).concat(mem.filter((k:string)=>k!=lead)),need=Math.max(1,d.party);
   const lb=exLead(lead);let dm=1,hm=1,dt=1;
   if(boon=='might'||boon=='crit')dm=boon=='might'?1.12:1.1;if(boon=='focus')dm=1.08;if(boon=='vigor'||boon=='wind')hm=1.1;if(boon=='stone')dt=.9;
@@ -149,7 +149,7 @@ const HR:Harvest[]=[
 const hrOk=(r:any)=>gateOk(r.gate)&&GSK.every(k=>lv(S.xp[k])>=GL[r.tier]);
 const hrTxt=(r:any)=>fxTxt(r.fx)+' on every gathering skill';
 function hrFx(){const o:any[]=[];HR.forEach(r=>{if(!(S.hrc&&S.hrc[r.id]))return;r.fx.forEach((e:Enemy)=>{if(CTX.includes(e[0]))GSK.forEach(sk=>o.push({k:e[0],v:e[1],sk}));else o.push({k:e[0],v:e[1],sk:null})})});return o}
-function hrCount(a:any,n:any){
+function hrCount(a:any,n:number){
   const h=S.hr;if(!h)return;const r=HR.find(x=>x.id==h.id);if(!r||+a.id.slice(2)<r.tier)return;
   h.q[a.sk]=Math.min(r.q,(h.q[a.sk]||0)+n);
   if(GSK.every(k=>(h.q[k]||0)>=r.q)){

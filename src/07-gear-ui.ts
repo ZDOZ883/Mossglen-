@@ -8,7 +8,7 @@ function gearView(){
     h+='<div class="gslots">'+['Melee','Ranged','Magic','head','neck','cape','body','legs','off','trinket','ring1','ring2'].map(tileHtml).join('')+'</div>';
     h+=gsel?pickerHtml(gsel):'<p class="sub" style="margin-top:12px">Tap any slot to see everything you own for it. Pick a grip: a two-hander hits harder, a one-hander can carry a shield (less damage taken, more armor) or an off-hand weapon (an extra strike). Gear comes in three grades per tier: <b>Plain</b> from the shop, <b>Crafted</b> by the production skills, and <b>Heirloom</b> from rare drops, bosses and raids.</p>';
   }else if(gtab=='shop'){
-    const fn:any[]=[['Melee',(t:any)=>'w0'+t],['Ranged',(t:any)=>'w1'+t],['Magic',(t:any)=>'w2'+t],['body',(t:any)=>'b'+t],['head',(t:any)=>'h'+t],['legs',(t:any)=>'g'+t],['ring',(t:any)=>'r0_'+t],['neck',(t:any)=>'n0_'+t],['cloak',(t:any)=>'c0_'+t],['off',(t:any)=>'y'+t]],have=(b:any)=>S.own[b]||S.own[b+'d']||S.own[b+'s'];let sh='';
+    const fn:any[]=[['Melee',(t:number)=>'w0'+t],['Ranged',(t:number)=>'w1'+t],['Magic',(t:number)=>'w2'+t],['body',(t:number)=>'b'+t],['head',(t:number)=>'h'+t],['legs',(t:number)=>'g'+t],['ring',(t:number)=>'r0_'+t],['neck',(t:number)=>'n0_'+t],['cloak',(t:number)=>'c0_'+t],['off',(t:number)=>'y'+t]],have=(b:number)=>S.own[b]||S.own[b+'d']||S.own[b+'s'];let sh='';
     fn.forEach(f=>{for(let t=0;t<2;t++){const b=f[1](t),id=b+'s';if(!have(b)){const it=IT[id];sh+='<div class="row"><span class="ri">'+icon(iconOf(it),30)+'</span><span style="flex:1">'+it.n+'<small>'+istat(it)+' · needs '+reqText(it)+'</small></span><button class="btn" data-shop="'+id+'"'+(S.a<price(it)?' disabled':'')+'>🌰 '+price(it).toLocaleString()+'</button></div>';break}}});
     h+='<p class="sub">The shop sells Plain starter gear for the first two tiers. Everything better is crafted or found.</p>'+(sh||'<p class="mu">You own everything the shop sells.</p>');
   }else if(gtab=='lo'){h+=loadoutView()}
@@ -18,7 +18,7 @@ function gearView(){
 const CR=['Smithing','Fletching','Enchanting','Tailoring'];CS.push(...CR,'Slayer','Leadership');
 const CSK=(id:string)=>id[0]=='y'?'Smithing':id[0]=='g'?'Fletching':id[0]=='r'?'Smithing':id[0]=='n'?'Enchanting':id[0]=='c'?'Tailoring':id[0]=='b'?'Smithing':id[0]=='h'?'Tailoring':id[1]=='0'?'Smithing':id[1]=='1'?'Fletching':'Enchanting';
 function recipe(id:string){
-  const it=IT[id],t=it.tier,i=Math.max(0,t-1),m={},s=CSK(id),g=(k:string)=>GN[k][i][1],add=(k:string,q:any)=>(m as any)[k]=((m as any)[k]||0)+q;
+  const it=IT[id],t=it.tier,i=Math.max(0,t-1),m={},s=CSK(id),g=(k:string)=>GN[k][i][1],add=(k:string,q:number)=>(m as any)[k]=((m as any)[k]||0)+q;
   if(s=='Smithing'){add(g('Mining'),id[0]=='b'?10+3*t:5+2*t);add(g('Woodcutting'),2+t);if(id[0]=='b')add(g('Hunting'),2+t)}
   else if(s=='Fletching'){add(g('Woodcutting'),6+2*t);add(g('Foraging'),2+t)}
   else if(s=='Enchanting'){add(g('Foraging'),5+2*t);add(g('Mining'),2+t)}
@@ -50,7 +50,7 @@ function slayKill(e:Enemy){
   k.left--;
   if(k.left<=0){S.str++;petRoll('p_Slayer',400);const p=Math.round((3+e.zone*2)*(S.str%10==0?3:S.str%5==0?2:1)*(1+cb('pts'))),ac=Math.round(e.a*k.n*.5);S.pt+=p;S.a+=ac;say('Task complete! +'+p+' slayer points, +'+ac+' acorns (streak '+S.str+').');S.task=null}
 }
-function taskAct(a:any){
+function taskAct(a:string){
   if(a=='new'&&!S.task)newTask();
   else if(a=='reroll'&&S.task&&S.pt>=10){S.pt-=10;newTask()}
   else if(a=='fight'&&S.task){const e=E.find(q=>q.id==S.task.id)!;S.zone=e.zone;S.ehp=null;S.cur={k:'c',id:e.id};S.p=0}
@@ -66,7 +66,7 @@ function slayerView(){
 }
 CS.push('Cooking');
 const DISH:Record<string,Dish>={},DN={F:['Berry tart','Mushroom pie','Truffle pasty','Moonroot soup','Frostcap broth','Sunpetal salad','Starbloom cake','Deepbloom torte','Wyrmcap roast','Eclipse lotus feast'],I:['Fried minnows','Baked trout','Pike pie','Eel stew','Carp supper','Moonfish feast','Glassfin platter','Cavefin chowder','Drakescale grill','Voidfin tasting'],H:['Beetle crisps','Cricket skewers','Garlic snails','Frog legs','Newt stew','Skink roast','Moth-wing pastry','Root beetle bake','Ember moth skewers','Dusk spider pie']},DSK={F:'Foraging',I:'Fishing',H:'Hunting'},DM={F:.9,I:1,H:1.1},HEAL=[15,28,50,80,125,190,280,420,600,850];
-function initDish(){['F','I','H'].forEach(c=>(DN as any)[c].forEach((n:any,i:any)=>{const heal=Math.round(HEAL[i]*(DM as any)[c]);DISH['d'+c+i]={n,raw:GN[(DSK as any)[c]][i][1],q:c=='F'?3:2,side:c=='F'?null:GN.Foraging[i][1],lv:GL[i],gate:i>6?i-6:0,heal,xp:GX[i]*2};FOOD[n]=heal;V[n]=Math.round(GV[i]*3.5)}))}
+function initDish(){['F','I','H'].forEach(c=>(DN as any)[c].forEach((n:string,i:number)=>{const heal=Math.round(HEAL[i]*(DM as any)[c]);DISH['d'+c+i]={n,raw:GN[(DSK as any)[c]][i][1],q:c=='F'?3:2,side:c=='F'?null:GN.Foraging[i][1],lv:GL[i],gate:i>6?i-6:0,heal,xp:GX[i]*2};FOOD[n]=heal;V[n]=Math.round(GV[i]*3.5)}))}
 const burn=(d:any)=>Math.max(0,.4-(lv(S.xp.Cooking)-d.lv)*.02)*(1-Math.min(.9,cb('burn','Cooking')));
 const dishNeeds=(d:any)=>{const nd:Record<string,any>={};nd[d.raw]=d.q;if(d.side)nd[d.side]=1;return nd};
 function cookDone(id:string,mk?:any){
@@ -80,13 +80,13 @@ function cookDone(id:string,mk?:any){
   const a=lv(S.xp.Cooking);if(a>b)say('Cooking reaches level '+a+'.'+Object.keys(DISH).filter(k=>DISH[k].lv==a).map(k=>' Unlocked: '+DISH[k].n+'.').join(''));
 }
 function buy(k:string){const t=S.gear[k],c=(k=='arm'?[100,400,1000]:[80,300,900])[t];if(t<3&&S.a>=c){S.a-=c;S.gear[k]++;say('Equipped '+(k=='arm'?AR[t]:W[k][t])+'.')}}
-const need=(l:any)=>XT[Math.min(l+1,120)];
+const need=(l:number)=>XT[Math.min(l+1,120)];
 const GL=[1,15,30,45,60,75,90,100,110,120],GX=[6,18,36,60,96,144,210,360,570,900],GV=[1,3,8,15,30,55,100,175,350,750];
 const GN:Record<string,string[][]>={Foraging:[['Pick berries','berries'],['Dig up mushrooms','mushrooms'],['Sniff out truffles','truffles'],['Gather moonroot','moonroot'],['Find frostcaps','frostcaps'],['Pluck sunpetals','sunpetals'],['Reach for starbloom','starbloom'],['Cut deepbloom','deepbloom'],['Harvest wyrmcap','wyrmcap'],['Pluck eclipse lotus','eclipse lotus']],Woodcutting:[['Gather twigs','twigs'],['Gnaw birch logs','birch logs'],['Fell an oak limb','oak limbs'],['Cut willow boughs','willow boughs'],['Fell maple staves','maple staves'],['Hew yew limbs','yew limbs'],['Claim elderwood','elderwood'],['Fell ironroot','ironroot'],['Claim wyrmwood','wyrmwood'],['Hew duskoak','duskoak']],Fishing:[['Catch minnows','minnows'],['Spear trout','trout'],['Hook a pike','pike'],['Trap eels','eels'],['Net silver carp','silver carp'],['Lure moonfish','moonfish'],['Land a glassfin','glassfin'],['Hook cavefin','cavefin'],['Land a drakescale','drakescale'],['Spear voidfin','voidfin']],Mining:[['Collect pebbles','pebbles'],['Chip flint','flint'],['Pry out amber','amber'],['Dig silver','silver'],['Cut moonstone','moonstone'],['Free a garnet','garnets'],['Mine starstone','starstone'],['Cut deepcrystal','deep crystal'],['Mine wyrmiron','wyrmiron'],['Quarry eclipsite','eclipsite']],Hunting:[['Snare beetles','beetles'],['Trap crickets','crickets'],['Gather snails','snails'],['Catch frogs','frogs'],['Net newts','newts'],['Snare skinks','sand skinks'],['Lure moon moths','moon moths'],['Snare rootbeetles','root beetles'],['Net ember moths','ember moths'],['Trap dusk spiders','dusk spiders']]};
-const A:any[]=[];Object.keys(GN).forEach(sk=>GN[sk].forEach((g:any,i:any)=>{A.push({id:sk.slice(0,2)+i,sk,n:g[0],lv:GL[i],t:i>6?[9,11,14][i-7]:3+i*.5,xp:GX[i],item:g[1],gate:i>6?i-6:0});V[g[1]]=GV[i]}));
+const A:any[]=[];Object.keys(GN).forEach(sk=>GN[sk].forEach((g:string[],i:number)=>{A.push({id:sk.slice(0,2)+i,sk,n:g[0],lv:GL[i],t:i>6?[9,11,14][i-7]:3+i*.5,xp:GX[i],item:g[1],gate:i>6?i-6:0});V[g[1]]=GV[i]}));
 const TN=['Flint','Bramble','Moonsteel','Amberforged','Elderglass'],TC=[0,150,800,4000,20000],TL=[1,10,30,50,75],TM=[1,.9,.8,.7,.6],TK={Foraging:'basket',Woodcutting:'axe',Fishing:'rod',Mining:'pick',Hunting:'snare'};
 const tt=(a:any)=>a.t*TM[S.tool[a.sk]]*Math.max(.3,1-cb('spd',a.sk));
-function unlockText(sk:string,n:any){const u=A.filter(a=>a.sk==sk&&a.lv==n&&!a.gate).map(a=>a.item);TL.forEach((l,i)=>{if(l==n&&i>0)u.push(TN[i]+' '+(TK as any)[sk])});return u.length?' Unlocked: '+u.join(', ')+'.':''}
+function unlockText(sk:string,n:number){const u=A.filter(a=>a.sk==sk&&a.lv==n&&!a.gate).map(a=>a.item);TL.forEach((l,i)=>{if(l==n&&i>0)u.push(TN[i]+' '+(TK as any)[sk])});return u.length?' Unlocked: '+u.join(', ')+'.':''}
 function buyTool(sk:string){const t=S.tool[sk]+1;if(t<5&&lv(S.xp[sk])>=TL[t]&&S.a>=TC[t]){S.a-=TC[t];S.tool[sk]=t;say('Equipped '+TN[t]+' '+(TK as any)[sk]+'.')}}
 function toolRow(k:string){const t=S.tool[k],n=t+1;return '<div class="row"><span>'+TN[t]+' '+(TK as any)[k]+'<small>Bonus yield '+Math.round(lv(S.xp[k])*.4)+'% · '+(t<4?'Next: '+TN[n]+' (level '+TL[n]+', '+TM[n]+'× time)':'Best tool')+'</small></span>'+(t<4?'<button class="btn" data-tool="'+k+'"'+(lv(S.xp[k])<TL[n]||S.a<TC[n]?' disabled':'')+'>'+TC[n]+'</button>':'')+'</div>'}
 let S:SaveState=null as any,tab='skills',who='you',skill:any=null;
@@ -95,7 +95,7 @@ if(!S)S={sp:null,xp:{Foraging:0,Woodcutting:0,Fishing:0,Mining:0},inv:{},a:0,cur
 S.tier=S.tier||{};S.best=S.best||{};S.cx=S.cx||{};S.lead=S.lead||null;S.style=S.style||'Melee';S.gear=S.gear||{Melee:0,Ranged:0,Magic:0,arm:0};if(S.xp.Attack==null&&(S.xp.Melee||S.xp.Ranged||S.xp.Magic)){const b0=Math.max(S.xp.Melee||0,S.xp.Ranged||0,S.xp.Magic||0);S.xp.Attack=S.xp.Strength=S.xp.Defense=b0}
 CS.forEach(k=>S.xp[k]=S.xp[k]||(k=='Vitality'?XT[10]:0));S.tool=S.tool||{Foraging:0,Woodcutting:0,Fishing:0,Mining:0};if(S.cur&&S.cur.k=='s'&&!A.find(a=>a.id==S.cur.id))S.cur=null;
 if(S.cur&&S.cur.k=='c'&&!E.find(e=>e.id==S.cur.id))S.cur=null;
-if(!S.own){if(S.gear){const rf=(g:any,c:any)=>c.slice(0,g).reduce((a:any,b:any)=>a+b,0);S.a+=['Melee','Ranged','Magic'].reduce((s,k)=>s+rf(S.gear[k]||0,[80,300,900]),0)+rf(S.gear.arm||0,[100,400,1000]);delete S.gear}S.own={w00:1,w10:1,w20:1};S.eq={Melee:'w00',Ranged:'w10',Magic:'w20',body:null,head:null,trinket:null}}
+if(!S.own){if(S.gear){const rf=(g:string,c:any)=>c.slice(0,g).reduce((a:number,b:number)=>a+b,0);S.a+=['Melee','Ranged','Magic'].reduce((s,k)=>s+rf(S.gear[k]||0,[80,300,900]),0)+rf(S.gear.arm||0,[100,400,1000]);delete S.gear}S.own={w00:1,w10:1,w20:1};S.eq={Melee:'w00',Ranged:'w10',Magic:'w20',body:null,head:null,trinket:null}}
 S.kc=S.kc||{};S.pity=S.pity||{};S.col=S.col||{};S.zone=S.zone||0;S.stance=S.stance||'bal';S.pt=S.pt||0;S.str=S.str||0;S.su=S.su||{};S.task=S.task||null;if(S.cur&&S.cur.k=='f'&&!IT[S.cur.id])S.cur=null;
 initDish();SK.forEach(k=>S.xp[k]=S.xp[k]||0);S.tool.Hunting=S.tool.Hunting||0;if(S.cur&&S.cur.k=='k'&&!DISH[S.cur.id])S.cur=null;if(S.hp==null)S.hp=30+lv(S.xp.Vitality)*10;
 const save=()=>{try{localStorage.setItem('hollowbrook1',JSON.stringify(S))}catch(e){}};

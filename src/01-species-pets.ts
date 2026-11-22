@@ -46,11 +46,11 @@ const D=[
 {id:'wyrmc',n:'The Wyrm’s Cellar',req:1000,t:200,a:[2000,3500],tr:'Wyrm Relic',type:'Melee',gate:2},
 {id:'vault',n:'The Eclipse Vault',req:1500,t:260,a:[5500,9500],tr:'Eclipse Relic',type:'Magic',gate:3}] as unknown as Delve[];
 const XT=[0,0];(()=>{let p=0;for(let x=1;x<127;x++){p+=Math.floor(x+300*Math.pow(2,x/7));XT[x+1]=Math.floor(p/4)}})();
-const lv=(x:any)=>{let a=1,b=120;while(a<b){const m=(a+b+1)>>1;if(x>=XT[m])a=m;else b=m-1}return a};
+const lv=(x:number)=>{let a=1,b=120;while(a<b){const m=(a+b+1)>>1;if(x>=XT[m])a=m;else b=m-1}return a};
 const CS=['Attack','Strength','Defense','Vitality'];
 const BEATS:Record<string,string>={Melee:'Ranged',Ranged:'Magic',Magic:'Melee'};
-const adv=(a:any,b:any)=>BEATS[a]==b?1:BEATS[b]==a?-1:0;
-const weak=(t:any)=>Object.keys(BEATS).find(k=>BEATS[k]==t);
+const adv=(a:string,b:string)=>BEATS[a]==b?1:BEATS[b]==a?-1:0;
+const weak=(t:string)=>Object.keys(BEATS).find(k=>BEATS[k]==t);
 const W:Record<string,string[]>={Melee:['Flint Claws','Briar Spear','Amber Cleaver'],Ranged:['Twig Bow','Birch Longbow','Amber Crossbow'],Magic:['Hazel Wand','Mooncap Staff','Amber Scepter']};
 const AR=['Bark Vest','Mossweave Coat','Amber Mail'];
 const maxhp=()=>Math.round((30+lv(S.xp.Vitality)*10)*(1+cb('hpm')+pk('hp')));

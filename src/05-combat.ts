@@ -7,8 +7,8 @@ function fight(e:Enemy){
 function canEq(it:Item){if(it.rs)return rsLv(it.rs)>=it.req;return lv(S.xp[SL.includes(it.slot)?'Attack':it.slot=='trinket'?'Vitality':'Defense'])>=it.req}
 function autoEq(id:string){const it=IT[id];if(it.slot=='ring'){if(!canEq(it))return;const k=!S.eq.ring1?'ring1':!S.eq.ring2?'ring2':null;if(k){S.eq[k]=id;say('Equipped '+it.n+'.');gearSync()}return}if(it.slot=='cloak'){if(!S.cape&&canEq(it)){S.cape='I:'+id;refreshFx();say('Wearing '+it.n+'.')}return}const cur=S.eq[it.slot];if(!cur&&canEq(it)){S.eq[it.slot]=id;say('Equipped '+it.n+'.');gearSync()}}
 function gainItem(id:string){const it=IT[id];if(S.own[id]){const v=Math.round((GP[it.tier]||50)*.4);S.a+=v;say('Duplicate '+it.n+' sold for '+v+' acorns.');return}S.own[id]=1;S.col[id]=1;say('Rare drop: '+it.n+'!');autoEq(id)}
-function rndGear(t:any){const ac=()=>{const sl=['ring','neck','cloak'][Math.floor(Math.random()*3)];return ACCL[sl]+Math.floor(Math.random()*4)+'_'+t};const pool=[0,1,2].map(i=>'w'+i+t).concat([0,1,2].map(i=>'x'+i+t),[0,1,2].map(i=>'o'+i+t),['y'+t,'b'+t,'h'+t,'g'+t,ac(),ac()]);return pool[Math.floor(Math.random()*pool.length)]+'d'}
-function loot(e:Enemy,quiet?:any){
+function rndGear(t:number){const ac=()=>{const sl=['ring','neck','cloak'][Math.floor(Math.random()*3)];return ACCL[sl]+Math.floor(Math.random()*4)+'_'+t};const pool=[0,1,2].map(i=>'w'+i+t).concat([0,1,2].map(i=>'x'+i+t),[0,1,2].map(i=>'o'+i+t),['y'+t,'b'+t,'h'+t,'g'+t,ac(),ac()]);return pool[Math.floor(Math.random()*pool.length)]+'d'}
+function loot(e:Enemy,quiet?:boolean){
   const z=e.zone,g=1+ef('drop')+cb('drop')+FM[S.form].drop+(onTask(e)?.1+(S.su.fort?.25:0)+cb('tdrop'):0),t=dropTier(z),k='z'+z+(e.boss?'b':'m');
   if(Math.random()<.6){const m=ZN[z][4];S.inv[m]=(S.inv[m]||0)+1+(Math.random()<.4?1:0)}
   S.pity[k]=(S.pity[k]||0)+1;
@@ -17,7 +17,7 @@ function loot(e:Enemy,quiet?:any){
   if(e.boss&&z>7){const hk='z'+z+'h';S.pity[hk]=(S.pity[hk]||0)+1;if(Math.random()<g/30||S.pity[hk]>=70){S.pity[hk]=0;gainItem(rndGear(z))}}
   if(e.boss){const tk='z'+z+'t';S.pity[tk]=(S.pity[tk]||0)+1;if(Math.random()<g/12||S.pity[tk]>=60){S.pity[tk]=0;gainItem('t'+z)}}
 }
-function onKill(e:Enemy,quiet:any){
+function onKill(e:Enemy,quiet?:boolean){
   S.lsu=false;
   const m=maxhp(),xs=XS[S.stance],xm=1+ef('xp')+cb('xpm'),c0=CL(),ks=['Attack','Strength','Defense','Vitality'],b=ks.map(k=>lv(S.xp[k]));
   const ox=Math.min(1,Math.pow((elv(e)+15)/Math.max(1,c0),2));
@@ -33,7 +33,7 @@ function onKill(e:Enemy,quiet:any){
   if(!quiet)hit('<b>You defeat '+e.n+'. +'+g+' acorns.</b>');
   if(e.raid)raidKill(e,quiet);else loot(e);
 }
-function cround(e:Enemy,quiet:any){
+function cround(e:Enemy,quiet?:boolean){
   const m=maxhp();
   if(e.raid){const r=RD.find(x=>x.id==e.raid)!;if(!raidOk(r)){S.cur=null;S.ehp=null;say('The raid party broke up. You pull out of '+r.n+'.');return}S.rr=(S.rr||0)+1}
   if(S.ehid!==e.id||S.ehp==null){S.ehid=e.id;S.ehp=e.hp;S.rr=0;if(!quiet)hits=[]}
@@ -52,7 +52,7 @@ function cround(e:Enemy,quiet:any){
 function cycle(k:string){const ot=k=='ring1'?S.eq.ring2:k=='ring2'?S.eq.ring1:null;const o=Object.keys(S.own).filter(i=>IT[i].slot==skey(k)&&canEq(IT[i])&&i!=ot).sort((a,b)=>IT[a].tier-IT[b].tier||qrank(IT[a])-qrank(IT[b])||(IT[a].fam||0)-(IT[b].fam||0));if(!o.length)return;S.eq[k]=o[(o.indexOf(S.eq[k])+1)%o.length];gearSync()}
 const price=(it:Item)=>Math.round(GP[it.tier]*(it.cmb?1.3:1)*(it.q=='s'?.6:1));
 function shopBuy(id:string){const it=IT[id],c=price(it);if(!S.own[id]&&S.a>=c){S.a-=c;S.own[id]=1;say('Bought '+it.n+'.');autoEq(id)}}
-function istat(it:any){if(it.eff){const N:Record<string,any>={gold:'acorns',dmg:'damage',heal:'food healing',drop:'rare drops',xp:'combat xp'};return Object.keys(it.eff).map(k=>'+'+Math.round(it.eff[k]*100)+'% '+N[k]).join(', ')}if(it.fx)return fxTxt(it.fx.map((e:any)=>[e[0],e[1]]))+scopeTxt(it);if(it.kind=='2h')return '+'+it.stat+' attack · two-handed: +30% damage, no off-hand';if(it.kind=='off')return '+'+it.stat+' attack · off-hand for '+it.st+': dual wield adds an extra strike';if(it.kind=='shield')return '+'+it.stat+' defense · −8% damage taken';return '+'+it.stat+(it.slot=='body'||it.slot=='head'||it.slot=='legs'?' defense':' attack')}
+function istat(it:Item){if(it.eff){const N:Record<string,any>={gold:'acorns',dmg:'damage',heal:'food healing',drop:'rare drops',xp:'combat xp'};return Object.keys(it.eff).map(k=>'+'+Math.round(it.eff[k]*100)+'% '+N[k]).join(', ')}if(it.fx)return fxTxt(it.fx.map((e:any)=>[e[0],e[1]]))+scopeTxt(it);if(it.kind=='2h')return '+'+it.stat+' attack · two-handed: +30% damage, no off-hand';if(it.kind=='off')return '+'+it.stat+' attack · off-hand for '+it.st+': dual wield adds an extra strike';if(it.kind=='shield')return '+'+it.stat+' defense · −8% damage taken';return '+'+it.stat+(it.slot=='body'||it.slot=='head'||it.slot=='legs'?' defense':' attack')}
 function reqText(it:Item){if(it.rs)return ({gath:'any gathering skill',prod:'any production skill'}[it.rs]||it.rs)+' '+it.req;return it.slot=='body'||it.slot=='head'||it.slot=='legs'?'Defense '+it.req:'Attack '+it.req}
 function arenaView(){
   const c=S.cur&&S.cur.k=='c'?E.find(e=>e.id==S.cur.id):null,food=Object.keys(FOOD).reduce((s,k)=>s+(S.inv[k]||0),0);
