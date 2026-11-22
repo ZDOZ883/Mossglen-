@@ -1095,3 +1095,36 @@ describe('economy guards', () => {
     out.forEach(([zb, rate]) => assert.ok(rate / zr[zb] <= 1.0, `expedition in zone ${zb} earns ${(rate / zr[zb]).toFixed(2)}x farming`));
   });
 });
+
+describe('tutorial and item directory', () => {
+  it('a new character gets a quick tour that can be advanced, skipped and replayed', () => {
+    const g = load({ seed: 4 });
+    g.click({ sp: 'Hedgehog' });
+    assert.equal(g.ev('gameState.tut'), 0);
+    assert.ok(/Quick tour · 1 of 6/.test(g.view('skills')));
+    g.click({ tut: 'next' });
+    assert.equal(g.ev('gameState.tut'), 1);
+    g.click({ tut: 'skip' });
+    assert.equal(g.ev('gameState.tut'), undefined);
+    assert.ok(!/Quick tour/.test(g.view('skills')));
+    g.click({ tut: 'replay' });
+    assert.equal(g.ev('gameState.tut'), 0);
+    for (let i = 0; i < 6; i++) g.click({ tut: 'next' });
+    assert.equal(g.ev('gameState.tut'), undefined, 'finishing the tour clears it');
+  });
+  it('existing saves do not get the tour', () => {
+    const g = load({ seed: 4 });
+    g.ev(`gameState.sp='Badger'`);
+    assert.ok(!/Quick tour/.test(g.view('skills')));
+  });
+  it('the item directory lists every zone, delve and raid with its sources', () => {
+    const g = load({ seed: 4 });
+    g.ev(`gameState.sp='Badger'`);
+    const h = g.ev('itemDir()');
+    for (const z of g.ev('ZN.map(z=>z[0])')) assert.ok(h.includes(z), 'missing zone ' + z);
+    for (const n of g.ev('DISHES.map(d=>d.tr)')) assert.ok(h.includes(n), 'missing trophy ' + n);
+    for (const n of g.ev('RD.map(r=>r.n)')) assert.ok(h.includes(n), 'missing raid ' + n);
+    assert.ok(!/undefined|NaN/.test(h));
+    g.view('log'); g.click({ logsub: 'guide' });
+  });
+});

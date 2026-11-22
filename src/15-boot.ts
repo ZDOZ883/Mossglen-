@@ -14,7 +14,7 @@ import { alchAct, farmAct } from './12-farm-alchemy';
 // Input handling, boot and timers. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 document.addEventListener('click',e=>{
   const t=(e.target as HTMLElement).closest('button');if(!t)return;const d=t.dataset,a0=gameState.a;
-  if(d.sp){gameState.sp=d.sp;refreshFx();say('A '+d.sp.toLowerCase()+' steps out of the burrow. The valley is quiet.')}
+  if(d.sp){gameState.sp=d.sp;if(!gameState.st||!gameState.st.t)gameState.tut=0;refreshFx();say('A '+d.sp.toLowerCase()+' steps out of the burrow. The valley is quiet.')}
   else if(d.tab){if(tab==d.tab&&d.tab=='skills')set_skill(null);set_tab(d.tab)}
   else if(d.skill)set_skill(d.skill);
   else if(d.cmd)gameState.cmd=!gameState.cmd;
@@ -27,6 +27,7 @@ document.addEventListener('click',e=>{
   else if(d.assign){const [k,a]=d.assign.split(':');assign(k,a)}
   else if(d.dismiss){const k=d.dismiss;if(asg(k).k=='exp'){say(MEMBERS[k].n+' is away on an expedition.');}else if(gameState.hired[k]){delete gameState.hired[k];gameState.bench[k]=1;gameState.mt[k]={k:'idle'};if(gameState.lead==k)gameState.lead=Object.keys(gameState.hired)[0]||null;if(who==k)set_who('you');say(MEMBERS[k].n+' rests at home. They stay on your roster and can train in the barracks.')}}
   else if(d.repx){delete gameState.rep}
+  else if(d.tut){if(d.tut=='replay'){gameState.tut=0;set_tab('skills')}else if(d.tut=='skip')delete gameState.tut;else{const n=(gameState.tut||0)+1;if(n>=6)delete gameState.tut;else gameState.tut=n}}
   else if(d.savex){
     const box=document.getElementById('savebox') as HTMLTextAreaElement|null,msg=(m:string)=>{set_saveMsg(m);const e=document.getElementById('savemsg');if(e)e.textContent=m};
     if(d.savex=='import'){const err=importSave(box?box.value:'');if(err){msg(err)}else{location.reload()}return}

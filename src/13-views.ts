@@ -1,7 +1,7 @@
 import { gameState, TASKS } from './00-state';
 import { X } from './registry';
-import { COMBAT_SKILLS, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, PB, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, KITSIG, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
-import { AF, CE, ZN, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
+import { COMBAT_SKILLS, DISHES, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, PB, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, KITSIG, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
+import { AF, CE, ZN, dropTier, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
 import { GATE, RD, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
 import { combatView, istat } from './05-combat';
@@ -154,6 +154,33 @@ export function petSrc(id:string):string{
   return '';
 }
 const petTag=(k:string)=>MEMBERS[k]&&MEMBERS[k].pet?'<small>'+petSrc(k)+'</small>':'';
+// ---------- first-run tutorial
+export const TUT:string[][]=[
+  ['Welcome to Mossglen','You play one hedgehog (or other woodland creature) forever. Everything you start keeps running, even while the game is closed. Tap a skill under Skills to begin gathering.'],
+  ['Pack and acorns','Gathered goods land in the Pack tab. Sell them for acorns, but keep food (it heals you in fights) and anything you want to craft with.'],
+  ['Fight','In Fight, choose Melee, Ranged or Magic, then an enemy. Counter an enemy\'s style for +25% damage. Gear and Loadout (in Gear) equip your best items for you.'],
+  ['Your party','Train Leadership by fighting to unlock party slots, then recruit members in Party. Extra members rest on your roster and can still train in the barracks or go on expeditions.'],
+  ['Explore and Burrow','Explore sends expeditions and raids. Burrow has buildings and the seasons. Seasons help gathering, farming and alchemy but never touch combat.'],
+  ['Log, Guide and saves','Log holds your Collection, a Guide with every drop source, Stats, and Data where you can copy a save code. Do that now and then to keep a backup.']
+];
+export const tutCard=()=>{
+  const n=gameState.tut;if(typeof n!='number'||n<0||n>=TUT.length)return '';
+  return '<div class="stat sans" style="position:static"><div class="mu now">Quick tour · '+(n+1)+' of '+TUT.length+'</div><div><b>'+TUT[n][0]+'</b></div><div class="mu" style="margin-top:4px">'+TUT[n][1]+'</div><div style="margin-top:8px;display:flex;gap:8px"><button class="btn" data-tut="next" style="font-size:14px">'+(n==TUT.length-1?'Done':'Next')+'</button><button class="btn" data-tut="skip" style="font-size:14px">Skip</button></div></div>';
+};
+// ---------- item directory
+export function itemDir():string{
+  const zl=ZN.map((z,i)=>{
+    const bits:string[]=['Combat level '+z[1]+' · material <b>'+z[4]+'</b> (about 3 in 5 kills)'];
+    if(i>7){bits.push('core <b>'+z[6]+'</b> (1 in 40 per kill, 1 in 6 from the boss)');bits.push('<b>'+PRE[dropTier(i)]+'</b> gear from the boss only (about 1 in 30)')}
+    else bits.push('<b>'+PRE[dropTier(i)]+'</b> gear (about 1 in 64 per kill, 1 in 10 from the boss)');
+    bits.push('boss trophy <b>'+IT['t'+i].n+'</b> (about 1 in 12 per boss kill)');
+    return '<div style="margin-top:6px"><b>'+z[0]+'</b><br>'+bits.join('<br>')+'</div>';
+  }).join('');
+  const dl=DISHES.map(d=>{const m=ZN[(d as any).zb];return '<div style="margin-top:6px"><b>'+d.n+'</b> · needs '+d.req+' combat power, '+(m?'also pays '+m[4]+(((d as any).zb>=8)?' and sometimes '+m[6]:''):'')+'<br>Trophy <b>'+d.tr+'</b> from winning expeditions, better with a good leader and Fortune. Tier 4 and 5 runs can also give a piece of gear.</div>'}).join('');
+  const rl=RD.map((r,i)=>'<div style="margin-top:6px"><b>'+r.n+'</b> · combat level '+r.cl+', '+r.party+' members of level '+r.mlv+'+<br>'+(r.core?r.core[0]+' ('+r.core[1]+' or '+(r.core[1]+1)+' per clear), ':'')+'trophy <b>'+IT[r.tr].n+'</b> (about 6% per clear, guaranteed by 25), '+PRE[Math.min(10,[7,8,9,10][i])]+' gear (about 1 in 5, guaranteed by 8), and the raid pet.</div>').join('');
+  const note='<p style="margin-top:6px">Chances shown are base rates. Rare-drop bonuses from gear, pets, blessings and tasks multiply them, and bad-luck protection guarantees a drop eventually. Gear can also be bought in the Shop and crafted from materials in the Gear tab.</p>';
+  return dens('Item directory · zones',note+zl)+dens('Item directory · delves and expeditions',dl)+dens('Item directory · raids',rl);
+}
 export function guideView(){
   const found=(id:string)=>gameState.pets[id]?'✓ ':'';
   const rec=HK.filter(k=>!MEMBERS[k].pet).map(k=>'<div style="margin-top:6px">'+(known(k)?'✓ ':'')+'<b>'+MEMBERS[k].n+'</b> · '+MEMBERS[k].role+'<br>Recruit in the Party tab for '+MEMBERS[k].c.toLocaleString()+' acorns once Leadership is level '+MEMBERS[k].lt+'.</div>').join('');
@@ -161,7 +188,7 @@ export function guideView(){
   const memDens=dens('Party members (recruits)',rec)+dens('Pets (found, never bought)','<p>Pets are extremely rare drops. Each is found once, joins your party or roster, and fights and works better than recruits. ✓ marks the ones you have.</p>'+pets);
   const capes=Object.keys(CE).map(k=>capeRow(k).replace('<div class="row"><span>','<div class="row"><span><b>'+k+'</b> · ')).join('');
   const rates='<b>Zone gear</b>: about 1 in 64 per kill, or 1 in 10 from a boss. A guaranteed drop arrives after 150 kills (40 for bosses).<br><b>Deep zones (8+)</b>: crafting materials about 1 in 40 per kill, 1 in 6 from a boss, guaranteed by 100 kills (18 for bosses). Bosses also have a 1 in 30 chance at gear, guaranteed by 70 kills.<br><b>Trinkets</b>: about 1 in 12 per boss kill, guaranteed by 60.<br>These are base chances. Rare-drop bonuses from gear, pets and blessings multiply them.';
-  return '<h2>Guide</h2><p class="sub">Reference notes, kept out of the way.</p>'+dens(gameState.sp+' traits','+15% xp in '+SP[gameState.sp!]+'. '+spTxt(gameState.sp))+dens('Capes','<div style="margin-top:6px">'+capes+'</div>')+memDens+dens('Drop rates',rates);
+  return '<h2>Guide</h2><p class="sub">Reference notes, kept out of the way.</p>'+dens(gameState.sp+' traits','+15% xp in '+SP[gameState.sp!]+'. '+spTxt(gameState.sp))+dens('Capes','<div style="margin-top:6px">'+capes+'</div>')+memDens+itemDir()+dens('Drop rates',rates)+'<p><button class="btn" data-tut="replay">Replay the quick tour</button></p>';
 }
 export function view(){
   if(tab=='burrow')return burrowView();
@@ -184,7 +211,7 @@ export function render(){
   const cn=curName(),sb=document.getElementById('savebox') as HTMLTextAreaElement|null,sbv=sb?sb.value:'';
   app!.innerHTML='<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">'+gameState.sp+' of the valley · total level '+GATHER_SKILLS.concat(COMBAT_SKILLS).reduce((s,k)=>s+lv(gameState.xp[k]),0)+'</p>'+
   '<div class="stat sans"><div class="mu now">You are currently</div>'+(cn?'<div style="display:flex;justify-content:space-between"><span>'+cn+(gameState.cur.k=='c'?' <small class="mu" id="se"></small>':'')+'</span><button class="btn" data-stop="1">Rest</button></div><div class="bar'+(gameState.cur.k=='c'?' hp':'')+'"><i id="pb"></i></div>':'<span class="mu">Resting. Choose an activity below to begin.</span>')+potStatus()+(hasWork()?'<div class="mu" style="font-size:14px;margin-top:4px">'+workNames()+'</div>':'')+'</div>'+
-  repCard()+
+  tutCard()+repCard()+
   '<nav>'+[['skills','Skills','leaf'],['combat','Fight','swords'],['gear','Gear','shield'],['party','Party','paw'],['delve','Explore','lantern'],['burrow','Burrow','burrow'],['log','Log','tome'],['pack','Pack','satchel']].map(t=>'<button data-tab="'+t[0]+'" class="'+(tab==t[0]?'on':'')+'"><i>'+icon(t[2],25)+'</i>'+t[1]+'</button>').join('')+'</nav>'+
   view()+'<div id="log">'+gameState.log.map((l:number)=>'<p>'+l+'</p>').join('')+'</div>';
   {const nb=document.getElementById('savebox') as HTMLTextAreaElement|null;if(nb&&sbv)nb.value=sbv}
