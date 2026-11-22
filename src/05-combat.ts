@@ -1,7 +1,7 @@
 import { gameState, say } from './00-state';
 import { X } from './registry';
 import { FM, FOOD, GP, MEMBERS, IT, SL, XS, adv, cb, fighters, ldx, lv, maxhp, mxp, onTask, petRoll, pk, skPet, weak , OFF } from './01-species-pets';
-import { OUT_BOSS, outLine, outZoneTier, outfitRoll } from './02-outfits';
+import { OUT_BOSS_N, OUT_BOSS_PITY, outLine, outZoneTier, outfitRoll } from './02-outfits';
 import { ACCL, BWEAPONS, ENEMIES, PRE, ZN, uniqLine, uniqTry, dropTier, elv, fxTxt, gearSync, qrank, rsLv, scopeTxt, skey, zoneOpen } from './02-gear-data';
 import { RD, raidKill, raidOk } from './03-world-expeditions';
 import { CL, RT, armor, dwf, eHitP, ef, emax, hit, hitP, maxHit, memDpr, set_hits, shT } from './04-loadout';
@@ -23,7 +23,7 @@ export function loot(e:Enemy,quiet?:boolean){
   if(z<8&&(Math.random()<(e.boss?.1:1/64)*g||gameState.pity[k]>=(e.boss?40:150))){gameState.pity[k]=0;gainItem(rndGear(t))}
   if(e.boss&&z>7){const hk='z'+z+'h';gameState.pity[hk]=(gameState.pity[hk]||0)+1;if(Math.random()<g/30||gameState.pity[hk]>=70){gameState.pity[hk]=0;gainItem(rndGear(z))}}
   if(e.boss){const w=BWEAPONS.find(x=>x.z==z)!;if(uniqTry(w,g))gainItem(w.id)}
-  if(e.boss)outfitRoll('obz'+z,outZoneTier(z),OUT_BOSS[0],OUT_BOSS[1],g);
+  if(e.boss)outfitRoll('obz'+z,outZoneTier(z),1/OUT_BOSS_N(outZoneTier(z)),OUT_BOSS_N(outZoneTier(z))*OUT_BOSS_PITY,g);
   if(e.boss){const tk='z'+z+'t';gameState.pity[tk]=(gameState.pity[tk]||0)+1;if(Math.random()<g/12||gameState.pity[tk]>=60){gameState.pity[tk]=0;gainItem('t'+z)}}
 }
 // Gear that can drop at a tier, with items you already have crossed out.
@@ -48,7 +48,7 @@ export function dropInfo(e:Enemy):string[]{
     const tg=!!(gameState.col['t'+z]||gameState.own['t'+z]),pg=!!gameState.pets['p_z'+z];
     o.push((tg?'<s>':'')+IT['t'+z].n+(tg?'</s>':'')+' (trinket): about 1 in 12, guaranteed by 60 boss kills.');
     o.push(uniqLine(BWEAPONS.find(x=>x.z==z)!));
-    o.push(outLine(outZoneTier(z),'about 1 in '+Math.round(1/OUT_BOSS[0])+', guaranteed by '+OUT_BOSS[1]+' boss kills here.'));
+    o.push(outLine(outZoneTier(z),'about 1 in '+OUT_BOSS_N(outZoneTier(z))+', guaranteed by '+OUT_BOSS_N(outZoneTier(z))*OUT_BOSS_PITY+' boss kills here.'));
     o.push((pg?'<s>':'')+'Boss pet'+(pg?'</s>':'')+': 1 in '+(1000+400*z).toLocaleString()+' per boss kill.');
   }
   o.push('Crossed out means you already have it. Materials and acorns never run out. Rare-drop bonuses from gear, pets, blessings and Slayer tasks raise these chances.');

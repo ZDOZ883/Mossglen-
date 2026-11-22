@@ -894,7 +894,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   __export(outfits_exports, {
     OUTFIT_SK: () => OUTFIT_SK,
     OUT_ACT_RATE: () => OUT_ACT_RATE,
-    OUT_BOSS: () => OUT_BOSS,
+    OUT_BOSS_N: () => OUT_BOSS_N,
+    OUT_BOSS_PITY: () => OUT_BOSS_PITY,
     OUT_DUP: () => OUT_DUP,
     OUT_EXP: () => OUT_EXP,
     OUT_GATHER: () => OUT_GATHER,
@@ -990,7 +991,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     return outKey(sk, i);
   }
   var OUT_ACT_RATE = 8e3;
-  var OUT_BOSS = [0.01, 300], OUT_EXP = [0.015, 5e-3, 60], OUT_RAID = [0.05, 30];
+  var OUT_BOSS_N = (tier) => 400 + 200 * (tier - 1), OUT_BOSS_PITY = 4;
+  var OUT_EXP = [0.015, 5e-3, 60], OUT_RAID = [0.05, 30];
   SKACT.push((sk) => {
     if (!OUTFIT_SK.includes(sk) || Math.random() * OUT_ACT_RATE >= 1) return;
     if (OUT_SLOTS.some((_, i) => outTier(sk, i) < 1)) outfitGive(1, sk);
@@ -1818,7 +1820,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       const w = BWEAPONS.find((x) => x.z == z);
       if (uniqTry(w, g)) gainItem(w.id);
     }
-    if (e.boss) outfitRoll("obz" + z, outZoneTier(z), OUT_BOSS[0], OUT_BOSS[1], g);
+    if (e.boss) outfitRoll("obz" + z, outZoneTier(z), 1 / OUT_BOSS_N(outZoneTier(z)), OUT_BOSS_N(outZoneTier(z)) * OUT_BOSS_PITY, g);
     if (e.boss) {
       const tk = "z" + z + "t";
       gameState.pity[tk] = (gameState.pity[tk] || 0) + 1;
@@ -1852,7 +1854,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       const tg = !!(gameState.col["t" + z] || gameState.own["t" + z]), pg = !!gameState.pets["p_z" + z];
       o.push((tg ? "<s>" : "") + IT["t" + z].n + (tg ? "</s>" : "") + " (trinket): about 1 in 12, guaranteed by 60 boss kills.");
       o.push(uniqLine(BWEAPONS.find((x) => x.z == z)));
-      o.push(outLine(outZoneTier(z), "about 1 in " + Math.round(1 / OUT_BOSS[0]) + ", guaranteed by " + OUT_BOSS[1] + " boss kills here."));
+      o.push(outLine(outZoneTier(z), "about 1 in " + OUT_BOSS_N(outZoneTier(z)) + ", guaranteed by " + OUT_BOSS_N(outZoneTier(z)) * OUT_BOSS_PITY + " boss kills here."));
       o.push((pg ? "<s>" : "") + "Boss pet" + (pg ? "</s>" : "") + ": 1 in " + (1e3 + 400 * z).toLocaleString() + " per boss kill.");
     }
     o.push("Crossed out means you already have it. Materials and acorns never run out. Rare-drop bonuses from gear, pets, blessings and Slayer tasks raise these chances.");
