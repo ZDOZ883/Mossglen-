@@ -3,7 +3,7 @@ type Style = 'Melee' | 'Ranged' | 'Magic';
 interface Item {
   n: string; slot: string; tier: number; stat: number; req: number;
   kind?: '2h' | 'off' | 'shield'; st?: string; rs?: string; cmb?: boolean; fam?: number;
-  q?: 's' | 'd'; fx?: [string, number, any?][]; [k: string]: any;
+  q?: 's' | 'd' | 'u'; fx?: [string, number, any?][]; [k: string]: any;
 }
 interface Enemy {
   id: string; n: string; zone: number; type: string; hp: number; dps: number;

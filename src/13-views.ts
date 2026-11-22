@@ -2,7 +2,7 @@ import { gameState, say, TASKS } from './00-state';
 import { X } from './registry';
 import { COMBAT_SKILLS, DISHES, FOOD, GL, MEMBERS, HK, IT, LD, LT, PETS, PB, REQ, GATHER_SKILLS, SP, SPX, SELL_VALUE, asg, cb, cl, lv, KITSIG, kit, kitNext, kitTier, mst, nsl, pm, roster, known, spTxt } from './01-species-pets';
 import { OUTFIT_SK, OUT_TIERS, outPerkTxt } from './02-outfits';
-import { AF, CE, KEEPX, ZN, dropTier, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
+import { AF, BWEAPONS, CE, KEEPX, ZN, dropTier, uniqLine, KEEP, KP, PRE, RF, RFN, gateOk, refRecipe } from './02-gear-data';
 import { GATE, RD, exFmt, exOf, exView, gatesView, hrView, raidView } from './03-world-expeditions';
 import { set_hitsStr } from './04-loadout';
 import { combatView, istat } from './05-combat';
@@ -192,7 +192,8 @@ export function itemDir():string{
   const note='<p style="margin-top:6px">Chances shown are base rates. Rare-drop bonuses from gear, pets, blessings and tasks multiply them, and bad-luck protection guarantees a drop eventually. Gear can also be bought in the Shop and crafted from materials in the Gear tab.</p>';
   const od=OUTFIT_SK.map(sk=>'<div style="margin-top:6px"><b>'+sk+'</b>: '+[1,2,3].map(t=>OUT_TIERS[t]+' set, '+outPerkTxt(sk,t)).join('; ')+'</div>').join('');
   const ol='<p>Four pieces per skill (Cap, Vest, Gloves, Boots), three tiers. Each piece gives a little xp. A full set gives the bonus of its weakest piece. Novice pieces also turn up while you train that skill (about 1 in 5,000 actions). Zone bosses drop Novice pieces in zones 1 to 4, Adept in zones 5 to 8 and Master in the deep zones. Expeditions and raids drop them too (raids give Adept and Master). Drops only roll for pieces you are missing, and you can set the skill they favour in Gear > Outfits.</p>'+od;
-  return dens('Item directory · skilling outfits',ol)+dens('Item directory · zones',note+zl)+dens('Item directory · delves and expeditions',dl)+dens('Item directory · raids',rl);
+  const ul='<p>Each boss has one signature weapon, about 12% stronger than an Heirloom of its tier, for the style listed. They are extremely rare and found once each.</p>'+BWEAPONS.map(w=>'<div style="margin-top:6px">'+uniqLine(w).replace('Signature weapon ','<b>'+(w.z!=null?w.boss:RD[w.raid!].st[RD[w.raid!].st.length-1][0])+'</b>: ')+'</div>').join('');
+  return dens('Item directory · boss signature weapons',ul)+dens('Item directory · skilling outfits',ol)+dens('Item directory · zones',note+zl)+dens('Item directory · delves and expeditions',dl)+dens('Item directory · raids',rl);
 }
 export function guideView(){
   const found=(id:string)=>gameState.pets[id]?'✓ ':'';

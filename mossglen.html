@@ -515,6 +515,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     ACCL: () => ACCL,
     AF: () => AF,
     AK: () => AK,
+    BWEAPONS: () => BWEAPONS,
     CAPN: () => CAPN,
     CE: () => CE,
     CTX: () => CTX,
@@ -540,6 +541,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     RF: () => RF,
     RFN: () => RFN,
     TNAME: () => TNAME,
+    UNIQ_PITY: () => UNIQ_PITY,
+    UNIQ_RATE: () => UNIQ_RATE,
     XK: () => XK,
     ZN: () => ZN,
     accScore: () => accScore,
@@ -568,6 +571,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     rsLv: () => rsLv,
     scopeTxt: () => scopeTxt,
     skey: () => skey,
+    uniqLine: () => uniqLine,
+    uniqTry: () => uniqTry,
     zoneOpen: () => zoneOpen
   });
   var PRE = ["Twig", "Hide", "Moss", "Moonsteel", "Amber", "Frostglass", "Sunforged", "Starbound", "Deepwood", "Wyrmscale", "Eclipse"];
@@ -611,7 +616,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       mk("d", "Heirloom", 1.25);
     });
   })();
-  var qrank = (it) => it.q == "s" ? 0 : it.q == "d" ? 2 : 1;
+  var qrank = (it) => it.q == "s" ? 0 : it.q == "d" ? 2 : it.q == "u" ? 3 : 1;
   var rsLv = (rs) => rs == "gath" ? Math.max(...GSK.map((k) => lv(gameState.xp[k]))) : rs == "prod" ? Math.max(...PSK.map((k) => lv(gameState.xp[k]))) : lv(gameState.xp[rs]);
   var skey = (k) => k.replace(/\d$/, "");
   function itFx(it) {
@@ -844,6 +849,45 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     }
     return out;
   }
+  var BWEAPONS = [
+    { n: "Gnawtooth Incisor", st: "Melee", z: 0 },
+    { n: "Thornjaw\u2019s Barbed Spear", st: "Melee", z: 1 },
+    { n: "Bog Matron\u2019s Reedwand", st: "Magic", z: 2 },
+    { n: "Stormwing Quillbow", st: "Ranged", z: 3 },
+    { n: "Deepdelve Crystal Cleaver", st: "Melee", z: 4 },
+    { n: "Warden\u2019s Rimestaff", st: "Magic", z: 5 },
+    { n: "Sandwyrm Glassblade", st: "Melee", z: 6 },
+    { n: "Raven Queen\u2019s Talonbow", st: "Ranged", z: 7 },
+    { n: "Rotheart Thornbow", st: "Ranged", z: 8 },
+    { n: "Ashmaw Emberfang", st: "Melee", z: 9 },
+    { n: "Hollow Sun Scepter", st: "Magic", z: 10 },
+    { n: "Brindlemaw Burrowbow", st: "Ranged", raid: 0 },
+    { n: "Bramblethorn Seedstaff", st: "Magic", raid: 1 },
+    { n: "Vaerath Wyrmbow", st: "Ranged", raid: 2 },
+    { n: "Sovereign\u2019s Eclipse Blade", st: "Melee", raid: 3 }
+  ].map((w, i) => {
+    const t = w.z != null ? w.z <= 7 ? Math.min(7, w.z + 1) : w.z : [7, 8, 9, 10][w.raid];
+    return Object.assign(w, { id: "u" + i, t, boss: w.z != null ? ZN[w.z][3][3] : "" });
+  });
+  BWEAPONS.forEach((w) => {
+    IT[w.id] = { n: w.n, slot: w.st, tier: w.t, stat: Math.round(WA[w.t] * 1.4), req: REQ[w.t], q: "u" };
+  });
+  var UNIQ_RATE = (w) => w.z != null ? 2e3 + 300 * w.z : 300;
+  var UNIQ_PITY = 4;
+  function uniqTry(w, mult) {
+    if (gameState.own[w.id]) return false;
+    const k = "u" + w.id;
+    gameState.pity[k] = (gameState.pity[k] || 0) + 1;
+    if (Math.random() * UNIQ_RATE(w) < mult || gameState.pity[k] >= UNIQ_RATE(w) * UNIQ_PITY) {
+      gameState.pity[k] = 0;
+      return true;
+    }
+    return false;
+  }
+  var uniqLine = (w) => {
+    const t = "Signature weapon " + IT[w.id].n + " (" + w.st + ", " + PRE[w.t] + " tier, stronger than an Heirloom): extremely rare, about 1 in " + UNIQ_RATE(w).toLocaleString() + (w.z != null ? " boss kills" : " clears") + ", guaranteed after " + (UNIQ_RATE(w) * UNIQ_PITY).toLocaleString() + ".";
+    return gameState.own[w.id] ? "<s>" + t + "</s>" : t;
+  };
 
   // src/02-outfits.ts
   var outfits_exports = {};
@@ -1274,6 +1318,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
       gameState.pity[hk2] = 0;
       X.gainItem(X.rndGear(Math.min(10, [7, 8, 9, 10][RD.indexOf(r)] + (Math.random() < 0.25 ? 1 : 0))));
     }
+    {
+      const w = BWEAPONS.find((x) => x.raid == RD.indexOf(r));
+      if (uniqTry(w, 1 + X.ef("drop") + cb("drop"))) X.gainItem(w.id);
+    }
     outfitRoll("or" + r.id, OUT_RAID_TIER[RD.indexOf(r)], OUT_RAID[0], OUT_RAID[1], 1 + X.ef("drop") + cb("drop"));
     say(m);
     const fg = fighters();
@@ -1288,6 +1336,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     const tg = !!(gameState.col[r.tr] || gameState.own[r.tr]), pk2 = "p_r" + i, pg = !!gameState.pets[pk2];
     L.push((tg ? "<s>" : "") + IT[r.tr].n + (tg ? "</s>" : "") + " (trinket): about 6% per clear, guaranteed by 25 clears.");
     L.push(PRE[Math.min(10, [7, 8, 9, 10][i])] + " gear piece: about 1 in 5 per clear (sometimes one tier higher), guaranteed by 8 clears.");
+    L.push(uniqLine(BWEAPONS.find((x) => x.raid == i)));
     L.push(outLine(OUT_RAID_TIER[i], "about " + Math.round(OUT_RAID[0] * 100) + "% per clear, guaranteed by " + OUT_RAID[1] + " clears."));
     L.push((pg ? "<s>" : "") + "Raid pet " + PETS[PETS.findIndex((q) => q[0] == pk2)][1] + (pg ? "</s>" : "") + ": 1 in " + [80, 100, 120, 150][i] + " per clear.");
     L.push("Leadership pet: 1 in 150 per clear.");
@@ -1765,6 +1814,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
         gainItem(rndGear(z));
       }
     }
+    if (e.boss) {
+      const w = BWEAPONS.find((x) => x.z == z);
+      if (uniqTry(w, g)) gainItem(w.id);
+    }
     if (e.boss) outfitRoll("obz" + z, outZoneTier(z), OUT_BOSS[0], OUT_BOSS[1], g);
     if (e.boss) {
       const tk = "z" + z + "t";
@@ -1798,6 +1851,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     if (e.boss) {
       const tg = !!(gameState.col["t" + z] || gameState.own["t" + z]), pg = !!gameState.pets["p_z" + z];
       o.push((tg ? "<s>" : "") + IT["t" + z].n + (tg ? "</s>" : "") + " (trinket): about 1 in 12, guaranteed by 60 boss kills.");
+      o.push(uniqLine(BWEAPONS.find((x) => x.z == z)));
       o.push(outLine(outZoneTier(z), "about 1 in " + Math.round(1 / OUT_BOSS[0]) + ", guaranteed by " + OUT_BOSS[1] + " boss kills here."));
       o.push((pg ? "<s>" : "") + "Boss pet" + (pg ? "</s>" : "") + ": 1 in " + (1e3 + 400 * z).toLocaleString() + " per boss kill.");
     }
@@ -2050,7 +2104,7 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
   var SLIC = { Melee: "sword", Ranged: "shortbow", Magic: "wand", head: "helm", body: "chest", legs: "legs", neck: "amulet", ring1: "ring", ring2: "ring", trinket: "charm", off: "shield", cape: "cape" };
   var gtab = "eq", gsel = null;
   var SLI = { off: ["\u{1F6E1}\uFE0F", "Off-hand"], Melee: ["\u{1F5E1}\uFE0F", "Melee"], Ranged: ["\u{1F3F9}", "Ranged"], Magic: ["\u{1FA84}", "Magic"], head: ["\u26D1\uFE0F", "Helm"], body: ["\u{1F9BA}", "Chest"], legs: ["\u{1F456}", "Legs"], neck: ["\u{1F4FF}", "Necklace"], ring1: ["\u{1F48D}", "Ring"], ring2: ["\u{1F48D}", "Ring"], trinket: ["\u{1F52E}", "Trinket"], cape: ["\u{1F9E3}", "Cape"] };
-  var grade = (it) => it.slot == "trinket" ? ["u", "Unique"] : it.q == "d" ? ["d", "Heirloom"] : it.q == "s" ? ["s", "Plain"] : ["c", "Crafted"];
+  var grade = (it) => it.slot == "trinket" ? ["u", "Unique"] : it.q == "u" ? ["u", "Unique"] : it.q == "d" ? ["d", "Heirloom"] : it.q == "s" ? ["s", "Plain"] : ["c", "Crafted"];
   function equipSlot(k, id) {
     if (!id) {
       gameState.eq[k] = null;
@@ -3561,7 +3615,8 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     const note = '<p style="margin-top:6px">Chances shown are base rates. Rare-drop bonuses from gear, pets, blessings and tasks multiply them, and bad-luck protection guarantees a drop eventually. Gear can also be bought in the Shop and crafted from materials in the Gear tab.</p>';
     const od = OUTFIT_SK.map((sk) => '<div style="margin-top:6px"><b>' + sk + "</b>: " + [1, 2, 3].map((t) => OUT_TIERS[t] + " set, " + outPerkTxt(sk, t)).join("; ") + "</div>").join("");
     const ol = "<p>Four pieces per skill (Cap, Vest, Gloves, Boots), three tiers. Each piece gives a little xp. A full set gives the bonus of its weakest piece. Novice pieces also turn up while you train that skill (about 1 in 5,000 actions). Zone bosses drop Novice pieces in zones 1 to 4, Adept in zones 5 to 8 and Master in the deep zones. Expeditions and raids drop them too (raids give Adept and Master). Drops only roll for pieces you are missing, and you can set the skill they favour in Gear > Outfits.</p>" + od;
-    return dens("Item directory \xB7 skilling outfits", ol) + dens("Item directory \xB7 zones", note + zl) + dens("Item directory \xB7 delves and expeditions", dl) + dens("Item directory \xB7 raids", rl);
+    const ul = "<p>Each boss has one signature weapon, about 12% stronger than an Heirloom of its tier, for the style listed. They are extremely rare and found once each.</p>" + BWEAPONS.map((w) => '<div style="margin-top:6px">' + uniqLine(w).replace("Signature weapon ", "<b>" + (w.z != null ? w.boss : RD[w.raid].st[RD[w.raid].st.length - 1][0]) + "</b>: ") + "</div>").join("");
+    return dens("Item directory \xB7 boss signature weapons", ul) + dens("Item directory \xB7 skilling outfits", ol) + dens("Item directory \xB7 zones", note + zl) + dens("Item directory \xB7 delves and expeditions", dl) + dens("Item directory \xB7 raids", rl);
   }
   function guideView() {
     const found = (id) => gameState.pets[id] ? "\u2713 " : "";

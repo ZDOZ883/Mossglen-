@@ -29,7 +29,7 @@ for(let t=0;t<11;t++){
 (function(){Object.keys(IT).slice().forEach(id=>{const b=IT[id];if(b.slot=='trinket')return;
   const mk=(sfx:any,pre:string,m:number)=>{const o=Object.assign({},b);o.n=pre+' '+b.n;o.q=sfx;o.base=id;o.stat=Math.round(b.stat*m);if(b.fx)o.fx=b.fx.map(e=>[e[0],Math.round(e[1]*m*10000)/10000,e[2]]);IT[id+sfx]=o};
   if(b.tier<=1)mk('s','Plain',.75);mk('d','Heirloom',1.25)})})();
-export const qrank=(it:Item)=>it.q=='s'?0:it.q=='d'?2:1;
+export const qrank=(it:Item)=>it.q=='s'?0:it.q=='d'?2:it.q=='u'?3:1;
 export const rsLv=(rs:string)=>rs=='gath'?Math.max(...GSK.map(k=>lv(gameState.xp[k]))):rs=='prod'?Math.max(...PSK.map(k=>lv(gameState.xp[k]))):lv(gameState.xp[rs]);
 export const skey=(k:string)=>k.replace(/\d$/,'');
 export function itFx(it:Item){const o:any[]=[];(it.fx||[]).forEach((e)=>{const sc=e[2];if(sc==null)o.push({k:e[0],v:e[1],sk:null});else{const L=sc=='G'?GSK:sc=='P'?CRS.concat('Cooking'):sc=='A'?GSK.concat(CRS,'Cooking'):[sc];L.forEach(sk=>o.push({k:e[0],v:e[1],sk}))}});return o}
@@ -137,3 +137,27 @@ export function capeFx(){
   else{const t=capeTier(id);for(let i=0;i<t;i++)add(CE[id][i],id)}
   return out;
 }
+// Boss signature weapons: one per zone boss and raid boss, themed to the boss, about 12% stronger than an Heirloom of the same tier.
+// Extremely rare (see UNIQ_RATE) and found once each.
+export const BWEAPONS:{id:string;n:string;st:string;boss:string;z?:number;raid?:number;t:number}[]=[
+  {n:'Gnawtooth Incisor',st:'Melee',z:0},{n:'Thornjaw’s Barbed Spear',st:'Melee',z:1},{n:'Bog Matron’s Reedwand',st:'Magic',z:2},{n:'Stormwing Quillbow',st:'Ranged',z:3},
+  {n:'Deepdelve Crystal Cleaver',st:'Melee',z:4},{n:'Warden’s Rimestaff',st:'Magic',z:5},{n:'Sandwyrm Glassblade',st:'Melee',z:6},{n:'Raven Queen’s Talonbow',st:'Ranged',z:7},
+  {n:'Rotheart Thornbow',st:'Ranged',z:8},{n:'Ashmaw Emberfang',st:'Melee',z:9},{n:'Hollow Sun Scepter',st:'Magic',z:10},
+  {n:'Brindlemaw Burrowbow',st:'Ranged',raid:0},{n:'Bramblethorn Seedstaff',st:'Magic',raid:1},{n:'Vaerath Wyrmbow',st:'Ranged',raid:2},{n:'Sovereign’s Eclipse Blade',st:'Melee',raid:3}
+].map((w:any,i:number)=>{const t=w.z!=null?(w.z<=7?Math.min(7,w.z+1):w.z):[7,8,9,10][w.raid];return Object.assign(w,{id:'u'+i,t,boss:w.z!=null?ZN[w.z][3][3]:''})});
+BWEAPONS.forEach(w=>{IT[w.id]={n:w.n,slot:w.st,tier:w.t,stat:Math.round(WA[w.t]*1.4),req:REQ[w.t],q:'u'}});
+// One in this many boss kills (zone bosses rise with depth) or raid clears. No pity until four times that.
+export const UNIQ_RATE=(w:{z?:number;raid?:number})=>w.z!=null?2000+300*w.z:300;
+export const UNIQ_PITY=4;
+// Roll for a boss's signature weapon once per kill or clear. Skips it once you own it. Returns true on a drop.
+export function uniqTry(w:{id:string;z?:number;raid?:number},mult:number):boolean{
+  if(gameState.own[w.id])return false;
+  const k='u'+w.id;gameState.pity[k]=(gameState.pity[k]||0)+1;
+  if(Math.random()*UNIQ_RATE(w)<mult||gameState.pity[k]>=UNIQ_RATE(w)*UNIQ_PITY){gameState.pity[k]=0;return true}
+  return false;
+}
+export const uniqLine=(w:{id:string;st:string;t:number;z?:number;raid?:number}):string=>{
+  const t='Signature weapon '+IT[w.id].n+' ('+w.st+', '+PRE[w.t]+' tier, stronger than an Heirloom): extremely rare, about 1 in '+UNIQ_RATE(w).toLocaleString()+(w.z!=null?' boss kills':' clears')+', guaranteed after '+(UNIQ_RATE(w)*UNIQ_PITY).toLocaleString()+'.';
+  return gameState.own[w.id]?'<s>'+t+'</s>':t;
+};
+

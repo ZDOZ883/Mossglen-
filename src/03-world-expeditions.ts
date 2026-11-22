@@ -2,7 +2,7 @@ import { gameState, say } from './00-state';
 import { X } from './registry';
 import { OUT_EXP, OUT_RAID, OUT_RAID_TIER, outLine, outZoneTier, outfitRoll } from './02-outfits';
 import { DISHES, FM, PETS, GL, MEMBERS, IT, T, asg, cb, cl, fighters, known, ldx, lv, maxhp, mxp, petRoll, pm, roster, sigPk } from './01-species-pets';
-import { AK, CTX, D0, ENEMIES, GSK, H0, PRE, PSK, XK, ZN, fxTxt, gateOk } from './02-gear-data';
+import { AK, BWEAPONS, CTX, uniqLine, uniqTry, D0, ENEMIES, GSK, H0, PRE, PSK, XK, ZN, fxTxt, gateOk } from './02-gear-data';
 // Gates, raids, expeditions, harvest raids. (Script-mode file: all src/*.ts share one global scope and are concatenated in filename order.)
 // ---------- ancient gates
 export const GATE=[
@@ -156,6 +156,7 @@ export function raidKill(e:Enemy,quiet?:any){
   const k='rt'+r.id;gameState.pity[k]=(gameState.pity[k]||0)+1;
   if(Math.random()<(1+X.ef('drop')+cb('drop'))*.06||gameState.pity[k]>=25){gameState.pity[k]=0;X.gainItem(r.tr)}
   const hk2='rh'+r.id;gameState.pity[hk2]=(gameState.pity[hk2]||0)+1;if(Math.random()<(1+X.ef('drop')+cb('drop'))*.2||gameState.pity[hk2]>=8){gameState.pity[hk2]=0;X.gainItem(X.rndGear(Math.min(10,[7,8,9,10][RD.indexOf(r)]+(Math.random()<.25?1:0))))}
+  {const w=BWEAPONS.find(x=>x.raid==RD.indexOf(r))!;if(uniqTry(w,1+X.ef('drop')+cb('drop')))X.gainItem(w.id)}
   outfitRoll('or'+r.id,OUT_RAID_TIER[RD.indexOf(r)],OUT_RAID[0],OUT_RAID[1],1+X.ef('drop')+cb('drop'));
   say(m);
   const fg=fighters();fg.forEach(q=>mxp(q,r.rw*.01));if(fg.length)ldx(r.rw*.004*fg.length);
@@ -167,6 +168,7 @@ export function raidDrops(r:Raid,i:number){
   const tg=!!(gameState.col[r.tr]||gameState.own[r.tr]),pk='p_r'+i,pg=!!gameState.pets[pk];
   L.push((tg?'<s>':'')+IT[r.tr].n+(tg?'</s>':'')+' (trinket): about 6% per clear, guaranteed by 25 clears.');
   L.push(PRE[Math.min(10,[7,8,9,10][i])]+' gear piece: about 1 in 5 per clear (sometimes one tier higher), guaranteed by 8 clears.');
+  L.push(uniqLine(BWEAPONS.find(x=>x.raid==i)!));
   L.push(outLine(OUT_RAID_TIER[i],'about '+Math.round(OUT_RAID[0]*100)+'% per clear, guaranteed by '+OUT_RAID[1]+' clears.'));
   L.push((pg?'<s>':'')+'Raid pet '+PETS[PETS.findIndex(q=>q[0]==pk)][1]+(pg?'</s>':'')+': 1 in '+[80,100,120,150][i]+' per clear.');
   L.push('Leadership pet: 1 in 150 per clear.');

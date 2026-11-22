@@ -1270,6 +1270,42 @@ describe('tutorial and item directory', () => {
     assert.ok(g.ev(`importSave(${JSON.stringify(code)})`) !== false);
     assert.equal(g.ev(`outTier('Foraging',0)`), 2, 'outfits survive a save code');
   });
+  it('every boss has an extremely rare signature weapon that is stronger than an Heirloom', () => {
+    const g = load({ seed: 11 });
+    g.ev(`gameState.sp='Badger'`);
+    assert.equal(g.ev('BWEAPONS.length'), 15);
+    for (const w of g.ev('BWEAPONS.map(w=>({id:w.id,st:w.st,t:w.t,n:w.n}))')) {
+      assert.ok(g.ev(`!!IT['${w.id}']&&IT['${w.id}'].slot=='${w.st}'`));
+      const heir = g.ev(`IT['w${['Melee', 'Ranged', 'Magic'].indexOf(w.st)}${w.t}d'].stat`);
+      const u = g.ev(`IT['${w.id}'].stat`);
+      assert.ok(u > heir && u < heir * 1.25, w.n + ' is a bit better than an Heirloom (' + u + ' vs ' + heir + ')');
+    }
+    assert.ok(g.ev(`UNIQ_RATE(BWEAPONS[0])`) >= 2000 && g.ev(`UNIQ_RATE(BWEAPONS[12])`) >= 300, 'rates are very low');
+    // Over 400 boss kills the chance of finding the first boss weapon by luck is under 20%: it essentially needs the long pity.
+    let found = 0;
+    for (let n = 0; n < 40; n++) {
+      g.ev(`delete gameState.own.u0;gameState.pity={}`);
+      let hit = false;
+      for (let i = 0; i < 400 && !hit; i++) hit = g.ev(`uniqTry(BWEAPONS[0],1)`);
+      if (hit) found++;
+    }
+    assert.ok(found <= 14, 'rarely drops in 400 kills (' + found + '/40)');
+    g.ev(`delete gameState.own.u0;gameState.pity={'uu0':${g.ev('UNIQ_RATE(BWEAPONS[0])*UNIQ_PITY')}-1}`);
+    assert.equal(g.ev(`uniqTry(BWEAPONS[0],1)`), true, 'pity guarantees it eventually');
+    g.ev(`gameState.own.u0=1`);
+    assert.equal(g.ev(`uniqTry(BWEAPONS[0],1000000)`), false, 'never rolls again once owned');
+  });
+  it('signature weapons are equippable by their style, struck out when owned, and listed in the guide', () => {
+    const g = load({ seed: 11 });
+    g.ev(`gameState.sp='Badger';gameState.xp.Attack=XT[10];gameState.xp.Strength=XT[10];gameState.cx={}`);
+    g.ev(`gainItem('u0')`);
+    assert.ok(g.ev(`!!gameState.own.u0&&canEq(IT.u0)`), 'a Melee boss weapon fits a Melee fighter');
+    assert.ok(/<s>Signature weapon/.test(g.ev(`dropInfo(ENEMIES.find(e=>e.id=='z0m3')).join(' ')`)));
+    assert.ok(/Signature weapon/.test(g.ev(`dropInfo(ENEMIES.find(e=>e.id=='z1m3')).join(' ')`)) && !/<s>Signature/.test(g.ev(`dropInfo(ENEMIES.find(e=>e.id=='z1m3')).join(' ')`)));
+    assert.ok(/boss signature weapons/.test(g.ev('itemDir()')));
+    for (let i = 0; i < 4; i++) assert.ok(/Signature weapon/.test(g.ev(`raidDrops(RD[${i}],${i})`)));
+    g.view('gear');
+  });
   it('existing saves do not get the tour', () => {
     const g = load({ seed: 4 });
     g.ev(`gameState.sp='Badger'`);

@@ -42,7 +42,7 @@ export function iconOf(it:Item){
 export const SLIC:Record<string,string>={Melee:'sword',Ranged:'shortbow',Magic:'wand',head:'helm',body:'chest',legs:'legs',neck:'amulet',ring1:'ring',ring2:'ring',trinket:'charm',off:'shield',cape:'cape'};
 export let gtab='eq',gsel:any=null;
 export const SLI:Record<string,string[]>={off:['🛡️','Off-hand'],Melee:['🗡️','Melee'],Ranged:['🏹','Ranged'],Magic:['🪄','Magic'],head:['⛑️','Helm'],body:['🦺','Chest'],legs:['👖','Legs'],neck:['📿','Necklace'],ring1:['💍','Ring'],ring2:['💍','Ring'],trinket:['🔮','Trinket'],cape:['🧣','Cape']};
-export const grade=(it:Item)=>it.slot=='trinket'?['u','Unique']:it.q=='d'?['d','Heirloom']:it.q=='s'?['s','Plain']:['c','Crafted'];
+export const grade=(it:Item)=>it.slot=='trinket'?['u','Unique']:it.q=='u'?['u','Unique']:it.q=='d'?['d','Heirloom']:it.q=='s'?['s','Plain']:['c','Crafted'];
 export function equipSlot(k:string,id:string){
   if(!id){gameState.eq[k]=null}
   else{if(!gameState.own[id]||!IT[id]||!canEq(IT[id]))return;
