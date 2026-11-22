@@ -2368,6 +2368,7 @@ nav button.on i{opacity:1}
     grpTier: () => grpTier,
     gw: () => gw,
     hasWork: () => hasWork,
+    ing: () => ing,
     isOn: () => isOn,
     pc: () => pc,
     pcx: () => pcx,
@@ -2442,9 +2443,7 @@ nav button.on i{opacity:1}
     if (o) o.textContent = "\u{1F330} " + Math.floor(S.a).toLocaleString();
   }
   function curName() {
-    const c = S.cur;
-    if (!c) return null;
-    return c.k == "s" ? A.find((a) => a.id == c.id).n : c.k == "k" ? "Cooking: " + DISH[c.id].n : c.k == "f" ? "Crafting: " + IT[c.id].n : c.k == "r" ? "Refining: " + RFN[c.id].n : c.k == "c" ? "Fighting: " + E.find((e) => e.id == c.id).n : "Delving: " + D.find((d) => d.id == c.id).n;
+    return S.cur ? taskName(S.cur) : null;
   }
   var CAPN = { Foraging: "Forager", Woodcutting: "Woodsman", Fishing: "Angler", Mining: "Delver", Hunting: "Trapper", Cooking: "Cook", Smithing: "Smith", Fletching: "Fletcher", Enchanting: "Enchanter", Tailoring: "Tailor", Attack: "Duelist", Strength: "Brawler", Defense: "Warden", Vitality: "Survivor", Slayer: "Slayer", Leadership: "Commander" };
   var TNAME = ["", "Skill Cape", "120 Cape", "Sub-master Cape", "Master Cape"];
@@ -2610,10 +2609,25 @@ nav button.on i{opacity:1}
   };
   var working = () => Object.keys(S.hired).filter((k) => asg(k).k != "war" && asg(k).k != "idle" && asg(k).k != "exp");
   var hasWork = () => !!S.ex || working().length > 0 || buL("bar") > 0 && Object.keys(S.hired).some((k) => asg(k).k == "idle");
+  var ING = Object.fromEntries("Pick Picking,Dig Digging,Sniff Sniffing,Gather Gathering,Find Finding,Pluck Plucking,Reach Reaching,Cut Cutting,Harvest Harvesting,Gnaw Gnawing,Fell Felling,Hew Hewing,Claim Claiming,Catch Catching,Spear Spearing,Hook Hooking,Trap Trapping,Net Netting,Lure Luring,Land Landing,Collect Collecting,Chip Chipping,Pry Prying,Free Freeing,Mine Mining,Quarry Quarrying,Snare Snaring".split(",").map((x) => x.split(" ")));
+  var ing = (n) => {
+    const w = n.split(" ");
+    return (ING[w[0]] || w[0]) + (w.length > 1 ? " " + w.slice(1).join(" ") : "");
+  };
   function taskName(c) {
-    return c.k == "bar" ? "Training in the barracks" : c.k == "s" ? A.find((a) => a.id == c.id).n : c.k == "k" ? "Cooking " + DISH[c.id].n : c.k == "f" ? "Crafting " + IT[c.id].n : c.k == "r" ? "Refining " + RFN[c.id].n : c.k == "c" ? "Fighting " + E.find((e) => e.id == c.id).n : "Delving " + D.find((d) => d.id == c.id).n;
+    return c.k == "bar" ? "Training in the barracks" : c.k == "s" ? ing(A.find((a) => a.id == c.id).n) : c.k == "k" ? "Cooking " + DISH[c.id].n : c.k == "f" ? "Crafting " + IT[c.id].n : c.k == "r" ? "Refining " + RFN[c.id].n : c.k == "c" ? "Fighting " + E.find((e) => e.id == c.id).n : "Delving into " + D.find((d) => d.id == c.id).n;
   }
-  var workNames = () => working().map((k) => H[k].n.split(" ")[0] + ": " + taskName(asg(k))).join(" \xB7 ");
+  var workNames = () => {
+    const g = {};
+    working().forEach((k) => {
+      const t = taskName(asg(k));
+      (g[t] = g[t] || []).push(H[k].n.split(" ")[0]);
+    });
+    return Object.keys(g).map((t) => {
+      const m = g[t], a = t.charAt(0).toLowerCase() + t.slice(1), who2 = m.length > 1 ? m.slice(0, -1).join(", ") + " and " + m[m.length - 1] : m[0];
+      return who2 + (m.length == 1 ? " is " : m.length == 2 ? " are both " : " are all ") + a;
+    }).join("<br>");
+  };
   function actorChips() {
     const hs = Object.keys(S.hired);
     if (!hs.length) return "";
@@ -2777,7 +2791,7 @@ nav button.on i{opacity:1}
       return;
     }
     const cn = curName();
-    app.innerHTML = '<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">' + S.sp + " of the valley \xB7 total level " + SK.concat(CS).reduce((s, k) => s + lv(S.xp[k]), 0) + '</p><div class="stat sans"><div class="mu now">You are currently</div>' + (cn ? '<div style="display:flex;justify-content:space-between"><span>' + cn + (S.cur.k == "c" ? ' <small class="mu" id="se"></small>' : "") + '</span><button class="btn" data-stop="1">Rest</button></div><div class="bar' + (S.cur.k == "c" ? " hp" : "") + '"><i id="pb"></i></div>' : '<span class="mu">Resting. Choose an activity below to begin.</span>') + (hasWork() ? '<div class="mu" style="font-size:14px;margin-top:4px">Party at work: ' + workNames() + "</div>" : "") + "</div><nav>" + [["skills", "Skills", "leaf"], ["combat", "Fight", "swords"], ["gear", "Gear", "shield"], ["party", "Party", "paw"], ["delve", "Delve", "lantern"], ["burrow", "Burrow", "burrow"], ["log", "Log", "tome"], ["pack", "Pack", "satchel"]].map((t) => '<button data-tab="' + t[0] + '" class="' + (tab == t[0] ? "on" : "") + '"><i>' + icon(t[2], 25) + "</i>" + t[1] + "</button>").join("") + "</nav>" + view() + '<div id="log">' + S.log.map((l) => "<p>" + l + "</p>").join("") + '</div><p class="mu" style="margin-top:24px"><button class="btn" data-reset="1" style="font-size:14px">Start over</button></p>';
+    app.innerHTML = '<div class="top"><h1>Mossglen</h1><span class="acorn" id="ac"></span></div><p class="sub">' + S.sp + " of the valley \xB7 total level " + SK.concat(CS).reduce((s, k) => s + lv(S.xp[k]), 0) + '</p><div class="stat sans"><div class="mu now">You are currently</div>' + (cn ? '<div style="display:flex;justify-content:space-between"><span>' + cn + (S.cur.k == "c" ? ' <small class="mu" id="se"></small>' : "") + '</span><button class="btn" data-stop="1">Rest</button></div><div class="bar' + (S.cur.k == "c" ? " hp" : "") + '"><i id="pb"></i></div>' : '<span class="mu">Resting. Choose an activity below to begin.</span>') + (hasWork() ? '<div class="mu" style="font-size:14px;margin-top:4px">' + workNames() + "</div>" : "") + "</div><nav>" + [["skills", "Skills", "leaf"], ["combat", "Fight", "swords"], ["gear", "Gear", "shield"], ["party", "Party", "paw"], ["delve", "Delve", "lantern"], ["burrow", "Burrow", "burrow"], ["log", "Log", "tome"], ["pack", "Pack", "satchel"]].map((t) => '<button data-tab="' + t[0] + '" class="' + (tab == t[0] ? "on" : "") + '"><i>' + icon(t[2], 25) + "</i>" + t[1] + "</button>").join("") + "</nav>" + view() + '<div id="log">' + S.log.map((l) => "<p>" + l + "</p>").join("") + '</div><p class="mu" style="margin-top:24px"><button class="btn" data-reset="1" style="font-size:14px">Start over</button></p>';
     bars();
   }
 

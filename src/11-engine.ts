@@ -37,10 +37,7 @@ export function bars(){
   const xb=document.getElementById('exb');if(xb&&S.ex)xb.style.width=Math.max(0,Math.min(100,S.ex.p/S.ex.dur*100))+'%';
   const o=document.getElementById('ac');if(o)o.textContent='🌰 '+Math.floor(S.a).toLocaleString();
 }
-export function curName(){
-  const c=S.cur;if(!c)return null;
-  return c.k=='s'?A.find(a=>a.id==c.id).n:c.k=='k'?'Cooking: '+DISH[c.id].n:c.k=='f'?'Crafting: '+IT[c.id].n:c.k=='r'?'Refining: '+RFN[c.id].n:c.k=='c'?'Fighting: '+E.find(e=>e.id==c.id)!.n:'Delving: '+D.find(d=>d.id==c.id)!.n;
-}
+export function curName(){return S.cur?taskName(S.cur):null}
 export const CAPN:Record<string,string>={Foraging:'Forager',Woodcutting:'Woodsman',Fishing:'Angler',Mining:'Delver',Hunting:'Trapper',Cooking:'Cook',Smithing:'Smith',Fletching:'Fletcher',Enchanting:'Enchanter',Tailoring:'Tailor',Attack:'Duelist',Strength:'Brawler',Defense:'Warden',Vitality:'Survivor',Slayer:'Slayer',Leadership:'Commander'};
 export const TNAME=['','Skill Cape','120 Cape','Sub-master Cape','Master Cape'];
 export const CE:Record<string,any[][][]>={
@@ -118,8 +115,12 @@ export const isOn=(k:string,id:string)=>{const t=who=='you'?S.cur:asg(who);retur
 export const crew=(k:string,id:string)=>{const n=Object.keys(S.hired).filter(m=>{const t=asg(m);return t.k==k&&t.id==id}).map(m=>H[m].n.split(' ')[0]);return n.length?'<br>'+n.join(', ')+' working':''};
 export const working=()=>Object.keys(S.hired).filter(k=>asg(k).k!='war'&&asg(k).k!='idle'&&asg(k).k!='exp');
 export const hasWork=()=>!!S.ex||working().length>0||(buL('bar')>0&&Object.keys(S.hired).some(k=>asg(k).k=='idle'));
-export function taskName(c:any){return c.k=='bar'?'Training in the barracks':c.k=='s'?A.find(a=>a.id==c.id)!.n:c.k=='k'?'Cooking '+DISH[c.id].n:c.k=='f'?'Crafting '+IT[c.id].n:c.k=='r'?'Refining '+RFN[c.id].n:c.k=='c'?'Fighting '+E.find(e=>e.id==c.id)!.n:'Delving '+D.find(d=>d.id==c.id)!.n}
-export const workNames=()=>working().map(k=>H[k].n.split(' ')[0]+': '+taskName(asg(k))).join(' · ');
+const ING:Record<string,string>=Object.fromEntries('Pick Picking,Dig Digging,Sniff Sniffing,Gather Gathering,Find Finding,Pluck Plucking,Reach Reaching,Cut Cutting,Harvest Harvesting,Gnaw Gnawing,Fell Felling,Hew Hewing,Claim Claiming,Catch Catching,Spear Spearing,Hook Hooking,Trap Trapping,Net Netting,Lure Luring,Land Landing,Collect Collecting,Chip Chipping,Pry Prying,Free Freeing,Mine Mining,Quarry Quarrying,Snare Snaring'.split(',').map(x=>x.split(' ')));
+export const ing=(n:string)=>{const w=n.split(' ');return (ING[w[0]]||w[0])+(w.length>1?' '+w.slice(1).join(' '):'')};
+export function taskName(c:any):string{return c.k=='bar'?'Training in the barracks':c.k=='s'?ing(A.find(a=>a.id==c.id)!.n):c.k=='k'?'Cooking '+DISH[c.id].n:c.k=='f'?'Crafting '+IT[c.id].n:c.k=='r'?'Refining '+RFN[c.id].n:c.k=='c'?'Fighting '+E.find(e=>e.id==c.id)!.n:'Delving into '+D.find(d=>d.id==c.id)!.n}
+export const workNames=()=>{
+  const g:Record<string,string[]>={};working().forEach(k=>{const t=taskName(asg(k));(g[t]=g[t]||[]).push(H[k].n.split(' ')[0])});
+  return Object.keys(g).map(t=>{const m=g[t],a=t.charAt(0).toLowerCase()+t.slice(1),who=m.length>1?m.slice(0,-1).join(', ')+' and '+m[m.length-1]:m[0];return who+(m.length==1?' is ':m.length==2?' are both ':' are all ')+a}).join('<br>')};
 export function actorChips(){
   const hs=Object.keys(S.hired);if(!hs.length)return '';
   if(who!='you'&&!S.hired[who])set_who('you');
