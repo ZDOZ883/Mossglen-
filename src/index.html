@@ -123,6 +123,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
 </head>
 <body>
 <div id="app"></div>
+<noscript><p style="padding:24px;font:16px/1.5 system-ui">Mossglen needs JavaScript. If you opened this file from Messages, Mail or Files, it opened in a preview that can't run it. Open it in Safari or Chrome instead, or use the hosted link.</p></noscript>
+<script id="guard">
+window.addEventListener('error',function(e){var a=document.getElementById('app');if(a&&!a.children.length){a.innerHTML='<p style="padding:24px;font:15px/1.5 system-ui;color:#222">Mossglen could not start on this browser.<br><br><small>'+String(e.message||e).replace(/</g,'&lt;')+' ('+(e.lineno||0)+':'+(e.colno||0)+')</small></p>'}});
+</script>
 <script>
 /*__GAME__*/
 </script>
