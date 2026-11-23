@@ -8,4 +8,5 @@ const r = esbuild.buildSync({
 const js = r.outputFiles[0].text;
 const html = fs.readFileSync(path.join(root, 'src/index.html'), 'utf8').replace('/*__GAME__*/', () => js);
 fs.writeFileSync(path.join(root, 'mossglen.html'), html);
+fs.writeFileSync(path.join(root, 'index.html'), html); // same game under the name GitHub Pages serves at the site root
 console.log('built mossglen.html', html.length, 'bytes');
