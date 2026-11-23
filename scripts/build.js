@@ -2,7 +2,7 @@
 const fs = require('fs'), path = require('path'), esbuild = require('esbuild');
 const root = path.join(__dirname, '..');
 const r = esbuild.buildSync({
-  entryPoints: [path.join(root, 'src/main.ts')], bundle: true, format: 'iife', target: 'es2022',
+  entryPoints: [path.join(root, 'src/main.ts')], bundle: true, format: 'iife', target: 'es2018',
   treeShaking: false, write: false, tsconfig: path.join(root, 'tsconfig.json'),
 });
 const js = r.outputFiles[0].text;

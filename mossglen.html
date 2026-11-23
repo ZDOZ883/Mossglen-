@@ -2375,7 +2375,10 @@ nav button{font-size:10.5px;letter-spacing:0;padding:6px 0 5px}
     return m;
   }
   var SCR = [1, 1, 1, 1, 0.6, 0.8, 0.7, 0.55, 0.9, 0.7, 0.4];
-  var scrap = (t) => Math.round(GP[t] * 0.15 * (SCR[t] ?? 1));
+  var scrap = (t) => {
+    var _a;
+    return Math.round(GP[t] * 0.15 * ((_a = SCR[t]) != null ? _a : 1));
+  };
   function craftDone(id, mk) {
     const it = IT[id], r = recipe(id), sk = CSK(id), x = it.tier >= 8 ? [4300, 7800, 14e3][it.tier - 8] : Math.round(25 * Math.pow(1.7, it.tier));
     if (it.tier >= 8 && !gateOk(it.tier - 7)) {
