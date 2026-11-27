@@ -6,7 +6,7 @@ import { CL, autoLoad, loadoutSl, optNow, optimize, set_hits } from './04-loadou
 import { cycle, shopBuy } from './05-combat';
 import { equipSlot, gsel, set_gsel, set_gtab } from './06-icons';
 import { ACHIEVEMENTS, buy, buyTool, offlineCap, set_skill, set_tab, set_who, skill, slBuy, slots, tab, taskAct, who } from './07-gear-ui';
-import { assign } from './08-party-state';
+import { assign, autoParty } from './08-party-state';
 import { buUp, sgBuy } from './09-seasons-burrow';
 import { bars, hasWork, refreshFx, tick } from './11-engine';
 import { CF, packAct, render, set_logSub, set_saveMsg } from './13-views';
@@ -60,6 +60,7 @@ document.addEventListener('click',e=>{
   else if(d.buy)buy(d.buy);
   else if(d.tier){const [i,t]=d.tier.split(':');gameState.tier[i]=+t}
   else if(d.lead)gameState.lead=d.lead;
+  else if(d.auto){const p=autoParty(d.auto);say(p.length?'Your party is now '+p.map((k:string)=>MEMBERS[k].n).join(', ')+'.':'No one free to seat in the party.')}
   else if(d.sic){gameState.sic=gameState.sic==d.sic?null:d.sic;refreshFx()}
   else if(d.exd)set_exSel({d:exSel.d==d.exd?null:d.exd,l:null,m:[],b:null});
   else if(d.exl){exSel.l=exSel.l==d.exl?null:d.exl;exSel.m=exSel.m.filter((k:string)=>k!=d.exl)}

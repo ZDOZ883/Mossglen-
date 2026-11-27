@@ -461,15 +461,13 @@ window.addEventListener('error',function(e){var a=document.getElementById('app')
     return s ? (t >= 5 ? s[0][n] || 0 : 0) + (t >= 10 ? s[1][n] || 0 : 0) : 0;
   };
   var KIT_STEP = 0.01, KIT_COST = 2, KIT_MAX = 10;
-  var kitTier = (k) => MEMBERS[k] && !MEMBERS[k].pet ? Math.min(KIT_MAX, gameState.mk[k] || 0) : 0;
+  var kitTier = (k) => MEMBERS[k] ? Math.min(KIT_MAX, gameState.mk[k] || 0) : 0;
   var kit = (k) => {
-    if (/^p_z\d+$/.test(k)) return 0.045 + 0.012 * +k.slice(3);
-    if (/^p_r\d+$/.test(k)) return 0.18 + 0.03 * +k.slice(3);
-    if (MEMBERS[k].pet) return 0;
-    return KIT_STEP * kitTier(k);
+    const own = /^p_z\d+$/.test(k) ? 0.045 + 0.012 * +k.slice(3) : /^p_r\d+$/.test(k) ? 0.18 + 0.03 * +k.slice(3) : 0;
+    return own + KIT_STEP * kitTier(k);
   };
   var kitNext = (k) => {
-    if (!MEMBERS[k] || MEMBERS[k].pet || kitTier(k) >= KIT_MAX) return null;
+    if (!MEMBERS[k] || kitTier(k) >= KIT_MAX) return null;
     const t = kitTier(k) + 1;
     return { t, cost: GP[t] * KIT_COST, req: REQ[t] };
   };
@@ -2580,8 +2578,10 @@ window.addEventListener('error',function(e){var a=document.getElementById('app')
   __export(party_state_exports, {
     SIC: () => SIC,
     assign: () => assign,
+    autoParty: () => autoParty,
     mdur: () => mdur,
     memAct: () => memAct,
+    memPower: () => memPower,
     sicBuff: () => sicBuff,
     validTask: () => validTask
   });
@@ -2647,8 +2647,13 @@ window.addEventListener('error',function(e){var a=document.getElementById('app')
     shrew: { n: "Brewer\u2019s boon", fx: [["pot", 0.15], ["xpm", 0.04]] },
     magpie: { n: "Spoils of war", fx: [["sell", 0.05], ["drop", 0.03]] }
   };
+  var PETSIC = { dmg: ["pmult", 0.5], taken: ["taken", 0.3], heal: ["regen", 3], speed: ["mspd", 0.4], loot: ["drop", 0.2] };
+  var petSic = (k) => {
+    const pk2 = MEMBERS[k].pk, fx = Object.keys(pk2).filter((n) => PETSIC[n]).sort((a, b) => pk2[b] * PETSIC[b][1] - pk2[a] * PETSIC[a][1]).slice(0, 2).map((n) => [PETSIC[n][0], Math.round(pk2[n] * PETSIC[n][1] * 1e3) / 1e3]);
+    return fx.length ? { n: "Pack leader", fx } : null;
+  };
   var sicBuff = (k) => {
-    const b = SIC[k];
+    const b = MEMBERS[k] && MEMBERS[k].pet ? petSic(k) : SIC[k];
     if (!b) return null;
     const s = 1 + Math.min(1, cl(k) / 100) * 0.5;
     return { n: b.n, fx: b.fx, s, d: fxTxt(b.fx.map(([q, v]) => [q, v * s])) };
@@ -2659,6 +2664,31 @@ window.addEventListener('error',function(e){var a=document.getElementById('app')
     const b = sicBuff(k);
     return b ? b.fx.map(([q, v]) => ({ k: q, v: v * b.s, sk: null })) : [];
   });
+  var memPower = (k) => {
+    const s = mst(k);
+    return (s.a * 1.5 + s.d + s.v) * (1 + kit(k)) * (MEMBERS[k].pet ? 1.25 : 1);
+  };
+  function autoParty(mode) {
+    const keep = (k) => !!MEMBERS[k].spec || asg(k).k == "exp", pool = roster().filter((k) => !keep(k));
+    const open = Math.max(0, slots() - Object.keys(gameState.hired).filter(keep).length);
+    const score = (k) => mode == "level" ? cl(k) * 1e6 + memPower(k) : memPower(k);
+    const pick = pool.sort((a, b) => score(b) - score(a)).slice(0, open);
+    pool.forEach((k) => {
+      const inP = !!gameState.hired[k], want = pick.includes(k);
+      if (want && !inP) {
+        delete gameState.bench[k];
+        gameState.hired[k] = 1;
+        gameState.mt[k] = { k: "war" };
+      } else if (want && inP && asg(k).k != "war") gameState.mt[k] = { k: "war" };
+      else if (!want && inP) {
+        delete gameState.hired[k];
+        gameState.bench[k] = 1;
+        gameState.mt[k] = { k: "idle" };
+      }
+    });
+    if (!gameState.hired[gameState.lead || ""] || false) gameState.lead = Object.keys(gameState.hired)[0] || null;
+    return pick;
+  }
 
   // src/09-seasons-burrow.ts
   var seasons_burrow_exports = {};
@@ -3597,7 +3627,6 @@ window.addEventListener('error',function(e){var a=document.getElementById('app')
     }).join(", ");
   }
   var kitRow = (k) => {
-    if (MEMBERS[k].pet) return "";
     const t = kitTier(k), n = kitNext(k);
     return '<div class="chips" style="margin:8px 0 0"><small style="align-self:center">Kit: ' + (t ? PRE[t] + " (tier " + t + ", +" + t + "% to perks and damage)" : "none") + "</small>" + (KITSIG[k] ? '<small class="mu" style="align-self:center">' + (t >= 10 ? "Signature perks unlocked: " : t >= 5 ? "First signature perk unlocked (second at tier 10): " : "Signature perks at tiers 5 and 10: ") + KITSIG[k][2] + ".</small>" : "") + (n ? '<button data-kit="' + k + '"' + (gameState.a < n.cost || cl(k) < n.req ? " disabled" : "") + ">Outfit " + PRE[n.t] + " \xB7 " + n.cost.toLocaleString() + (cl(k) < n.req ? " \xB7 needs level " + n.req : "") + "</button>" : "") + "</div>";
   };
@@ -3617,6 +3646,7 @@ window.addEventListener('error',function(e){var a=document.getElementById('app')
       const sk = gameState.sic && sicOn() ? sicBuff(gameState.sic) : null;
       h += '<p class="mu">' + (sk ? "<b>Second in command: " + MEMBERS[gameState.sic].n + "</b> \xB7 " + sk.n + ": " + sk.d + (sk.s > 1 ? " (scaled by level)" : "") + "." : "Name a fighting recruit second in command for a party buff.") + "</p>";
     }
+    if (roster().length > 1) h += '<div class="chips"><small style="align-self:center">Auto-fill the party:</small><button data-auto="stats">Best stats</button><button data-auto="level">Highest level</button></div><p class="mu">Seats the strongest recruits and pets in your open slots. Specialists and anyone on an expedition stay put.</p>';
     if (!roster().length) h += '<p class="mu">No one has joined yet. Recruit your first member below.</p>';
     h += hs.map((k) => {
       const m = MEMBERS[k], t = asg(k), work = t.k != "war" && t.k != "idle" && t.k != "bar" && t.k != "exp";
@@ -4206,7 +4236,10 @@ window.addEventListener('error',function(e){var a=document.getElementById('app')
       const [i, t2] = d.tier.split(":");
       gameState.tier[i] = +t2;
     } else if (d.lead) gameState.lead = d.lead;
-    else if (d.sic) {
+    else if (d.auto) {
+      const p = autoParty(d.auto);
+      say(p.length ? "Your party is now " + p.map((k) => MEMBERS[k].n).join(", ") + "." : "No one free to seat in the party.");
+    } else if (d.sic) {
       gameState.sic = gameState.sic == d.sic ? null : d.sic;
       refreshFx();
     } else if (d.exd) set_exSel({ d: exSel.d == d.exd ? null : d.exd, l: null, m: [], b: null });

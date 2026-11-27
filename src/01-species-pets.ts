@@ -103,10 +103,11 @@ export const KITSIG:Record<string,[Record<string,number>,Record<string,number>,s
   magpie:[{loot:.04},{loot:.08},'Eye for shinies: more expedition loot']};
 export const sigPk=(k:string,n:string)=>{const s=KITSIG[k],t=kitTier(k);return s?(t>=5?s[0][n]||0:0)+(t>=10?s[1][n]||0:0):0};
 export const KIT_STEP=.01,KIT_COST=2,KIT_MAX=10;
-export const kitTier=(k:string)=>MEMBERS[k]&&!MEMBERS[k].pet?Math.min(KIT_MAX,gameState.mk[k]||0):0;
-export const kit=(k:string)=>{if(/^p_z\d+$/.test(k))return .045+.012*(+k.slice(3));if(/^p_r\d+$/.test(k))return .18+.03*(+k.slice(3));if(MEMBERS[k].pet)return 0;return KIT_STEP*kitTier(k)};
+export const kitTier=(k:string)=>MEMBERS[k]?Math.min(KIT_MAX,gameState.mk[k]||0):0;
+export const kit=(k:string)=>{// Boss and raid pets arrive carrying their own kit; every pet and recruit can then be outfitted tier by tier on top.
+  const own=/^p_z\d+$/.test(k)?.045+.012*(+k.slice(3)):/^p_r\d+$/.test(k)?.18+.03*(+k.slice(3)):0;return own+KIT_STEP*kitTier(k)};
 // The next kit tier for a recruited member: they must have the level that tier's gear asks for, and it costs acorns once per tier.
-export const kitNext=(k:string)=>{if(!MEMBERS[k]||MEMBERS[k].pet||kitTier(k)>=KIT_MAX)return null;const t=kitTier(k)+1;return{t,cost:GP[t]*KIT_COST,req:REQ[t]}};
+export const kitNext=(k:string)=>{if(!MEMBERS[k]||kitTier(k)>=KIT_MAX)return null;const t=kitTier(k)+1;return{t,cost:GP[t]*KIT_COST,req:REQ[t]}};
 export function buyKit(k:string){const n=kitNext(k);if(!n||!known(k)||gameState.a<n.cost||cl(k)<n.req)return false;gameState.a-=n.cost;gameState.mk[k]=n.t;return true}
 // Second in command: one recruit commands the party for a buff. Member stats are tuned 6% lower across the board to make room for it.
 export const MEM_BASE=.94;

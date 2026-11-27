@@ -1,10 +1,10 @@
 import { gameState, TASKS, FXSRC } from './00-state';
 import { X } from './registry';
-import { IT, asg, cb, cl, ldx, lv, mxp, pbs, sicOn, skPet } from './01-species-pets';
+import { IT, MEMBERS, asg, cb, cl, kit, ldx, lv, mst, mxp, pbs, roster, sicOn, skPet } from './01-species-pets';
 import { RFN, ctime, fxTxt, gateOk, refineDone } from './02-gear-data';
 
 import { hrCount } from './03-world-expeditions';
-import { ACHIEVEMENTS, CSK, DISH, cookDone, craftDone, mspd, tt } from './07-gear-ui';
+import { ACHIEVEMENTS, CSK, DISH, cookDone, craftDone, mspd, slots, tt } from './07-gear-ui';
 export function validTask(t:any){return !!t&&((!!TASKS[t.k]&&TASKS[t.k].valid(t))||t.k=='war'||t.k=='idle'||t.k=='bar'||t.k=='exp'||(t.k=='s'&&!!ACHIEVEMENTS.find(a=>a.id==t.id))||(t.k=='k'&&!!DISH[t.id])||(t.k=='f'&&!!IT[t.id]&&t.id[0]!='t')||(t.k=='r'&&!!RFN[t.id]))}
 export function assign(k:string,kind:string,id?:any){
   if(gameState.bench[k]&&!gameState.hired[k]){if(kind=='bar'&&X.buL('bar')>0)gameState.mt[k]={k:'bar'};else if(kind=='idle')gameState.mt[k]={k:'idle'};return}
@@ -37,5 +37,23 @@ export const SIC:Record<string,{n:string;fx:[string,number][]}>={
   dormouse:{n:'Well fed',fx:[['heal',.05],['regen',.05]]},
   shrew:{n:'Brewer’s boon',fx:[['pot',.15],['xpm',.04]]},
   magpie:{n:'Spoils of war',fx:[['sell',.05],['drop',.03]]}};
-export const sicBuff=(k:string)=>{const b=SIC[k];if(!b)return null;const s=1+Math.min(1,cl(k)/100)*.5;return{n:b.n,fx:b.fx,s,d:fxTxt(b.fx.map(([q,v])=>[q,v*s]))}};
+// Pets have no buff of their own, so they lead with the strength they fight with: the two biggest of their perks, shrunk to leader size.
+const PETSIC:Record<string,[string,number]>={dmg:['pmult',.5],taken:['taken',.3],heal:['regen',3],speed:['mspd',.4],loot:['drop',.2]};
+const petSic=(k:string)=>{const pk=MEMBERS[k].pk,fx=Object.keys(pk).filter(n=>PETSIC[n]).sort((a,b)=>pk[b]*PETSIC[b][1]-pk[a]*PETSIC[a][1]).slice(0,2).map((n):[string,number]=>[PETSIC[n][0],Math.round(pk[n]*PETSIC[n][1]*1000)/1000]);return fx.length?{n:'Pack leader',fx}:null};
+export const sicBuff=(k:string)=>{const b=MEMBERS[k]&&MEMBERS[k].pet?petSic(k):SIC[k];if(!b)return null;const s=1+Math.min(1,cl(k)/100)*.5;return{n:b.n,fx:b.fx,s,d:fxTxt(b.fx.map(([q,v])=>[q,v*s]))}};
 FXSRC.push(()=>{const k=gameState.sic;if(!k||!sicOn())return[];const b=sicBuff(k);return b?b.fx.map(([q,v])=>({k:q,v:v*b.s,sk:null as any})):[]});
+
+// Auto-fill: seat the strongest fighters in the open slots, by combined stats or by level. Specialists and anyone away on an expedition stay as they are.
+export const memPower=(k:string)=>{const s=mst(k);return(s.a*1.5+s.d+s.v)*(1+kit(k))*(MEMBERS[k].pet?1.25:1)};
+export function autoParty(mode:string){
+  const keep=(k:string)=>!!MEMBERS[k].spec||asg(k).k=='exp',pool=roster().filter(k=>!keep(k));
+  const open=Math.max(0,slots()-Object.keys(gameState.hired).filter(keep).length);
+  const score=(k:string)=>mode=='level'?cl(k)*1e6+memPower(k):memPower(k);
+  const pick=pool.sort((a,b)=>score(b)-score(a)).slice(0,open);
+  pool.forEach(k=>{const inP=!!gameState.hired[k],want=pick.includes(k);
+    if(want&&!inP){delete gameState.bench[k];gameState.hired[k]=1;gameState.mt[k]={k:'war'}}
+    else if(want&&inP&&asg(k).k!='war')gameState.mt[k]={k:'war'};
+    else if(!want&&inP){delete gameState.hired[k];gameState.bench[k]=1;gameState.mt[k]={k:'idle'}}});
+  if(!gameState.hired[gameState.lead||'']||false)gameState.lead=Object.keys(gameState.hired)[0]||null;
+  return pick;
+}

@@ -71,7 +71,6 @@ export function leadView(){
 export const PKN:Record<string,string[]>={acc:['+','% hit chance'],hp:['+','% max health'],dmg:['+','% damage'],taken:['−','% damage taken'],heal:['heals ','% hp per kill'],speed:['expeditions ','% faster'],loot:['+','% expedition loot'],succ:['+','% expedition odds']};
 export function perkTxt(k:string){return Object.keys(MEMBERS[k].pk).map(n=>{const v=MEMBERS[k].pk[n]*(1+(cl(k)-1)*.02)*pm()*(MEMBERS[k].pet?1.25:1),x=n=='succ'?Math.round(v):Math.round(v*100);return PKN[n][0]+x+PKN[n][1]}).join(', ')}
 export const kitRow=(k:string)=>{
-  if(MEMBERS[k].pet)return '';
   const t=kitTier(k),n=kitNext(k);
   return '<div class="chips" style="margin:8px 0 0"><small style="align-self:center">Kit: '+(t?PRE[t]+' (tier '+t+', +'+t+'% to perks and damage)':'none')+'</small>'+(KITSIG[k]?'<small class="mu" style="align-self:center">'+(t>=10?'Signature perks unlocked: ':t>=5?'First signature perk unlocked (second at tier 10): ':'Signature perks at tiers 5 and 10: ')+KITSIG[k][2]+'.</small>':'')+(n?'<button data-kit="'+k+'"'+(gameState.a<n.cost||cl(k)<n.req?' disabled':'')+'>Outfit '+PRE[n.t]+' · '+n.cost.toLocaleString()+(cl(k)<n.req?' · needs level '+n.req:'')+'</button>':'')+'</div>';
 };
@@ -82,6 +81,7 @@ export function partyView(){
   let h='<h2>Your party</h2><p class="sub">Leadership '+l+' · '+nsl()+' of '+sl+' slots · members work at '+Math.round(bspd()*100)+'% of your speed. Raise Leadership for more slots and faster work.</p>';
   h+='<p>Party power: <b>'+power()+'</b> <span class="mu" style="display:inline">(half your total levels, plus members fighting with you)</span></p>';
   {const sk=gameState.sic&&sicOn()?sicBuff(gameState.sic):null;h+='<p class="mu">'+(sk?'<b>Second in command: '+MEMBERS[gameState.sic!].n+'</b> · '+sk.n+': '+sk.d+(sk.s>1?' (scaled by level)':'')+'.':'Name a fighting recruit second in command for a party buff.')+'</p>'}
+  if(roster().length>1)h+='<div class="chips"><small style="align-self:center">Auto-fill the party:</small><button data-auto="stats">Best stats</button><button data-auto="level">Highest level</button></div><p class="mu">Seats the strongest recruits and pets in your open slots. Specialists and anyone on an expedition stay put.</p>';
   if(!roster().length)h+='<p class="mu">No one has joined yet. Recruit your first member below.</p>';
   h+=hs.map(k=>{
     const m=MEMBERS[k],t=asg(k),work=t.k!='war'&&t.k!='idle'&&t.k!='bar'&&t.k!='exp';

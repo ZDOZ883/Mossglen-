@@ -417,7 +417,11 @@ describe('gear slots', () => {
     const base = g.ev(`gameState.mk.mole=0;mdmg('mole',${e})`);
     const full = g.ev(`gameState.mk.mole=KIT_MAX;mdmg('mole',${e})`);
     assert.ok(full / base > 1.05 && full / base < 1.15, 'full kit adds about 10%: ' + full / base);
-    assert.equal(g.ev('kitNext("p_Attack")'), null, 'pets cannot be bought kit');
+    g.ev('gameState.pets.p_Attack=1;gameState.hired.p_Attack=1;gameState.mt.p_Attack={k:"war"};gameState.cx.p_Attack=XT[60]');
+    assert.ok(g.ev('kitNext("p_Attack")'), 'pets can be outfitted too');
+    g.click({ kit: 'p_Attack' });
+    assert.equal(g.ev('kitTier("p_Attack")'), 1);
+    g.ev('gameState.mk.p_Attack=0');
     g.ev(`gameState.cx.p_Attack=XT[60];gameState.cx.p_z6=XT[60];gameState.cx.p_r0=XT[60];gameState.cx.mole=XT[60];gameState.mk.mole=KIT_MAX`);
     assert.ok(g.ev(`mdmg('p_Attack',${e})`) > g.ev(`mdmg('mole',${e})`), 'a skill pet still out-damages a fully outfitted recruit');
     assert.ok(g.ev(`mdmg('p_z6',${e})`) > g.ev(`mdmg('p_Attack',${e})`) && g.ev(`mdmg('p_r0',${e})`) > g.ev(`mdmg('p_z6',${e})`), 'boss pets beat skill pets and raid pets beat boss pets');
@@ -1363,5 +1367,22 @@ describe('food rules', () => {
     assert.equal(g.ev(`gameState.fmode`), 'best');
     g.click({ eat: '0.75' });
     assert.equal(g.ev(`gameState.eat`), 0.75);
+  });
+});
+
+describe('pets as full party members', () => {
+  it('auto-fill seats the best fighters by stats or by level, and pets can lead', () => {
+    const g = load({ seed: 6 });
+    g.ev(`gameState.sp='Badger';gameState.xp.Leadership=XT[LT[1]];gameState.hired={};gameState.bench={};gameState.mt={};gameState.pets={p_Attack:1,p_z6:1};gameState.cx.mole=XT[40];gameState.cx.hare=XT[10];gameState.cx.p_Attack=XT[20];gameState.cx.p_z6=XT[30];['mole','hare','p_Attack','p_z6'].forEach(k=>{gameState.bench[k]=1;gameState.mt[k]={k:'idle'}})`);
+    const n = g.ev('slots()');
+    assert.ok(n >= 2 && n < 4, 'two or three slots');
+    g.click({ auto: 'level' });
+    assert.equal(g.ev('Object.keys(gameState.hired).sort().join()'), g.ev(`['mole','p_z6','p_Attack','hare'].slice(0,${n}).sort().join()`));
+    g.ev(`gameState.sic='p_z6';gameState.hired.p_z6=1;gameState.mt.p_z6={k:'war'};refreshFx()`);
+    assert.ok(g.ev('sicBuff("p_z6")'), 'a pet can be second in command');
+    assert.equal(g.ev('sicOn()'), true);
+    g.click({ auto: 'stats' });
+    assert.equal(g.ev('Object.keys(gameState.hired).length'), n);
+    assert.ok(g.ev('Object.keys(gameState.hired).every(k=>asg(k).k=="war")'));
   });
 });
